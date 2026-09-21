@@ -1,4 +1,7 @@
+import { PRIVATE_WORKSPACES } from '../privacyPolicy.js';
+
 export function publishExperienceRecord(options = {}) {
+  if (PRIVATE_WORKSPACES) return { ok: false, code: 'privateWorkspace' };
   const records = Array.isArray(options.records) ? options.records : [];
   const community = options.community || {};
   const posts = Array.isArray(community.posts) ? community.posts : [];

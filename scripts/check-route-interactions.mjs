@@ -66,6 +66,7 @@ const contracts = [
           ["setup form creates plans", /id="prepPlanSetupForm"[\s\S]*?onSubmit=\{createPlan\}/],
           ["baseline diagnostic can submit and restart", all("id=\"prepDiagnosticForm\"", "onSubmit={submitDiagnostic}", "data-prep-start-test=\"true\"", "startDiagnostic(\"pending\")")],
           ["task rows toggle and open target modules", all("data-prep-toggle-task={task.id}", "advanceTask(task)", "data-prep-open={task.action}", "openTask(task.action, task.query || \"\")")],
+          ["unowned legacy plan state cannot migrate into another account", text => !["window.localStorage.getItem", "window.localStorage.removeItem", "migrateDoingTasks("].some(marker => text.includes(marker))],
           ["external prep links stay safe", all("safeExternalUrl?.(source.url)", "target=\"_blank\"", "rel=\"noopener noreferrer\"")]
         ]
       },
@@ -248,8 +249,8 @@ const contracts = [
         checks: [
           ["experience record sorting uses safe finite timestamps", all("import { timestampOrZero } from \"../../lib/date.js\"", "timestampOrZero(b.updatedAt) - timestampOrZero(a.updatedAt)")],
           ["experience form creates/edits records", all("id=\"newExperienceBtn\"", "onClick={openForm}", "resetForm()", "id=\"experienceForm\"", "onSubmit={save}", "id=\"experienceFirm\"", "onChange={(e) => update(\"firm\", e.target.value)}")],
-          ["filter/edit/delete/share interactions remain wired", all("id=\"experienceFilter\"", "onChange={(e) => setFilter(e.target.value)}", "onClick={() => edit(record)}", "onClick={() => remove(record.id)}", "onClick={() => setPendingShareId(record.id)}", "onClick={() => confirmShare(record.id)}")],
-          ["community jump is wired", all("id=\"openCommunityExperiencesBtn\"", "data-jump-module=\"community\"", "onClick={openCommunityExperiences}")]
+          ["private experience filter/edit/delete/read interactions remain wired", all("id=\"experienceFilter\"", "onChange={(e) => setFilter(e.target.value)}", "onClick={() => edit(record)}", "onClick={() => remove(record.id)}", "onClick={() => confirmRead(record)}")],
+          ["private records never load or link to community copies", text => text.includes("仅本人可见") && !["communityPosts", "api.publish", "openCommunityExperiencesBtn", "experience-share-confirm"].some(marker => text.includes(marker))]
         ]
       }
     ]

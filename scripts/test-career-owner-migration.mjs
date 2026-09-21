@@ -32,7 +32,7 @@ function seedPersonal(storage, ownerId, data) {
   storage.values.set(personalStorageKey(ownerId), JSON.stringify({ version: 1, ownerId, data }));
 }
 
-test('a verified owner migrates personal-only training, drafts and tombstones with no Tracker records', () => {
+test('a verified owner migrates private training, drafts, recovered questions and tombstones with no Tracker records', () => {
   const storage = memoryStorage();
   const trial = { ...createTrial({}, { id: 'local-trial', now: Date.parse(now()) }), currentAnswer: '42' };
   const daily = createDailySession({ mentalEnabled: false, techCount: 2, codingCount: 0, behavioralCount: 0 }, { id: 'local-daily', startedAt: now() });
@@ -43,7 +43,8 @@ test('a verified owner migrates personal-only training, drafts and tombstones wi
   seedPersonal(storage, sourceOwnerId, data);
   const sourceRaw = storage.getItem(personalStorageKey(sourceOwnerId));
   assert.equal(migrate(storage).migrated, true);
-  assert.deepEqual(readTarget(storage).data, data);
+  assert.deepEqual(readTarget(storage).data, { ...data, behavioralQuestions: [{ id: 'question', title: 'Recovered question',
+    createdAt: '1970-01-01T00:00:00.000Z', updatedAt: '1970-01-01T00:00:00.000Z', deletedAt: null }] });
   assert.equal(storage.getItem(personalStorageKey(sourceOwnerId)), sourceRaw);
   assert.equal(JSON.parse(storage.getItem(careerOwnerMigrationBackupKey(sourceOwnerId, targetOwnerId))).source.personal, sourceRaw);
   const beforeRetry = new Map(storage.values);

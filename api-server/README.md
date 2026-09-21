@@ -193,7 +193,7 @@ export QUANTGYM_JOBS_SOURCE_CACHE_SECONDS=300
 export QUANTGYM_MEDIA_ROOT="/var/data/media"
 export QUANTGYM_MEDIA_MAX_BYTES=5242880
 export QUANTGYM_MEDIA_STORAGE="local" # local/disk for development or small private beta only
-# Production/public launch media must use real S3/R2-compatible object storage plus a CDN/public base URL.
+# Private deployments use persistent local disk or a private S3/R2 bucket; never a public media base.
 # export QUANTGYM_MEDIA_STORAGE="r2"
 # export QUANTGYM_MEDIA_S3_ENDPOINT="https://your-r2-account-id.r2.cloudflarestorage.com"
 # export QUANTGYM_MEDIA_S3_BUCKET="quantgym-media"
@@ -201,7 +201,7 @@ export QUANTGYM_MEDIA_STORAGE="local" # local/disk for development or small priv
 # export QUANTGYM_MEDIA_S3_ACCESS_KEY_ID="replace-with-real-object-storage-access-key"
 # export QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY="replace-with-real-object-storage-secret-key"
 # export QUANTGYM_MEDIA_S3_PREFIX="media"
-# export QUANTGYM_MEDIA_PUBLIC_BASE_URL="https://media.quantgym.app"
+# export QUANTGYM_MEDIA_PUBLIC_BASE_URL="" # Required for private account uploads.
 export QUANTGYM_PUBLIC_API_BASE_URL="https://api.quantgym.app"
 export QUANTGYM_ALLOWED_ORIGINS="https://beta.quantgym.app"
 export QUANTGYM_SESSION_DAYS=30
@@ -310,7 +310,11 @@ npm run check:jobs-api:deployed-source
 
 The runtime smoke starts a temporary feed and API, verifies the API sends the bearer token, merges source and local catalog jobs, prefers source data for duplicate ids, uses the source cache, supports POST type filtering, sanitizes invalid source `postedAt` values, and falls back to the local catalog when the source fails. The production fixture proves the production gate accepts the default public ATS feed, accepts explicit hardened HTTPS feeds, rejects HTTP, localhost/private-network, credential-bearing, query-bearing, placeholder, bad cache/timeout/size, short or placeholder token, missing fulltime, and duplicate-catalog cases, and runs `--live` against a fake feed to reject internship-only, duplicate-id, invalid-URL, defaulted metadata, invalid/future `postedAt`, invalid JSON, oversized payload, and missing-token responses. `npm run build:jobs-feed:publication-packet` writes an ignored handoff packet under `artifacts/jobs-feed/publication-packet/` with a generated public-ATS feed snapshot, SHA-256, source list, stable HTTPS hosting runbook, production env template, and live-signoff checklist. The production check requires a non-placeholder HTTPS source URL, either explicitly configured or defaulted to the public ATS feed, sane cache/timeout/size settings, and a valid local fallback catalog; explicit source URL hosts must not point at localhost, loopback, or private-network addresses, and production source tokens must not be placeholders or short secrets when configured. Add `-- --live` to fetch the configured/default source and validate that it returns both internship and fulltime roles, unique ids, valid HTTP(S) URLs, and real company/title/postedAt fields with valid, non-future dates rather than defaults. `QUANTGYM_JOBS_SOURCE_TOKEN` is optional in the API and intentionally absent for the public ATS feed, but recommended for non-public crawler or vendor feeds; the check reports a warning if it is absent.
 
-By default, media uploads are written under `QUANTGYM_MEDIA_ROOT`, which is acceptable for local development and tightly controlled private beta deployments with persistent disk. Set `QUANTGYM_MEDIA_STORAGE=s3` or `r2` plus the `QUANTGYM_MEDIA_S3_*` variables to store uploads in an S3-compatible bucket such as Cloudflare R2. Without `QUANTGYM_MEDIA_PUBLIC_BASE_URL`, `GET /api/media/:id` proxies the object through the API; with it, upload responses return public media URLs and `GET /api/media/:id` redirects to the public object URL. Public production signoff requires object storage plus a CDN/public base URL, and the `--live` check must write, read, publicly fetch, and delete one tiny readiness object. Set `QUANTGYM_PUBLIC_API_BASE_URL` to the public API origin when API read-through media URLs should be stable in production. If that origin is not set, upload responses ignore `X-Forwarded-Host`, `X-Forwarded-Proto`, and `X-Forwarded-Ssl` unless the request comes from a trusted proxy configured through `QUANTGYM_TRUST_PROXY_HEADERS` and `QUANTGYM_TRUSTED_PROXY_CIDRS`.
+With the default `QUANTGYM_PRIVATE_WORKSPACES=1`, uploads are served only through authenticated owner requests to `GET /api/media/:id`, with private, no-store responses. For a deployment with an attached persistent disk, set `QUANTGYM_MEDIA_STORAGE=local` and `QUANTGYM_MEDIA_ROOT` to a directory inside that disk, such as `/var/data/media`; the default directory inside the application checkout is not persistent on Render. Leave `QUANTGYM_MEDIA_PUBLIC_BASE_URL` empty. This uses the existing disk without creating another storage resource.
+
+For private S3/R2 storage, configure `QUANTGYM_MEDIA_STORAGE=s3` or `r2` and the `QUANTGYM_MEDIA_S3_*` variables, disable all public bucket access (including R2 custom domains and `r2.dev`), and leave `QUANTGYM_MEDIA_PUBLIC_BASE_URL` empty. In private mode the API rejects object-storage uploads with HTTP 503 before sending any bytes if a public media base is still configured. An empty base URL alone does not change the bucket's permissions: verify those separately. Reads proxy signed object-storage requests through the owner check rather than redirecting to a public URL. The older public-CDN production readiness check applies only to an explicitly enabled legacy sharing deployment; use `scripts/test-private-workspaces-api.py` for the private media contract.
+
+Set `QUANTGYM_PUBLIC_API_BASE_URL` to the public API origin when media API URLs should be stable in production. If that origin is not set, upload responses ignore `X-Forwarded-Host`, `X-Forwarded-Proto`, and `X-Forwarded-Ssl` unless the request comes from a trusted proxy configured through `QUANTGYM_TRUST_PROXY_HEADERS` and `QUANTGYM_TRUSTED_PROXY_CIDRS`.
 
 Validate media storage configuration before deploying:
 

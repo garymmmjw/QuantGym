@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
-import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
+import { usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 import { timestampOrZero } from "../../lib/date.js";
@@ -73,7 +73,6 @@ function firmColor(firm) {
 }
 
 export function ExperiencesPageContent() {
-  const appServices = useAppServices();
   const pageApi = usePageApi();
   const api = pageApi.experiences;
   const userState = useUserStateStore((state) => state.value || {});
@@ -83,10 +82,14 @@ export function ExperiencesPageContent() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
-  const [pendingShareId, setPendingShareId] = useState("");
-  const [communityTick, setCommunityTick] = useState(0);
 
-  useEffect(() => setReadNotice(''), [personal.ownerId]);
+  useEffect(() => {
+    setReadNotice('');
+    setForm(EMPTY_FORM);
+    setShowForm(false);
+    setFilter('all');
+    setCompanyFilter('all');
+  }, [personal.ownerId]);
 
   const confirmRead = (record) => {
     if (!personal.ownerId || !personal.store || !record.id) return;
@@ -104,12 +107,6 @@ export function ExperiencesPageContent() {
       setReadNotice(result?.ok ? '已读标记已保存。' : '暂时无法保存，请保留此页并稍后重试。');
     } catch { setReadNotice('暂时无法保存，请保留此页并稍后重试。'); }
   };
-
-  useEffect(() => {
-    const onCommunityUpdated = () => setCommunityTick((tick) => tick + 1);
-    window.addEventListener("quantgym:community-updated", onCommunityUpdated);
-    return () => window.removeEventListener("quantgym:community-updated", onCommunityUpdated);
-  }, []);
 
   const records = useMemo(
     () => [...(userState.interviewExperiences || [])]
@@ -144,20 +141,13 @@ export function ExperiencesPageContent() {
       (companyFilter === "all" || item.firm === companyFilter)),
     [filter, companyFilter, records]
   );
-  const sharedCount = records.filter((record) => record.sharedPostId).length;
   const labels = api.labels || {};
-
-  const communityPosts = useMemo(
-    () => pageApi.community?.getPosts?.() || [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pageApi, communityTick, records]
-  );
 
   useEffect(() => {
     if (!form.date) setForm((prev) => ({ ...prev, date: pageApi.localDateKey?.() || "" }));
   }, [form.date, pageApi]);
 
-  useScopedRefreshIcons(pageApi.refreshIcons, ".experiences-section", [visible, filter, pendingShareId, form.id, showForm, communityPosts]);
+  useScopedRefreshIcons(pageApi.refreshIcons, ".experiences-section", [visible, filter, form.id, showForm]);
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -198,7 +188,6 @@ export function ExperiencesPageContent() {
     if (!record?.firm || !record?.summary) return;
     api.setRecords([record, ...records.filter((item) => item.id !== record.id)]);
     pageApi.saveState?.();
-    setPendingShareId("");
     resetForm();
     setShowForm(false);
   };
@@ -223,20 +212,10 @@ export function ExperiencesPageContent() {
   const remove = (id) => {
     const record = records.find((item) => item.id === id);
     if (!record) return;
-    const warning = record.sharedPostId ? labels.deleteSharedWarning : labels.deleteWarning;
+    const warning = labels.deleteWarning;
     if (!window.confirm(warning)) return;
     api.setRecords(records.filter((item) => item.id !== id));
     pageApi.saveState?.();
-  };
-
-  const confirmShare = (id) => {
-    api.publish?.(id);
-    setPendingShareId("");
-    pageApi.saveState?.();
-  };
-
-  const openCommunityExperiences = () => {
-    appServices.services?.switchModule?.("community");
   };
 
   return (
@@ -245,7 +224,7 @@ export function ExperiencesPageContent() {
         <div>
           <span className="experience-kicker">TRAINING · 面经</span>
           <h2 className="experience-title-line">面经 <span>Interview Notes</span></h2>
-          <p>真实面试复盘 · 按公司/轮次归档 · 每篇都能跳转对应题库</p>
+          <p>我的面试复盘 · 按公司和轮次归档 · 仅本人账户可见</p>
         </div>
         <button className="primary-button experience-write-btn" id="newExperienceBtn" type="button" onClick={openForm}>
           <i data-lucide="plus" />写面经 · +30 XP
@@ -359,26 +338,12 @@ export function ExperiencesPageContent() {
               placeholder="做得好的地方、卡住的点、下一次要强化的训练。"
             />
           </label>
-          <p className="experience-safety"><i data-lucide="shield-check" /> 分享前请移除姓名、联系方式及公司要求保密的具体题目。</p>
+          <p className="experience-safety"><i data-lucide="lock-keyhole" /> 面经内容与阅读记录仅保存到你的账户。</p>
           <div className="experience-form-stats">
             <div>
               <strong id="experienceCount">{records.length}</strong>
               <span>条面经记录</span>
             </div>
-            <div>
-              <strong id="sharedExperienceCount">{sharedCount}</strong>
-              <span>已分享到社群</span>
-            </div>
-            <button
-              className="secondary-button"
-              id="openCommunityExperiencesBtn"
-              type="button"
-              data-jump-module="community"
-              onClick={openCommunityExperiences}
-            >
-              <i data-lucide="users-round" />
-              查看社群面经
-            </button>
           </div>
           <div className="experience-form-actions">
             <button className="primary-button" type="submit"><i data-lucide="save" />保存面经</button>
@@ -402,9 +367,6 @@ export function ExperiencesPageContent() {
         {readNotice && <p role="status">{readNotice}{personal.snapshot.dirty && <button type="button" className="secondary-button" onClick={retryReadSave}>重试保存</button>}</p>}
         <div className="experience-list" id="experienceList">
           {!visible.length ? <EmptyState title={records.length ? labels.emptyFiltered : labels.emptyRecords} /> : visible.map((record) => {
-            const sharedPost = record.sharedPostId
-              ? communityPosts.find((post) => post.id === record.sharedPostId)
-              : null;
             return (
             <article key={record.id} className="experience-card" data-experience-id={record.id}>
               <div className="experience-card-head">
@@ -422,7 +384,7 @@ export function ExperiencesPageContent() {
                 </div>
               </div>
               <div className="experience-badges">
-                <span className={record.sharedPostId ? "shared" : "private"}>{record.sharedPostId ? "已分享到社群" : "私有记录"}</span>
+                <span className="private">仅本人可见</span>
               </div>
               <div className="experience-card-body">
                 <div>
@@ -442,34 +404,16 @@ export function ExperiencesPageContent() {
                   </div>
                 ) : null}
               </div>
-              {(record.tags || []).length || sharedPost ? (
+              {(record.tags || []).length ? (
                 <div className="experience-tags">
                   {(record.tags || []).map((tag) => <span key={tag}>{tag}</span>)}
-                  {sharedPost ? (
-                    <div className="experience-social">
-                      <span className="experience-social-up"><i data-lucide="arrow-up" />{(sharedPost.likes || []).length}</span>
-                      <span className="experience-social-comments"><i data-lucide="message-square" />{(sharedPost.comments || []).length}</span>
-                    </div>
-                  ) : null}
                 </div>
               ) : null}
               <div className="experience-share-row">
                 <button type="button" className="secondary-button" disabled={!personal.ownerId || hasExplicitCompletion(personal.snapshot.data, 'experience-read', record.id)} onClick={() => confirmRead(record)}>
                   {hasExplicitCompletion(personal.snapshot.data, 'experience-read', record.id) ? '已读' : '标记已读'}
                 </button>
-                <button type="button" className="secondary-button" onClick={() => setPendingShareId(record.id)}>
-                  <i data-lucide="share-2" />{record.sharedPostId ? labels.updateShare : labels.shareToCommunity}
-                </button>
               </div>
-              {pendingShareId === record.id ? (
-                <div className="experience-share-confirm">
-                  <p>{labels.shareConfirmMessage}</p>
-                  <div>
-                    <button type="button" className="primary-button" onClick={() => confirmShare(record.id)}>{labels.confirmShare}</button>
-                    <button type="button" className="secondary-button" onClick={() => setPendingShareId("")}>{labels.cancel}</button>
-                  </div>
-                </div>
-              ) : null}
             </article>
             );
           })}

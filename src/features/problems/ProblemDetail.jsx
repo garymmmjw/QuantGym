@@ -10,8 +10,9 @@ import {
 } from "./problemDisplayLabels.js";
 import { ProblemRichText } from "./ProblemRichText.jsx";
 import { FreePracticeTimer, FreePracticeOutcomes } from "./FreePracticeAttempt.jsx";
-
-const NOTE_STORAGE_PREFIX = "quantgym.problemNote.";
+import { useAuthStore } from '../../stores/AppServicesContext.jsx';
+import { PRIVATE_WORKSPACES } from '../../modules/privacyPolicy.js';
+import { problemNoteStorageKey } from './problemNotes.js';
 
 function DetailBlock({
   title,
@@ -67,18 +68,22 @@ export function ProblemDetail({
   onDeleteComment
 }) {
   const [commentDraft, setCommentDraft] = useState("");
-  const [noteDraft, setNoteDraft] = useState("");
+  const ownerId = useAuthStore(state => state.currentUser?.id || '');
+  const [note, setNote] = useState({ key: '', text: '' });
   const bodyRef = useRef(null);
   const detailId = detail?.id || "";
+  const noteKey = problemNoteStorageKey(ownerId, detailId);
+  const noteDraft = note.key === noteKey ? note.text : '';
 
   useEffect(() => {
-    if (!detailId) return;
+    if (!noteKey) return;
     try {
-      setNoteDraft(window.localStorage.getItem(`${NOTE_STORAGE_PREFIX}${detailId}`) || "");
+      setNote({ key: noteKey, text: window.localStorage.getItem(noteKey) || '' });
     } catch {
-      setNoteDraft("");
+      setNote({ key: noteKey, text: '' });
     }
-  }, [detailId]);
+    setCommentDraft('');
+  }, [noteKey]);
 
   if (!detail) return null;
 
@@ -113,11 +118,12 @@ export function ProblemDetail({
     : "--";
 
   const handleNoteChange = (event) => {
+    if (!noteKey) return;
     const value = event.target.value;
-    setNoteDraft(value);
+    setNote({ key: noteKey, text: value });
     try {
-      if (value) window.localStorage.setItem(`${NOTE_STORAGE_PREFIX}${detail.id}`, value);
-      else window.localStorage.removeItem(`${NOTE_STORAGE_PREFIX}${detail.id}`);
+      if (value) window.localStorage.setItem(noteKey, value);
+      else window.localStorage.removeItem(noteKey);
     } catch {
       /* storage unavailable */
     }
@@ -306,7 +312,7 @@ export function ProblemDetail({
               : (isEnglish ? "Only clicking “I finished this problem” records completion. Opening a question or revealing its answer does not count." : "点击「我做完了」才记录完成；打开题目、查看答案不会增加刷题数量。")}
         </p> : null}
 
-        <section className="problem-social-panel">
+        {!PRIVATE_WORKSPACES && <section className="problem-social-panel">
           <div className="problem-social-header">
             <div>
               <h3>{t("problemDiscussion")}</h3>
@@ -374,7 +380,7 @@ export function ProblemDetail({
               {t("problemCommentPost")}
             </button>
           </form>
-        </section>
+        </section>}
       </div>
     </>
   );

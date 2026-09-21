@@ -11,8 +11,13 @@ export function createAccountSessionController(deps = {}) {
   const text = (key, params) => deps.t?.(key, params) || key;
 
   function renderUserChip() {
-    renderUserChipView(getElements(), getAppState().currentUser, {
+    const owner = getAppState().currentUser;
+    const config = { ...getAppState().cloudConfig };
+    renderUserChipView(getElements(), owner, {
       documentRef,
+      cloudConfig: config,
+      isCurrent: () => getAppState().currentUser?.id === owner?.id && getAppState().cloudConfig?.token === config.token
+        && getAppState().cloudConfig?.endpoint === config.endpoint && getAppState().cloudConfig?.userId === config.userId,
       t: deps.t
     });
   }

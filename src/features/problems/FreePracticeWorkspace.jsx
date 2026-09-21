@@ -56,7 +56,7 @@ function BankDirectory({ practice: p }) {
       </div>)}
       {!visible.length && p.companySearch ? <p className="fp-directory-empty">{en ? "No matching company." : "没有找到这家公司。"}</p> : null}
     </nav>
-    {isCompany ? <p className="fp-directory-note">{en ? "A question can appear under several companies. Progress is shared." : "同一题可归属多家公司，做题记录共用。"}</p> : null}
+    {isCompany ? <p className="fp-directory-note">{en ? "A question can appear under several companies. Your progress stays within your account." : "同一题可归属多家公司，做题记录仅属于你的账户。"}</p> : null}
   </aside>;
 }
 

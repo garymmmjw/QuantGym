@@ -46,6 +46,7 @@ def empty_state(marker=None):
         "reviewEvents": [],
         "practiceSessions": [],
         "behavioralAnswers": [],
+        "behavioralQuestions": [],
         "careerTrackerOperations": [],
     }
 
@@ -60,6 +61,13 @@ def tracker_operations():
         {"id": "tracker-delete", "clock": 4, "kind": "delete", "applicationId": "application-one", "eventId": event["id"], "deleteId": "delete-one", "event": event, "order": ["event-submitted", event["id"]]},
         {"id": "tracker-restore", "clock": 5, "kind": "restore", "applicationId": "application-one", "eventId": event["id"], "deleteId": "delete-one"},
     ]
+
+
+def behavioral_question(identity="my-behavioral-question", title="My private question\n私人题干"):
+    return {
+        "id": identity, "title": title, "createdAt": "2026-09-20T12:00:00.000Z",
+        "updatedAt": "2026-09-20T12:00:00.000Z", "deletedAt": None,
+    }
 
 
 def archived_event_state():
@@ -748,6 +756,151 @@ class PersonalPrepApiTests(unittest.TestCase):
             with self.subTest(invalid=type(invalid).__name__):
                 self.assertEqual(self.put(token, {**state, "behavioralAnswers": invalid}, saved["revision"])[0], 400)
                 self.assertEqual(self.request("GET", token=token)[1], saved)
+
+    def test_private_behavioral_questions_and_answers_round_trip_without_cross_account_or_public_leaks(self):
+        token, owner = self.new_user()
+        other_token, other_owner = self.new_user()
+        question = behavioral_question(title="PRIVATE-BEHAVIORAL-TITLE-ONE\nMy own interview prompt")
+        answer = {"id": question["id"], "text": "PRIVATE-BEHAVIORAL-ANSWER-ONE", "updatedAt": question["updatedAt"]}
+        original = {**empty_state(), "behavioralQuestions": [question], "behavioralAnswers": [answer]}
+        status, saved, headers = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        self.assert_private(headers)
+        self.assertEqual(saved["data"], original)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        self.assertIsNone(self.request("GET", token=other_token)[1]["data"], "A fresh account must receive no default or other owner's Behavioral questions")
+        other_question = {**question, "title": "PRIVATE-BEHAVIORAL-TITLE-TWO"}
+        other_answer = {**answer, "text": "PRIVATE-BEHAVIORAL-ANSWER-TWO"}
+        other_state = {**empty_state(), "behavioralQuestions": [other_question], "behavioralAnswers": [other_answer]}
+        self.assertEqual(self.put(other_token, other_state)[0], 200)
+        self.assertEqual(self.request("GET", f"/api/personal-prep?userId={other_owner}", token=token)[1], saved)
+        self.assertEqual(self.request("GET", f"/api/personal-prep?ownerId={owner}", token=other_token)[1]["data"], other_state)
+        with self.connect_database() as conn:
+            stored = conn.execute(self.sql("SELECT data_json FROM user_personal_prep WHERE user_id = ?"), (owner,)).fetchone()[0]
+            self.assertEqual(json.loads(stored) if isinstance(stored, str) else stored, original)
+        for path in ("/api/community", "/api/leaderboard", "/api/problems", "/api/state"):
+            status, response, _ = self.request("GET", path, token=other_token if path == "/api/state" else None)
+            self.assertEqual(status, 200, (path, response))
+            public = json.dumps(response)
+            for private_text in (question["title"].splitlines()[0], answer["text"], other_question["title"], other_answer["text"]):
+                self.assertNotIn(private_text, public)
+        for field in ("userId", "ownerId", "user_id"):
+            self.assertEqual(self.put(token, other_state, saved["revision"], **{field: other_owner})[0], 400)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+
+    def test_old_clients_cannot_erase_private_behavioral_questions_or_answers(self):
+        token, _ = self.new_user()
+        question = behavioral_question()
+        answer = {"id": question["id"], "text": "Keep my existing answer", "updatedAt": question["updatedAt"]}
+        state = {**empty_state(), "behavioralQuestions": [question], "behavioralAnswers": [answer]}
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        for omitted in (True, False):
+            legacy = empty_state("other state can still change")
+            if omitted:
+                del legacy["behavioralQuestions"]
+                del legacy["behavioralAnswers"]
+            status, saved, _ = self.put(token, legacy, saved["revision"])
+            self.assertEqual(status, 200, saved)
+            self.assertEqual(saved["data"]["behavioralQuestions"], [question])
+            self.assertEqual(saved["data"]["behavioralAnswers"], [answer])
+        # Changing an answer does not require a title rewrite; changing a title
+        # does not erase its separately versioned answer.
+        latest_answer = {**answer, "text": "My revised answer", "updatedAt": "2026-09-20T13:00:00.000Z"}
+        status, saved, _ = self.put(token, {**empty_state(), "behavioralAnswers": [latest_answer]}, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        renamed = {**question, "title": "My revised prompt", "updatedAt": "2026-09-20T14:00:00.000Z"}
+        status, saved, _ = self.put(token, {**empty_state(), "behavioralQuestions": [renamed]}, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["behavioralQuestions"], [renamed])
+        self.assertEqual(saved["data"]["behavioralAnswers"], [latest_answer])
+
+    def test_behavioral_question_merge_is_deterministic_across_write_order_and_conflict_retries(self):
+        first = behavioral_question(title="\U0001f600")
+        second = {**first, "title": "\uffff"}
+        # UTF-16 ordering selects U+FFFF above the astral character, matching
+        # JavaScript rather than Python's Unicode code-point ordering.
+        for candidates in ((first, second), (second, first)):
+            token, _ = self.new_user()
+            revision = 0
+            for candidate in candidates:
+                status, saved, _ = self.put(token, {**empty_state(), "behavioralQuestions": [candidate]}, revision)
+                self.assertEqual(status, 200, saved)
+                revision = saved["revision"]
+            self.assertEqual(saved["data"]["behavioralQuestions"], [second])
+            latest = {**first, "title": "A later timestamp wins", "updatedAt": "2026-09-20T09:00:00.000-04:00"}
+            status, saved, _ = self.put(token, {**empty_state(), "behavioralQuestions": [latest]}, revision)
+            self.assertEqual(status, 200, saved)
+            self.assertEqual(saved["data"]["behavioralQuestions"], [latest])
+        token, _ = self.new_user()
+        barrier = threading.Barrier(2)
+        def write(candidate):
+            barrier.wait(timeout=5)
+            return self.put(token, {**empty_state(), "behavioralQuestions": [candidate]})
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            responses = list(workers.map(write, (first, second)))
+        self.assertEqual(sorted(status for status, _, _ in responses), [200, 409])
+        for candidate, (status, conflict, _) in zip((first, second), responses):
+            if status == 409:
+                self.assertEqual(self.put(token, {**empty_state(), "behavioralQuestions": [candidate]}, conflict["revision"])[0], 200)
+        self.assertEqual(self.request("GET", token=token)[1]["data"]["behavioralQuestions"], [second])
+
+    def test_behavioral_question_deletion_survives_newer_stale_edits_and_legacy_snapshots(self):
+        token, _ = self.new_user()
+        active = behavioral_question()
+        deleted = {**active, "deletedAt": "2026-09-20T13:00:00.000Z", "updatedAt": "2026-09-20T13:00:00.000Z"}
+        later_stale = {**active, "title": "Edited offline after deletion", "updatedAt": "2026-09-21T12:00:00.000Z"}
+        answer = {"id": active["id"], "text": "Keep this private historical answer", "updatedAt": active["updatedAt"]}
+        _, saved, _ = self.put(token, {**empty_state(), "behavioralQuestions": [active], "behavioralAnswers": [answer]})
+        for candidate in (deleted, later_stale, active):
+            status, saved, _ = self.put(token, {**empty_state(), "behavioralQuestions": [candidate]}, saved["revision"])
+            self.assertEqual(status, 200, saved)
+            self.assertEqual(saved["data"]["behavioralQuestions"], [deleted])
+            self.assertEqual(saved["data"]["behavioralAnswers"], [answer])
+        legacy = empty_state()
+        del legacy["behavioralQuestions"]
+        status, saved, _ = self.put(token, legacy, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["behavioralQuestions"], [deleted])
+        replacement = behavioral_question("new-question-id", active["title"])
+        status, saved, _ = self.put(token, {**empty_state(), "behavioralQuestions": [replacement]}, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual({question["id"]: question for question in saved["data"]["behavioralQuestions"]}, {deleted["id"]: deleted, replacement["id"]: replacement})
+        # Reverse arrival order must converge to the same deletion.
+        other, _ = self.new_user()
+        _, other_saved, _ = self.put(other, {**empty_state(), "behavioralQuestions": [later_stale]})
+        _, other_saved, _ = self.put(other, {**empty_state(), "behavioralQuestions": [deleted]}, other_saved["revision"])
+        self.assertEqual(other_saved["data"]["behavioralQuestions"], [deleted])
+
+    def test_invalid_private_behavioral_questions_never_partially_replace_saved_data(self):
+        token, other_owner = self.new_user()
+        question = behavioral_question()
+        state = {**empty_state(), "behavioralQuestions": [question]}
+        _, saved, _ = self.put(token, state)
+        invalid = [None, {}, [question, question], [None],
+                   [{field: value for field, value in question.items() if field != "deletedAt"}],
+                   [behavioral_question(str(index)) for index in range(10001)]]
+        for patch in (
+            {"id": ""}, {"id": " "}, {"id": " padded "}, {"id": "x" * 201}, {"id": "🌊" * 101}, {"id": 42},
+            {"title": "\n\t"}, {"title": None}, {"title": "x" * 4001}, {"title": "🌊" * 2001},
+            {"ownerId": other_owner}, {"userId": other_owner}, {"answer": "nested answers are invalid"},
+            {"createdAt": None}, {"updatedAt": "2026-09-19T12:00:00.000Z"},
+            {"deletedAt": "2026-09-19T12:00:00.000Z"}, {"deletedAt": "2026-09-21T12:00:00.000Z"},
+        ):
+            invalid.append([{**question, **patch}])
+        for invalid_date in ("not-a-date", "2026-02-30T12:00:00.000Z", "0000-01-01T12:00:00.000Z",
+                             "2026-09-20T24:00:00.000Z", "2026-09-20T12:00:60.000Z", "2026-09-20T12:00:00",
+                             "2026-09-20T12:00:00.000+03:99", "2026-09-20T12:00:00.000+24:00",
+                             "2026-09-20T12:00:00.1234567Z"):
+            invalid.append([{**question, "updatedAt": invalid_date}])
+        for index, questions in enumerate(invalid):
+            with self.subTest(case=index):
+                self.assertEqual(self.put(token, {**state, "dailySettings": {"marker": "must-not-save"}, "behavioralQuestions": questions}, saved["revision"])[0], 400)
+                self.assertEqual(self.request("GET", token=token)[1], saved)
+        boundary = behavioral_question("x" * 200, "🌊" * 2000)
+        status, updated, _ = self.put(token, {**empty_state(), "behavioralQuestions": [boundary]}, saved["revision"])
+        self.assertEqual(status, 200, updated)
+        self.assertIn(boundary, updated["data"]["behavioralQuestions"])
 
     def test_cross_account_isolation_and_no_client_selected_owner(self):
         first, first_id = self.new_user()

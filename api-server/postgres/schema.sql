@@ -99,7 +99,7 @@ ON registration_invitations (created_at DESC);
 
 CREATE TABLE invitation_redemptions (
   id text PRIMARY KEY,
-  invitation_id text NOT NULL REFERENCES registration_invitations(id),
+  invitation_id text NOT NULL REFERENCES registration_invitations(id) ON DELETE NO ACTION,
   user_id text REFERENCES users(id) ON DELETE SET NULL,
   email_norm text NOT NULL,
   redeemed_at timestamptz NOT NULL,

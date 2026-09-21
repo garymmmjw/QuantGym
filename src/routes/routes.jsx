@@ -4,6 +4,7 @@ import { AppChromeLayout } from "../layouts/AppChromeLayout.jsx";
 import { AuthLayout } from "../layouts/AuthLayout.jsx";
 import { ProtectedRoute } from "./ProtectedRoute.jsx";
 import { routeConfig } from "./routeConfig.js";
+import { PRIVATE_WORKSPACES, SHARING_MODULE_IDS } from "../modules/privacyPolicy.js";
 
 const GuardianPage = lazy(() => import("../features/guardian/GuardianPage.jsx").then((m) => ({ default: m.GuardianPage })));
 const NewsPage = lazy(() => import("../pages/NewsPage.jsx").then((m) => ({ default: m.NewsPage })));
@@ -95,7 +96,7 @@ function AppRouteElements() {
         path={route.path}
         element={(
           <Suspense fallback={<RouteLoadingFallback />}>
-            <Page />
+            {PRIVATE_WORKSPACES && SHARING_MODULE_IDS.has(route.id) ? <Navigate to="/calendar" replace /> : <Page />}
           </Suspense>
         )}
       />
@@ -112,7 +113,7 @@ export function AppRoutes() {
   return (
     <>
       <Routes>
-        <Route path="/guardian" element={<Suspense fallback={<RouteLoadingFallback />}><GuardianPage /></Suspense>} />
+        <Route path="/guardian" element={PRIVATE_WORKSPACES ? <Navigate to="/login" replace /> : <Suspense fallback={<RouteLoadingFallback />}><GuardianPage /></Suspense>} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={null} />
         </Route>

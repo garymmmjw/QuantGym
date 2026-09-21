@@ -239,6 +239,7 @@ function startApi(port, envOverrides = {}) {
       QUANTGYM_MAX_BODY_BYTES: "4096",
       QUANTGYM_REQUIRE_EMAIL_VERIFICATION: "0",
       QUANTGYM_REQUIRE_INVITE_CODE: "0",
+      QUANTGYM_PRIVATE_WORKSPACES: "0", // Explicitly exercise legacy public media storage behavior.
       QUANTGYM_RATE_LIMIT_DISABLED: "1",
       QUANTGYM_BETA_EMAIL_ALLOWLIST: "",
       ...envOverrides

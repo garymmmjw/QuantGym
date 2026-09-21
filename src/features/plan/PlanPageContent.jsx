@@ -479,34 +479,12 @@ export function PlanPageContent() {
   const { t } = model;
   const showSetup = model.view.showSetup;
   const hasPlan = Boolean(model.view.plan);
-  const { advanceTask: advanceTaskById, migrateDoingTasks } = model;
+  const { advanceTask: advanceTaskById } = model;
   const [weekOffset, setWeekOffset] = useState(0);
 
-  // 一次性迁移：旧版把「进行中」存在 localStorage（qg-plan-doing:YYYY-MM-DD），
-  // 现在并入真实 store（prepPlan.completedTasks 三态）随云同步，随后清除旧 key。
-  useEffect(() => {
-    if (!hasPlan) return;
-    const legacyPrefix = "qg-plan-doing:";
-    const todayKey = `${legacyPrefix}${localDateKey()}`;
-    let legacyIds = [];
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(todayKey) || "[]");
-      if (Array.isArray(parsed)) legacyIds = parsed.map(String).filter(Boolean);
-    } catch {
-      legacyIds = [];
-    }
-    try {
-      const staleKeys = [];
-      for (let index = 0; index < window.localStorage.length; index += 1) {
-        const key = window.localStorage.key(index);
-        if (key && key.startsWith(legacyPrefix)) staleKeys.push(key);
-      }
-      staleKeys.forEach((key) => window.localStorage.removeItem(key));
-    } catch {
-      /* storage unavailable */
-    }
-    if (legacyIds.length) migrateDoingTasks(legacyIds);
-  }, [hasPlan, migrateDoingTasks]);
+  // Legacy qg-plan-doing: keys have no account owner. Keep them untouched:
+  // assigning them to the next signed-in account could expose another person's
+  // progress. Current task status is already stored in the account's prepPlan.
 
   const advanceTask = useCallback((task) => {
     if (!task?.id) return;

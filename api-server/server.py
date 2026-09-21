@@ -42,6 +42,7 @@ from personal_prep import (
     validate_personal_prep_request,
 )
 from guardian import GUARDIAN_SCHEMA, GuardianService
+from privacy_policy import PRIVATE_WORKSPACES
 from free_practice_attempts import merge_free_practice_state
 from private_practice_catalog import is_curated_private_problem, is_retired_private_problem, lock_problem_catalog
 from invitations import (
@@ -944,6 +945,10 @@ def read_s3_media_object(storage_path: str) -> bytes:
 
 def store_media_payload(storage_path: str, content_type: str, payload: bytes) -> str:
     if media_uses_object_storage():
+        if PRIVATE_WORKSPACES and MEDIA_PUBLIC_BASE_URL:
+            # Owner checks on the API cannot protect a separately public R2/S3
+            # hostname. Refuse the write before putting private bytes there.
+            raise HttpError(503, "Private uploads are unavailable while public media access is configured.")
         return put_s3_media_object(storage_path, content_type, payload)
     if MEDIA_STORAGE not in {"", "local", "disk"}:
         raise HttpError(503, "Unsupported media storage backend")
@@ -2184,6 +2189,8 @@ class Database:
         return parse_json(row["state_json"], {}) if row else {}
 
     def get_leaderboard(self, conn: sqlite3.Connection) -> list[dict]:
+        if PRIVATE_WORKSPACES:
+            return []
         rows = conn.execute(
             """
             SELECT
@@ -2233,10 +2240,16 @@ class Database:
         return next_state
 
     def get_community(self, conn: sqlite3.Connection) -> dict:
+        if PRIVATE_WORKSPACES:
+            return {"posts": []}
         row = conn.execute("SELECT community_json FROM community WHERE id = 1").fetchone()
         return parse_json(row["community_json"], {"posts": []}) if row else {"posts": []}
 
     def save_community(self, conn: sqlite3.Connection, community: dict | None, merge: bool = True) -> dict:
+        # Older clients still include this envelope in signup/sync. Keep their
+        # private writes working, without publishing or overwriting old shares.
+        if PRIVATE_WORKSPACES:
+            return {"posts": []}
         existing = self.get_community(conn)
         next_community = merge_community(existing, community) if merge else community
         if not isinstance(next_community, dict):
@@ -3005,7 +3018,9 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
 
     def end_headers(self):
-        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password", "/api/problems"} or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/")):
+        if (PRIVATE_WORKSPACES and urlparse(self.path).path.startswith("/api/")
+                or urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password", "/api/problems"}
+                or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/"))):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
             self.send_header("Vary", "Authorization")
@@ -3045,6 +3060,10 @@ class QuantGymHandler(BaseHTTPRequestHandler):
     def route(self):
         path = urlparse(self.path).path.rstrip("/") or "/"
         try:
+            if PRIVATE_WORKSPACES and (path.startswith("/api/poker/") or path.startswith("/api/guardian/")
+                    or path.startswith("/api/problem-social/") and self.command != "GET"
+                    or path == "/api/community" and self.command != "GET"):
+                raise HttpError(403, "Sharing is disabled. Personal data is private to its account.")
             if path in {"/health", "/api/health"} and self.command == "GET":
                 return self.send_json(200, {"ok": True, "database": db.health(), "capabilities": {"careerTrackerSync": 1}})
             if path.startswith("/api/guardian/"):
@@ -3421,7 +3440,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 conn=conn,
             )
         path = f"/api/media/{quote(media_id)}"
-        media_url = media_public_url(media["storagePath"]) or self.absolute_api_url(path)
+        media_url = self.absolute_api_url(path) if PRIVATE_WORKSPACES else media_public_url(media["storagePath"]) or self.absolute_api_url(path)
         media_type = (
             "video" if content_type.startswith("video/")
             else "image" if content_type.startswith("image/")
@@ -3443,13 +3462,14 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         })
 
     def get_media(self, media_id: str):
+        user = self.require_user() if PRIVATE_WORKSPACES else None
         if not media_id:
             raise HttpError(400, "Media id is required")
         with db.connect() as conn:
             media = db.get_media_object(conn, media_id)
-        if not media:
+        if not media or user is not None and media["ownerUserId"] != user["id"]:
             raise HttpError(404, "Media not found")
-        public_url = media_public_url(media["storagePath"])
+        public_url = "" if PRIVATE_WORKSPACES else media_public_url(media["storagePath"])
         if public_url:
             self.send_response(302)
             self.send_header("Location", public_url)
@@ -3467,7 +3487,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", media["contentType"])
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "public, max-age=86400")
+        if not PRIVATE_WORKSPACES:
+            self.send_header("Cache-Control", "public, max-age=86400")
         self.send_header("Content-Disposition", f"inline; filename*=UTF-8''{quote(media['filename'])}")
         self.end_headers()
         self.wfile.write(body)
@@ -4230,12 +4251,16 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             self.send_json(200, {"problemStates": db.save_problem_states(conn, user["id"], states)})
 
     def get_problem_social_summaries(self):
+        if PRIVATE_WORKSPACES:
+            return self.send_json(200, {"problemSocial": []})
         user = self.optional_user()
         with db.connect() as conn:
             items = db.get_problem_social_summaries(conn, user["id"] if user else None)
             self.send_json(200, {"problemSocial": items})
 
     def get_problem_social_detail(self, problem_id: str):
+        if PRIVATE_WORKSPACES:
+            return self.send_json(200, {"social": {"problemId": problem_id, "likeCount": 0, "commentCount": 0, "liked": False, "comments": []}})
         user = self.optional_user()
         with db.connect() as conn:
             social = db.get_problem_social_detail(conn, problem_id, user["id"] if user else None)

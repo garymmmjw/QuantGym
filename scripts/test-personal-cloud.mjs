@@ -7,6 +7,7 @@ import { createReasoningTrial, transitionReasoningTrial, persistReasoningTransit
 import { createDailySession, updateDailyAnswer } from '../src/features/personal/daily/dailyEngine.js';
 import { markExperienceRead, saveBehavioralAnswer } from '../src/features/personal/completionActivities.js';
 import { collectCalendarActivities } from '../src/features/personal/calendar/calendarModel.js';
+import { addBehavioralQuestion, updateBehavioralQuestion, deleteBehavioralQuestion, getBehavioralQuestions } from '../src/features/personal/behavioral/questions.js';
 
 const iso = '2026-09-09T12:00:00.000Z';
 const clone = value => structuredClone(value);
@@ -687,4 +688,87 @@ test('offline preparation cancellation survives unrelated edits on both devices 
   second.store.restoreBackup(staleBackup);
   assert.equal(second.store.getSnapshot().data.activeTrial, null);
   assert.equal(second.store.getSnapshot().data.trials.length, 0);
+});
+
+
+test('private question creation on two devices merges after conflict and stays out of another account', async () => {
+  const server = memoryServer(), otherServer = memoryServer();
+  const storage = memoryStorage();
+  const first = device(server, { storage }), second = device(server);
+  const other = device(otherServer, { ownerId: 'bob', storage, token: 'bob-token' });
+  await first.cloud.sync();
+  await second.cloud.sync();
+  first.store.update(state => addBehavioralQuestion(state, 'Alice first private question', iso, { id: 'one' }));
+  second.store.update(state => addBehavioralQuestion(state, 'Alice other private question', iso, { id: 'two' }));
+  second.store.update(state => saveBehavioralAnswer(state, { id: 'two' }, 'Alice private answer', iso));
+  server.beforePut = async () => { server.beforePut = null; await second.cloud.sync(); };
+  await first.cloud.sync();
+  await second.cloud.sync();
+  await other.cloud.sync();
+  assert.deepEqual(getBehavioralQuestions(server.data).map(row => row.id), ['one', 'two']);
+  assert.deepEqual(first.store.getSnapshot().data.behavioralQuestions, second.store.getSnapshot().data.behavioralQuestions);
+  assert.equal(first.store.getSnapshot().data.behavioralAnswers[0].text, 'Alice private answer');
+  assert.deepEqual(getBehavioralQuestions(other.store.getSnapshot().data), []);
+  assert.deepEqual(otherServer.data.behavioralAnswers, []);
+  assert.equal(server.calls.every(call => call.headers.Authorization === 'Bearer test-only-token'), true);
+  assert.equal(otherServer.calls.every(call => call.headers.Authorization === 'Bearer bob-token'), true);
+});
+
+test('known fingerprints retain questions and explicit answer clears omitted by an older client on either side', async () => {
+  const server = memoryServer();
+  const first = device(server);
+  first.store.update(state => addBehavioralQuestion(state, 'My no-answer question', iso, { id: 'unanswered' }));
+  first.store.update(state => addBehavioralQuestion(state, 'My question with a clear', iso, { id: 'cleared' }));
+  first.store.update(state => saveBehavioralAnswer(state, { id: 'cleared' }, '', iso));
+  await first.cloud.sync();
+  const expected = first.store.getSnapshot().data.behavioralQuestions;
+  const legacy = { ...server.data, activities: [activity('old-client-change')] };
+  delete legacy.behavioralQuestions;
+  delete legacy.behavioralAnswers;
+  server.change(legacy);
+  await first.cloud.sync();
+  assert.deepEqual(first.store.getSnapshot().data.behavioralQuestions, expected);
+  assert.deepEqual(server.data.behavioralQuestions, expected);
+  assert.equal(server.data.behavioralAnswers[0].text, '');
+  first.store.update(state => ({ ...state, behavioralQuestions: [], behavioralAnswers: [], activities: [...state.activities, activity('another-change')] }));
+  await first.cloud.sync();
+  assert.deepEqual(first.store.getSnapshot().data.behavioralQuestions, expected);
+  assert.deepEqual(server.data.behavioralQuestions, expected);
+  assert.equal(server.data.behavioralAnswers[0].text, '');
+});
+
+test('offline rename and answer edits cannot revive a deleted personal question', async () => {
+  const server = memoryServer();
+  const first = device(server), second = device(server);
+  first.store.update(state => addBehavioralQuestion(state, 'A personal prompt', iso, { id: 'private-prompt' }));
+  first.store.update(state => saveBehavioralAnswer(state, { id: 'private-prompt' }, 'Original own answer', iso));
+  await first.cloud.sync();
+  await second.cloud.sync();
+  first.store.update(state => deleteBehavioralQuestion(state, 'private-prompt', '2026-09-10T00:00:00.000Z'));
+  second.store.update(state => updateBehavioralQuestion(state, 'private-prompt', 'Stale device rename', '2026-09-12T00:00:00.000Z'));
+  second.store.update(state => saveBehavioralAnswer(state, { id: 'private-prompt' }, 'Later private answer', '2026-09-12T00:00:00.000Z'));
+  await first.cloud.sync();
+  await second.cloud.sync();
+  await first.cloud.sync();
+  assert.deepEqual(getBehavioralQuestions(server.data), []);
+  assert.deepEqual(getBehavioralQuestions(first.store.getSnapshot().data), []);
+  assert.deepEqual(getBehavioralQuestions(second.store.getSnapshot().data), []);
+  assert.equal(server.data.behavioralQuestions[0].deletedAt, '2026-09-10T00:00:00.000Z');
+  assert.equal(server.data.behavioralAnswers[0].text, 'Later private answer');
+  assert.equal(server.data.activities.length, 2);
+  const fresh = device(server);
+  await fresh.cloud.sync();
+  assert.deepEqual(getBehavioralQuestions(fresh.store.getSnapshot().data), []);
+});
+
+test('server-retained questions are immediately adopted without an unnecessary repeated upload', async () => {
+  const server = memoryServer();
+  const retained = addBehavioralQuestion(createPersonalState(), 'Server-side private question', iso, { id: 'server-question' }).behavioralQuestions[0];
+  server.transformPut = data => ({ ...data, behavioralQuestions: [...data.behavioralQuestions.filter(row => row.id !== retained.id), retained] });
+  const first = device(server);
+  first.store.update(state => addBehavioralQuestion(state, 'Local private question', iso, { id: 'local-question' }));
+  await first.cloud.sync();
+  assert.equal(getBehavioralQuestions(first.store.getSnapshot().data).length, 2);
+  await first.cloud.sync();
+  assert.equal(server.calls.filter(call => call.method === 'PUT').length, 1);
 });

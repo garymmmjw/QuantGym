@@ -487,6 +487,9 @@ class GuardianService:
         self._worker = None
 
     def start(self):
+        from privacy_policy import PRIVATE_WORKSPACES
+        if PRIVATE_WORKSPACES:
+            return
         if self._worker is None:
             self._worker = threading.Thread(target=self._run, name="guardian-mail-worker", daemon=True)
             self._worker.start()
@@ -640,6 +643,9 @@ class GuardianService:
         return sum(item["count"] for item in counted_practice(practice, zone) if goal["start_date"] <= timestamp(item["completedAt"]).astimezone(zone).date().isoformat() <= goal["end_date"])
 
     def evaluate(self, conn, user_id, practice=None):
+        from privacy_policy import PRIVATE_WORKSPACES
+        if PRIVATE_WORKSPACES:
+            return
         goals = conn.execute("SELECT * FROM guardian_goals WHERE user_id = ? AND status = 'active'", (user_id,)).fetchall()
         if not goals:
             return
@@ -659,6 +665,9 @@ class GuardianService:
             self.enqueue(conn, user_id, "goal_completed", "QuantGym · 目标已达成", body, goal_id=goal["id"])
 
     def evaluate_all(self):
+        from privacy_policy import PRIVATE_WORKSPACES
+        if PRIVATE_WORKSPACES:
+            return
         with self.db.connect() as conn:
             users = conn.execute("SELECT DISTINCT user_id FROM guardian_goals WHERE status = 'active'").fetchall()
         for user in users:
@@ -822,6 +831,9 @@ class GuardianService:
         return {"ok": True}
 
     def deliver_pending(self, limit=20):
+        from privacy_policy import PRIVATE_WORKSPACES
+        if PRIVATE_WORKSPACES:
+            return
         if not self.email_configured():
             return
         for _ in range(limit):
@@ -855,6 +867,9 @@ class GuardianService:
                     conn.execute("UPDATE guardian_notifications SET status = 'sent', sent_at = ?, last_error = NULL, lease_token = NULL, lease_until = NULL WHERE id = ? AND lease_token = ?", (stamp(), notification["id"], lease))
 
     def handle(self, handler, path):
+        from privacy_policy import PRIVATE_WORKSPACES
+        if PRIVATE_WORKSPACES:
+            raise self.error(403, "Sharing is disabled. Personal data is private to its account.")
         method = handler.command
         if method in {"POST", "PUT", "PATCH"}:
             try:

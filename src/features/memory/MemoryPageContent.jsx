@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { AccountImage } from "../account/AccountImage.jsx";
 import { CoderSticker } from "../shared/CoderSticker.jsx";
 import { readFileAsDataUrl, readFileAsText } from "../../lib/files.js";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
@@ -419,7 +420,7 @@ export function MemoryPageContent() {
           </div>
           {selected ? (
             <div className="memory-note-body">
-              {selected.dataUrl ? <img className="resource-image" src={selected.dataUrl} alt={selected.title} /> : null}
+              {selected.dataUrl ? <AccountImage className="resource-image" src={selected.dataUrl} alt={selected.title} fallback="" /> : null}
               {renderNoteBlocks(selected)}
               {selectedEmbed?.embedUrl ? (
                 <div className="resource-player">

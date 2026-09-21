@@ -61,11 +61,12 @@ test('switching endpoint clears credentials rather than forwarding them to anoth
   assert.equal(result.region, 'California');
 });
 test('settings search finds deep destinations and avoids duplicate settings modules', () => {
-  for (const [query, destination] of [['修改密码','security'], ['language','preferences'], ['监护人','guardian'], ['leetcode','connections'], ['备份','data']]) {
+  for (const [query, destination] of [['修改密码','security'], ['language','preferences'], ['leetcode','connections'], ['备份','data']]) {
     const results = buildGlobalSearchResults(query);
     assert.equal(results[0].type, 'setting');
     assert.equal(results[0].id, destination);
   }
+  assert.equal(buildGlobalSearchResults('监护人').some(item => item.id === 'guardian'), false);
   assert.equal(getModuleSearchDefs().filter(item => ['account','settings'].includes(item.module)).length, 1);
 });
 test('connections accept only constrained public usernames and the supported hosts', () => {
