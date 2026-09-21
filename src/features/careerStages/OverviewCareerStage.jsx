@@ -35,7 +35,7 @@ export function OverviewCareerStage({ rows = [], note = '', onEdit }) {
             <span className="overview-stage-summary-name">{row.label}</span><Pencil size={14} strokeWidth={1.6} aria-hidden="true" />
           </button> : <span className="overview-stage-summary-name">{row.label}</span>}
         </div></th>
-        <td role="cell" className="overview-stage-summary-period" title={row.periodStart && row.periodEnd && row.periodStart <= row.periodEnd ? `统计 ${row.periodStart} 之后至 ${row.periodEnd} 当日的记录，不含起始日、包含结束日。` : '请在投递 Tracker 中补充或校正阶段日期。'}>{formatStagePeriod(row)}</td>
+        <td role="cell" className="overview-stage-summary-period" title={row.periodStart && row.periodEnd && row.periodStart <= row.periodEnd ? `统计 ${row.periodStart} 之后至 ${row.periodEnd} 当日的记录，不含起始日、包含结束日。${row.includesEarlierApplications ? '申请数量另包含本阶段开始当日及更早的投递。' : ''}` : '请在投递 Tracker 中补充或校正阶段日期。'}>{formatStagePeriod(row)}</td>
         {METRICS.map(metric => <td role="cell" key={metric.key} className={`overview-stage-summary-metric${metric.key === 'leetcode' ? ' overview-stage-summary-leetcode' : ''}${metric.average ? ' overview-stage-summary-average' : ''}`}>
           <span className="overview-stage-summary-mobile-label" aria-hidden="true">{metric.compactLabel || metric.label}{metric.detail && ` ${metric.detail}`}</span>
           {metric.key === 'leetcode' ? <LeetCodeCounts newCount={row.leetcodeNew} totalCount={row.leetcode} newStatus={row.leetcodeNewStatus} totalStatus={row.leetcodeCountStatus} layout="row" scope="stage" />
