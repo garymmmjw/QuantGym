@@ -9,18 +9,20 @@ import { EMPTY_LEETCODE } from '../leetcode/leetcodeModel.js';
 const list = value => Array.isArray(value) ? value : [];
 const QUESTION_KINDS = new Set(['quant', 'coding', 'tech', 'behavioral']);
 
-// Site questions remain distinct; each qualifying LeetCode repeat is one solve.
+// Tech questions remain distinct; Behavioral saves and qualifying LeetCode
+// repeats use their own event identities.
 export function collectStagePractice(personalState = {}, legacyState = {}, leetcodeSnapshot = {}, leetcodeOptions = {}) {
   const records = new Map();
   const sessionQuestions = new Map();
   list(personalState.dailySessions).forEach(session => list(session.questions).forEach(question => {
     sessionQuestions.set(`${session.id}:${question.id}`, question);
   }));
-  function add(id, completedAt, dayKey) {
+  function add(id, completedAt, dayKey, byEvent = false) {
     const day = localDayKey(dayKey || completedAt);
     if (!id || !day || !hasExplicitProblemCompletion({ completed: true, completedAt })) return;
     const key = String(id);
-    records.set(`${key}:${day}`, { key, day });
+    const recordKey = byEvent ? `event:${key}` : `question:${key}:${day}`;
+    if (!records.has(recordKey)) records.set(recordKey, { key, day });
   }
   const removed = new Set(list(personalState.removedActivityIds));
   const { activities } = collectCalendarActivities(personalState, {
@@ -32,7 +34,8 @@ export function collectStagePractice(personalState = {}, legacyState = {}, leetc
       || activity.count < 1 || removed.has(activity.id)) return;
     const question = sessionQuestions.get(`${activity.sessionId}:${activity.questionId}`);
     if (question && !countsTowardProblemTotal({ ...question, id: question.sourceProblemId || question.id })) return;
-    add(activity.problemId || question?.sourceProblemId || activity.questionId, activity.completedAt);
+    add(activity.kind === 'behavioral' ? `behavioral:${activity.id}`
+      : activity.problemId || question?.sourceProblemId || activity.questionId, activity.completedAt, undefined, activity.kind === 'behavioral');
   });
   // Older daily sessions may have answers without a corresponding activity entry.
   list(personalState.dailySessions).forEach(session => list(session.questions).forEach(question => {
@@ -41,7 +44,8 @@ export function collectStagePractice(personalState = {}, legacyState = {}, leetc
     if (!QUESTION_KINDS.has(question.kind) || removed.has(eventId)
       || !countsTowardProblemTotal({ ...question, id: question.sourceProblemId || question.id })
       || !answer?.text?.trim() || !['independent', 'with-help', 'review'].includes(answer.selfAssessment)) return;
-    add(question.sourceProblemId || question.id, answer.completedAt);
+    add(question.kind === 'behavioral' ? `behavioral:${eventId}` : question.sourceProblemId || question.id,
+      answer.completedAt, undefined, question.kind === 'behavioral');
   }));
   // Personal LeetCode history includes explicit submission imports. Local
   // Hot100 flags, reviews and calendar aggregates still cannot create credit.

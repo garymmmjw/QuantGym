@@ -23,8 +23,6 @@ export default function ApplicationList({ applications, stages, status, onStatus
     ['awaiting', '等待回复', summary.awaiting],
     ['oa', 'OA', summary.oa],
     ['interview', '面试', summary.interview],
-    ['offer', 'Offer', summary.offer],
-    ['closed', '已结束', summary.closed],
     ['company', '按公司'],
   ];
   const renderRow = application => <ApplicationRow
@@ -50,11 +48,13 @@ export default function ApplicationList({ applications, stages, status, onStatus
         >{label}{count !== undefined && <span>{count}</span>}</button>)}
       </div>
       <div className="qt-toolbar-controls">
-        <div className="qt-search"><Icon name="Search" size={16}/><span className="qt-sr-only">搜索公司或岗位</span><input ref={searchInput} aria-label="搜索公司或岗位" type="search" value={query} onChange={event => search(event.target.value)} placeholder="搜索公司或岗位…" />{query && <button type="button" aria-label="清空搜索" onClick={clearSearch}><Icon name="X" size={14}/></button>}</div>
-        <div className="qt-view-switch" aria-label="显示方式">
-          <button type="button" aria-label="表格视图" title="表格视图" aria-pressed={view === 'table'} className={view === 'table' ? 'qt-active' : ''} onClick={() => setView('table')}><Icon name="Table2" size={16}/></button>
-          <button type="button" aria-label="紧凑视图" title="紧凑视图" aria-pressed={view === 'compact'} className={view === 'compact' ? 'qt-active' : ''} onClick={() => setView('compact')}><Icon name="List" size={16}/></button>
-        </div>
+        <div className="qt-search"><Icon name="Search" size={16}/><span className="qt-sr-only">搜索公司或岗位</span><input ref={searchInput} aria-label="搜索公司或岗位" type="search" value={query} onChange={event => search(event.target.value)} placeholder="公司或岗位" />{query && <button type="button" aria-label="清空搜索" onClick={clearSearch}><Icon name="X" size={14}/></button>}</div>
+        <button type="button" className="qt-view-toggle"
+          aria-label={view === 'table' ? '切换为紧凑视图' : '切换为表格视图'}
+          title={view === 'table' ? '切换为紧凑视图' : '切换为表格视图'}
+          onClick={() => setView(current => current === 'table' ? 'compact' : 'table')}>
+          <Icon name={view === 'table' ? 'List' : 'Table2'} size={18}/>
+        </button>
       </div>
     </div>
     <div className={`qt-table-scroll qt-${view}`} tabIndex={0} aria-label="横向滚动查看申请进展">

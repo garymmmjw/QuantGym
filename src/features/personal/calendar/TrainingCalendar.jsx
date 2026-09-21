@@ -183,7 +183,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         <dl className="pc-stats">
           {DISPLAY_KINDS.filter((kind) => kind !== "daily" || selectedSummary.daily > 0).map((kind) => <div className={`pc-stat pc-kind-${kind}`} key={kind}>
             <dt>{labels[kind]}</dt>
-            <dd><strong>{selectedSummary[kind].toLocaleString(locale)}</strong><span>{kind === "daily" ? t("轮", "rounds") : t("题", "questions")}</span></dd>
+            <dd><strong>{selectedSummary[kind].toLocaleString(locale)}</strong><span>{kind === "daily" ? t("轮", "rounds") : kind === "behavioral" ? t("次", "times") : t("题", "questions")}</span></dd>
             <p>{TRIAL_KINDS.includes(kind) ? t(`其中正确 ${selectedSummary[`${kind}Correct`]} 题 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `${selectedSummary[`${kind}Correct`]} correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("已确认完成", "Completion confirmed") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
           </div>)}
         </dl>

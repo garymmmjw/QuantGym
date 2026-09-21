@@ -5,6 +5,7 @@ import { createPracticeSession, completePracticeSession } from '../src/features/
 import { completeBehavioralPractice, markExperienceRead, saveBehavioralAnswer } from '../src/features/personal/completionActivities.js';
 import { collectStagePractice, summarizeStagePractice } from '../src/features/careerStages/stagePractice.js';
 import { collectLeetCodeActivities } from '../src/features/personal/calendar/leetcodeCalendar.js';
+import { buildActivityChart } from '../src/features/overview/activityChartModel.js';
 
 const stamp = (day, time = '12:00') => `${day}T${time}:00Z`;
 const options = { today: '2026-09-19', now: stamp('2026-09-19', '23:59'), timeZone: 'UTC' };
@@ -108,17 +109,41 @@ test('Stage ranges never restart the three-hour clock and out-of-range dates rem
   assert.deepEqual(tracker.map(row => row.questionCount), [1, 1, 0]);
 });
 
-test('writing a Behavioral answer counts immediately across overview, activity and Tracker; editing does not count twice', () => {
+test('each saved Behavioral revision counts across overview, daily activity and Tracker on its own date', () => {
   const question = { id: 'general-introduction' };
   let state = saveBehavioralAnswer({ activities: [], behavioralAnswers: [] }, question, 'My project experience.', stamp('2026-09-18'));
   state = saveBehavioralAnswer(state, question, 'My revised project experience.', stamp('2026-09-19'));
   const model = buildOverviewActivity({ stages, personalState: state }, options);
-  assert.equal(model.totals.behavioral, 1);
-  assert.equal(model.today.counts.behavioral, 0);
+  assert.equal(model.totals.behavioral, 2);
+  assert.equal(model.today.counts.behavioral, 1);
   assert.equal(model.days.find(day => day.day === '2026-09-18').counts.behavioral, 1);
-  assert.deepEqual(model.stageRows.map(row => row.behavioral), [0, 1, 0]);
+  assert.deepEqual(model.stageRows.map(row => row.behavioral), [0, 2, 0]);
   const tracker = summarizeStagePractice(stages, collectStagePractice(state), options);
-  assert.deepEqual(tracker.map(row => row.questionCount), [0, 1, 0]);
+  assert.deepEqual(tracker.map(row => row.questionCount), [0, 2, 0]);
+});
+
+test('old BofA answers and same-day saved revisions share event counts across Stage, daily tasks and the monthly chart', () => {
+  const question = { id: 'bofa-why' };
+  let state = { activities: [], behavioralAnswers: [{ id: question.id, text: 'An existing answer', updatedAt: stamp('2026-09-13') }] };
+  const firstId = '00000000-0000-4000-8000-000000000001', secondId = '00000000-0000-4000-8000-000000000002';
+  state = saveBehavioralAnswer(state, question, 'First revised answer', stamp('2026-09-19'), { editId: firstId });
+  state = saveBehavioralAnswer(state, question, 'Second revised answer', stamp('2026-09-19', '13:00'), { editId: secondId });
+  state = saveBehavioralAnswer(state, question, 'Second revised answer', stamp('2026-09-19', '14:00'), { editId: secondId });
+  assert.equal(state.activities.filter(activity => activity.source === 'explicit').length, 1, 'the old answer keeps its compatible historical event');
+  assert.equal(state.activities.filter(activity => activity.source === 'answer-edit').length, 2, 'new saves use the source accepted by older clients');
+  const model = buildOverviewActivity({ stages, personalState: state }, options);
+  assert.equal(model.totals.behavioral, 3);
+  assert.equal(model.today.counts.behavioral, 2);
+  assert.equal(model.today.activityScore, 20);
+  assert.equal(Object.values(model.today.counts).filter(count => count > 0).length, 1, 'two saves complete one daily task category');
+  assert.deepEqual(model.stageRows.map(row => row.behavioral), [1, 2, 0]);
+  assert.deepEqual(summarizeStagePractice(stages, collectStagePractice(state), options).map(row => row.questionCount), [1, 2, 0]);
+  const daily = buildActivityChart(model.recordBundle, { month: '2026-09', today: options.today });
+  const weekly = buildActivityChart(model.recordBundle, { month: '2026-09', today: options.today, granularity: 'week' });
+  assert.equal(daily.buckets.find(bucket => bucket.start === options.today).counts.behavioral, 2);
+  assert.equal(daily.totalValue, 30);
+  assert.deepEqual(weekly.totals, daily.totals);
+  assert.equal(weekly.totalValue, daily.totalValue);
 });
 
 test('six cumulative metrics use real distinct records, with Mock explicitly unknown', () => {
@@ -133,7 +158,7 @@ test('six cumulative metrics use real distinct records, with Mock explicitly unk
     leetcodeSnapshot: lc([ac('1', '2026-09-19')], { stats: { solved: 118 }, submissions: [ac('imported', '2026-09-19', 'imported-only')] }),
   };
   const before = structuredClone(input);
-  assert.deepEqual(buildOverviewActivity(input, options).totals, { applications: 2, technical: 1, behavioral: 1, experiences: 1, leetcode: 118, leetcodeNew: 118, mock: null });
+  assert.deepEqual(buildOverviewActivity(input, options).totals, { applications: 2, technical: 1, behavioral: 2, experiences: 1, leetcode: 118, leetcodeNew: 118, mock: null });
   assert.deepEqual(input, before);
 });
 
@@ -145,8 +170,8 @@ test('daily counts include three-hour LeetCode repeats and use the requested wei
       entries: [{ id: 'same-q', ...done('q1', '2026-09-19') }] },
     leetcodeSnapshot: lc([ac('1', '2026-09-19', 'two-sum', '01:00'), ac('2', '2026-09-19', 'two-sum', '06:00')]),
   }, options);
-  assert.deepEqual(model.today.counts, { applications: 1, leetcode: 2, technical: 2, behavioral: 1, mentalMath: 1 });
-  assert.equal(model.today.activityScore, 47);
+  assert.deepEqual(model.today.counts, { applications: 1, leetcode: 2, technical: 2, behavioral: 2, mentalMath: 1 });
+  assert.equal(model.today.activityScore, 57);
   assert.deepEqual(model.days.map(item => item.day), ['2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17', '2026-09-18', '2026-09-19', '2026-09-20']);
   assert.equal(model.days.filter(item => item.isToday).length, 1);
   assert.equal(model.days.at(-1).activityScore, 0);
@@ -199,6 +224,24 @@ test('real standalone session output and restored daily answers dedup against ca
   const model = buildOverviewActivity({ personalState: personal, legacyState: { problemStates: [done('bank-1', '2026-09-19')] } }, options);
   assert.equal(model.totals.technical, 1);
   assert.equal(model.totals.behavioral, 1);
+});
+
+test('a daily Behavioral fallback with a later date cannot move or duplicate its original event across Stages', () => {
+  const personal = {
+    activities: [{ id: 'daily:session:bq', kind: 'behavioral', source: 'daily', sessionId: 'session', questionId: 'bq',
+      count: 1, completedAt: stamp('2026-09-13') }],
+    dailySessions: [{ id: 'session', questions: [{ id: 'bq', kind: 'behavioral' }], answers: {
+      bq: { text: 'A restored answer', selfAssessment: 'independent', completedAt: stamp('2026-09-19') },
+    } }],
+  };
+  const model = buildOverviewActivity({ personalState: personal, stages }, options);
+  assert.equal(model.totals.behavioral, 1);
+  assert.equal(model.today.counts.behavioral, 0);
+  assert.deepEqual(model.stageRows.map(row => row.behavioral), [1, 0, 0]);
+  assert.deepEqual(summarizeStagePractice(stages, collectStagePractice(personal), options).map(row => row.questionCount), [1, 0, 0]);
+  assert.equal(model.recordBundle.records.filter(record => record.kind === 'behavioral').length, 1);
+  const chart = buildActivityChart(model.recordBundle, { month: '2026-09', today: options.today });
+  assert.equal(chart.totals.behavioral, 1);
 });
 
 test('saved Behavioral answers count while deleted events, Tech drafts and local reviews do not', () => {

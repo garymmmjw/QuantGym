@@ -36,7 +36,7 @@ test('known-fingerprint sync paths retain explicit reads omitted by an older sna
   assert.equal(server.data.activities.some(row => row.id === 'older-device'), true);
 });
 
-test('answer preparation syncs once across devices and keeps its original date through edits and clearing', async () => {
+test('independent answer edits sync across devices while clearing and old snapshots preserve both dates', async () => {
   const server = memoryServer();
   const first = device(server);
   const question = { id: 'behavioral-fixture' };
@@ -52,12 +52,82 @@ test('answer preparation syncs once across devices and keeps its original date t
   await first.cloud.sync();
   assert.equal(server.data.behavioralAnswers[0].text, '');
   assert.equal(first.store.getSnapshot().data.behavioralAnswers[0].text, '');
-  assert.equal(server.data.activities.length, 1);
-  assert.equal(collectCalendarActivities(server.data).activities[0].completedAt, iso);
+  assert.equal(server.data.activities.length, 2);
+  assert.deepEqual(collectCalendarActivities(server.data).activities.map(row => row.completedAt).sort(), [iso, '2026-09-10T12:00:00.000Z']);
   server.change({ ...server.data, activities: [] });
   await first.cloud.sync();
-  assert.equal(server.data.activities.length, 1, 'a previous client omitting completion events cannot erase known preparation history');
-  assert.equal(collectCalendarActivities(server.data).activities[0].completedAt, iso);
+  assert.equal(server.data.activities.length, 2, 'a previous client omitting edit events cannot erase known preparation history');
+  assert.deepEqual(collectCalendarActivities(server.data).activities.map(row => row.completedAt).sort(), [iso, '2026-09-10T12:00:00.000Z']);
+});
+
+test('two offline edits of the same question on the same day retain separate UUIDs after a revision conflict', async () => {
+  const server = memoryServer();
+  const first = device(server), second = device(server);
+  await first.cloud.sync();
+  await second.cloud.sync();
+  const question = { id: 'behavioral:team / 中文' };
+  const editIds = ['11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222'];
+  first.store.update(state => saveBehavioralAnswer(state, question, 'First device answer', iso, { editId: editIds[0] }));
+  second.store.update(state => saveBehavioralAnswer(state, question, 'Second device answer', '2026-09-09T13:00:00.000Z', { editId: editIds[1] }));
+  // The other device wins after the first device has read the cloud revision.
+  server.beforePut = async () => { server.beforePut = null; await second.cloud.sync(); };
+  await first.cloud.sync();
+  await second.cloud.sync();
+  const expected = editIds.map(id => `behavioral:edit:${encodeURIComponent(question.id)}:${id}`).sort();
+  assert.deepEqual(ids(server.data), expected);
+  assert.deepEqual(ids(first.store.getSnapshot().data), expected);
+  assert.deepEqual(ids(second.store.getSnapshot().data), expected);
+  assert.equal(server.data.behavioralAnswers[0].text, 'Second device answer');
+  assert.equal(collectCalendarActivities(server.data).activities.reduce((sum, row) => sum + row.count, 0), 2);
+  assert.ok(server.data.activities.every(row => row.source === 'answer-edit' && row.sourceId === question.id && row.questionId === question.id
+    && !Object.hasOwn(row, 'text') && !Object.hasOwn(row, 'answer')));
+});
+
+test('lost edit-upload acknowledgement and continuous autosave retries reuse one completion event', async () => {
+  const server = memoryServer();
+  const first = device(server);
+  const question = { id: 'behavioral-retry' };
+  const editId = '33333333-3333-4333-8333-333333333333';
+  first.store.update(state => saveBehavioralAnswer(state, question, 'Saved answer', iso, { editId }));
+  server.afterPut = async () => { server.afterPut = null; throw new TypeError('Connection lost after commit'); };
+  await first.cloud.sync();
+  assert.equal(first.statuses.at(-1).phase, 'error');
+  assert.equal(server.data.activities.length, 1);
+  first.store.update(state => saveBehavioralAnswer(state, question, 'Further typing in the same edit', '2026-09-09T12:02:00.000Z', { editId }));
+  await first.cloud.sync();
+  await first.cloud.sync();
+  assert.equal(first.statuses.at(-1).phase, 'synced');
+  assert.equal(server.data.activities.length, 1);
+  assert.equal(server.data.activities[0].completedAt, iso);
+  assert.equal(server.data.behavioralAnswers[0].text, 'Further typing in the same edit');
+  const restored = device(server);
+  await restored.cloud.sync();
+  assert.deepEqual(ids(restored.store.getSnapshot().data), ids(server.data));
+});
+
+test('same-day answer edit tombstones survive a stale device without deleting another edit or another account', async () => {
+  const server = memoryServer(), otherServer = memoryServer(), storage = memoryStorage();
+  const first = device(server, { storage }), second = device(server);
+  const other = device(otherServer, { ownerId: 'bob', storage, token: 'bob-only-token' });
+  const question = { id: 'behavioral-private' };
+  first.store.update(state => saveBehavioralAnswer(state, question, 'First edit', iso,
+    { editId: '44444444-4444-4444-8444-444444444444' }));
+  first.store.update(state => saveBehavioralAnswer(state, question, 'Second edit', '2026-09-09T13:00:00.000Z',
+    { editId: '55555555-5555-4555-8555-555555555555' }));
+  await first.cloud.sync();
+  await second.cloud.sync();
+  const removed = first.store.getSnapshot().data.activities[0].id;
+  first.store.update(state => ({ ...state, activities: state.activities.filter(row => row.id !== removed), removedActivityIds: [removed] }));
+  await first.cloud.sync();
+  second.store.update(add('unrelated-offline-change'));
+  await second.cloud.sync();
+  assert.equal(server.data.activities.filter(row => row.kind === 'behavioral').length, 1);
+  assert.ok(server.data.removedActivityIds.includes(removed));
+  await other.cloud.sync();
+  assert.equal(other.store.getSnapshot().data.activities.length, 0);
+  assert.equal(other.store.getSnapshot().data.behavioralAnswers.length, 0);
+  assert.equal(otherServer.data.activities.length, 0);
+  assert.equal(createPersonalStore({ ownerId: 'alice', storage }).getSnapshot().data.activities.filter(row => row.kind === 'behavioral').length, 1);
 });
 function deferred() {
   let resolve;

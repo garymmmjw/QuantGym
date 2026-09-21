@@ -35,7 +35,9 @@ export function collectOverviewRecords({ applications = [], personalState = {}, 
   };
   function add(kind, key, day, extra = {}, allowUndated = false) {
     if (!identity(key) || !day && !allowUndated) return;
-    const recordKey = JSON.stringify([kind, key, day]);
+    // A restored daily answer can carry a later timestamp than its original
+    // calendar event. Behavioral saves keep one identity and the event's date.
+    const recordKey = JSON.stringify(kind === 'behavioral' ? [kind, key] : [kind, key, day]);
     if (!records.has(recordKey)) records.set(recordKey, { kind, key, day, ...extra });
   }
   if (sources.applications) {
@@ -57,7 +59,8 @@ export function collectOverviewRecords({ applications = [], personalState = {}, 
       if (!kind || ['manual', 'import', 'imported'].includes(activity.source) || removed.has(activity.id) || activity.countedAsSolved === false || activity.count < 1) return;
       const question = questions.get(`${activity.sessionId}:${activity.questionId}`);
       if (question && !countsTowardProblemTotal({ ...question, id: question.sourceProblemId || question.id })) return;
-      const key = activity.problemId || question?.sourceProblemId || activity.sourceId || activity.questionId;
+      const key = kind === 'behavioral' ? activity.id
+        : activity.problemId || question?.sourceProblemId || activity.sourceId || activity.questionId;
       add(kind, key, dayOf(activity.completedAt));
     });
     // A restored session may predate its generated calendar activity.
@@ -71,7 +74,8 @@ export function collectOverviewRecords({ applications = [], personalState = {}, 
       const answer = session.answers?.[question.id];
       if (!kind || removed.has(`daily:${session.id}:${question.id}`) || !answer?.text?.trim()
         || !ASSESSMENTS.has(answer.selfAssessment) || !countsTowardProblemTotal({ ...question, id: question.sourceProblemId || question.id })) return;
-      add(kind, question.sourceProblemId || question.id, dayOf(answer.completedAt));
+      add(kind, kind === 'behavioral' ? `daily:${session.id}:${question.id}` : question.sourceProblemId || question.id,
+        dayOf(answer.completedAt));
     }));
     // Reading credit is an explicit action, separate from writing a private note.
     list(personalState.activities).forEach(activity => {
