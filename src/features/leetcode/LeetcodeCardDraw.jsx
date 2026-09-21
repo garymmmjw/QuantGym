@@ -164,7 +164,7 @@ export function LeetcodeCardDraw({ pool, selectedProblem, lc, practiceSessions, 
     <div className="lc-card-draw-content">
       <div className="lc-reveal-slot" ref={target}>
         {problem ? <article className={`lc-revealed-card${draw?.phase === "revealing" ? " is-entering" : ""}`} aria-labelledby="lc-revealed-title">
-          <div className="lc-revealed-top"><span>LeetCode <b>#{problem.frontendId || "—"}</b></span><span className={`lc-difficulty lc-difficulty-${problem.difficulty || "unknown"}`}>{labels[problem.difficulty] || t("已通过", "Solved")}</span></div>
+          <div className="lc-revealed-top"><span>LeetCode <b>#{problem.frontendId || "—"}</b></span><span className={`lc-difficulty lc-difficulty-${problem.difficulty || "unknown"}`}>{labels[problem.difficulty] || "—"}</span></div>
           <h3 id="lc-revealed-title" ref={headingRef} tabIndex={-1}>{title}</h3>
           {!en && problem.titleEn && problem.titleEn !== title && <p className="lc-revealed-translation">{problem.titleEn}</p>}
           <div className="lc-revealed-bottom"><div><span>{t("上次完成", "Last completed")}</span>{practiced ? <time dateTime={practiced}>{formatted}</time> : <span className="lc-card-unknown">{t("暂无时间记录", "No time recorded")}</span>}</div><a href={problemUrl(problem.slug)} target="_blank" rel="noopener noreferrer" aria-label={`${t("去力扣挑战", "Solve on LeetCode")} ${title}`}><ArrowUpRight size={20} aria-hidden="true" /></a></div>
