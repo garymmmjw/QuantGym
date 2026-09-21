@@ -1,5 +1,6 @@
 import { localDayKey, parseLocalDay } from './calendar/calendarModel.js';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KINDS = new Set(['behavioral', 'experience-read']);
 const sourceIdentity = value => typeof value === 'string' && value.trim() === value && value.length > 0 && value.length <= 200;
 const instant = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value)
@@ -12,15 +13,27 @@ export function explicitCompletionId(kind, sourceId, dayKey) {
   return id;
 }
 
+export function behavioralEditId(sourceId, editId) {
+  if (!sourceIdentity(sourceId) || typeof editId !== 'string' || !UUID.test(editId)) throw new Error('Invalid behavioral edit identity.');
+  const id = `behavioral:edit:${encodeURIComponent(sourceId)}:${editId}`;
+  if (id.length > 512) throw new Error('Completion identity is too long.');
+  return id;
+}
+
 export function isExplicitCompletionActivity(activity) {
-  return activity?.source === 'explicit' && KINDS.has(activity.kind);
+  return activity?.source === 'explicit' && KINDS.has(activity.kind)
+    || activity?.source === 'answer-edit' && activity.kind === 'behavioral';
 }
 
 export function validateExplicitCompletionActivity(activity) {
   const keys = ['id', 'kind', 'source', 'sourceId', 'count', 'completedAt', 'dateKey', ...(activity?.kind === 'behavioral' ? ['questionId'] : [])];
-  if (!isExplicitCompletionActivity(activity) || activity.count !== 1 || !instant(activity.completedAt)
+  const revision = activity?.kind === 'behavioral' && activity.id?.startsWith('behavioral:edit:');
+  const expectedId = revision ? behavioralEditId(activity.sourceId, activity.id.split(':').at(-1))
+    : explicitCompletionId(activity?.kind, activity?.sourceId, activity?.dateKey);
+  if (!isExplicitCompletionActivity(activity) || activity.count !== 1 || !instant(activity.completedAt) || !parseLocalDay(activity.dateKey)
+    || activity.source === 'answer-edit' && !revision
     || Object.keys(activity).some(key => !keys.includes(key))
-    || activity.id !== explicitCompletionId(activity.kind, activity.sourceId, activity.dateKey)
+    || activity.id !== expectedId
     || activity.kind === 'behavioral' && activity.questionId !== activity.sourceId) throw new Error('Invalid explicit completion activity.');
   return activity;
 }
@@ -38,9 +51,10 @@ export function hasPersonalBehavioralAnswer(state, question) {
 }
 
 function hasBehavioralHistory(state, sourceId) {
-  return (state.activities || []).some(activity => activity.kind === 'behavioral' && activity.source === 'explicit'
+  return (state.activities || []).some(activity => activity.kind === 'behavioral' && isExplicitCompletionActivity(activity)
     && (activity.sourceId || activity.questionId) === sourceId)
     || (state.removedActivityIds || []).some(id => id.startsWith(`behavioral:explicit:${encodeURIComponent(sourceId)}:`)
+      || id.startsWith(`behavioral:edit:${encodeURIComponent(sourceId)}:`)
       || id === `behavioral:answer:${encodeURIComponent(sourceId)}`);
 }
 
@@ -63,10 +77,11 @@ export function completeBehavioralPractice(state, question, now = new Date()) {
   return recordCompletion(state, 'behavioral', question.id, instant(answer.updatedAt) ? answer.updatedAt : now);
 }
 
-export function saveBehavioralAnswer(state, question, text, now = new Date()) {
+export function saveBehavioralAnswer(state, question, text, now = new Date(), { editId = crypto.randomUUID() } = {}) {
   if (typeof text !== 'string') throw new Error('Invalid behavioral answer.');
   let next = state;
   const previous = (state.behavioralAnswers || []).find(item => item.id === question.id);
+  if (previous?.text === text) return state;
   // Even a clear must first preserve preparation already represented by the
   // old nonempty answer. Otherwise rewriting it later would move its date.
   if (hasPersonalBehavioralAnswer(state, question) && instant(previous.updatedAt)) {
@@ -76,21 +91,30 @@ export function saveBehavioralAnswer(state, question, text, now = new Date()) {
     ...(next.behavioralAnswers || []).filter(item => item.id !== question.id),
     { id: question.id, text, updatedAt: new Date(now).toISOString() },
   ] };
-  return text.trim() ? completeBehavioralPractice(next, question, now) : next;
+  if (!text.trim() || previous?.text.trim() === text.trim()) return next;
+  const id = behavioralEditId(question.id, editId);
+  // Automatic saves throughout one editing session share this identity. A
+  // later editing session gets a new id, including on the same question/day.
+  if ((next.activities || []).some(activity => activity.id === id) || (next.removedActivityIds || []).includes(id)) return next;
+  // A separate source lets older clients read the snapshot without applying
+  // their legacy explicit-ID validator to this new event identity.
+  const activity = validateExplicitCompletionActivity({ id, kind: 'behavioral', source: 'answer-edit',
+    sourceId: question.id, questionId: question.id, count: 1, completedAt: new Date(now).toISOString(), dateKey: localDayKey(now) });
+  return { ...next, activities: [...(next.activities || []), activity] };
 }
 
 export function markExperienceRead(state, experienceId, now = new Date()) {
   return recordCompletion(state, 'experience-read', experienceId, now);
 }
 
-// Concurrent confirmations of the same question/day or first read are one event.
+// Concurrent retries of the same event or first read retain one record.
 // Retain the first timestamp, including when an older client omits these records.
 export function retainExplicitCompletionActivities(base, ...sources) {
   const rows = new Map();
   const removed = new Set(base.removedActivityIds || []);
   for (const source of [base, ...sources]) {
     for (const id of source.removedActivityIds || []) {
-      if (id.startsWith('behavioral:explicit:') || id.startsWith('experience-read:')) removed.add(id);
+      if (id.startsWith('behavioral:explicit:') || id.startsWith('behavioral:edit:') || id.startsWith('experience-read:')) removed.add(id);
     }
     for (const activity of source.activities || []) {
       if (!isExplicitCompletionActivity(activity)) continue;

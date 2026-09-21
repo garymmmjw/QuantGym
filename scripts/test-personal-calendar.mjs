@@ -74,18 +74,53 @@ test('saved behavioral answers count without confirmation and reuse their existi
   assert.equal(result.undatedLegacyCount, 2, 'missing and impossible dates remain undated rather than becoming today');
 });
 
-test('behavioral projection chooses the earliest confirmation and counts old answer and repeat events only once', () => {
+test('behavioral projection retains each event while suppressing a duplicate legacy-answer fallback', () => {
   const earlier = '2026-09-08T17:00:00.000Z';
   const later = '2026-09-09T17:00:00.000Z';
   const event = (id, completedAt) => ({ id, kind: 'behavioral', source: 'explicit', sourceId: 'written', questionId: 'written', count: 1, completedAt });
   const state = { behavioralAnswers: [{ id: 'written', text: 'An answer before confirmation', updatedAt: at }],
     activities: [event('later', later), event('earlier', earlier)] };
   const result = collectCalendarActivities(state);
-  assert.equal(result.activities.length, 1);
-  assert.equal(result.activities[0].id, 'earlier');
-  assert.equal(result.activities[0].completedAt, earlier, 'a known confirmation takes precedence over the historical edit timestamp');
+  assert.equal(result.activities.length, 2);
+  assert.deepEqual(result.activities.map(activity => [activity.id, activity.completedAt]), [['later', later], ['earlier', earlier]],
+    'both saved events keep their dates, without fabricating a third event from the answer');
   assert.deepEqual(collectCalendarActivities({ ...state, activities: [...state.activities].reverse() }), result);
-  assert.equal(collectCalendarActivities({ ...state, behavioralAnswers: [{ ...state.behavioralAnswers[0], text: '' }] }).activities.length, 1, 'clearing the answer retains recorded history');
+  assert.equal(collectCalendarActivities({ ...state, behavioralAnswers: [{ ...state.behavioralAnswers[0], text: '' }] }).activities.length, 2, 'clearing the answer retains recorded history');
+});
+
+test('same-day Behavioral revisions count separately, retries deduplicate, and a deleted revision never revives from an answer', () => {
+  const questionId = 'bofa:why / culture';
+  const prefix = `behavioral:edit:${encodeURIComponent(questionId)}:`;
+  const event = (suffix, completedAt) => ({ id: `${prefix}00000000-0000-4000-8000-${suffix}`, kind: 'behavioral',
+    source: 'answer-edit', sourceId: questionId, questionId, count: 1, completedAt, dateKey: '2026-09-08' });
+  const first = { ...event('000000000001', at), source: 'explicit' }, second = event('000000000002', '2026-09-08T17:00:00Z');
+  const state = { behavioralAnswers: [{ id: questionId, text: 'A saved answer', updatedAt: at }], activities: [first, second, first] };
+  const before = structuredClone(state);
+  const result = collectCalendarActivities(state);
+  assert.equal(result.activities.length, 2);
+  assert.equal(summarizeActivities(result.activities).behavioral, 2);
+  assert.deepEqual(result.activities.map(activity => activity.source), ['answer-edit', 'explicit'], 'new saves and previously generated explicit edits both remain readable');
+  assert.deepEqual(collectCalendarActivities({ ...state, activities: [second, first, second] }), result);
+  const deleted = { ...state, removedActivityIds: [first.id] };
+  assert.deepEqual(collectCalendarActivities(deleted).activities.map(activity => activity.id), [second.id]);
+  assert.deepEqual(collectCalendarActivities({ ...deleted, activities: [] }).activities, [], 'an edit tombstone suppresses the legacy fallback even without its payload');
+  const next = event('000000000003', '2026-09-08T18:00:00Z');
+  assert.deepEqual(collectCalendarActivities({ ...deleted, activities: [next] }).activities.map(activity => activity.id), [next.id]);
+  assert.deepEqual(collectCalendarActivities({ ...state, removedActivityIds: [second.id] }).activities.map(activity => activity.id), [first.id], 'new-source records cannot bypass deletion through the generic activity path');
+  assert.deepEqual(state, before);
+});
+
+test('restored daily Behavioral answers use the original calendar event id and retain distinct sessions', () => {
+  const question = { id: 'bq', kind: 'behavioral', sourceProblemId: 'same-question' };
+  const session = id => ({ id, questions: [question], answers: {
+    bq: { text: 'A completed answer', selfAssessment: 'independent', completedAt: at },
+  } });
+  const first = { id: 'daily:one:bq', kind: 'behavioral', source: 'daily', sessionId: 'one', questionId: 'bq', count: 1, completedAt: at };
+  const state = { activities: [first], dailySessions: [session('one'), session('two')], removedActivityIds: [] };
+  const result = collectCalendarActivities(state);
+  assert.deepEqual(result.activities.map(activity => activity.id), ['daily:one:bq', 'daily:two:bq']);
+  assert.equal(summarizeActivities(result.activities).behavioral, 2);
+  assert.deepEqual(collectCalendarActivities({ ...state, activities: [], removedActivityIds: [first.id] }).activities.map(activity => activity.id), ['daily:two:bq']);
 });
 
 test('behavioral source tombstones suppress legacy-answer fallback without hiding other questions', () => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BEHAVIORAL_PREP_QUESTIONS, getBehavioralAnswer } from './questions.js';
 import { hasPersonalBehavioralAnswer, saveBehavioralAnswer } from '../completionActivities.js';
@@ -7,6 +7,7 @@ import './behavioral.css';
 export function BehavioralWorkspace({ state, update, language }) {
   const [params, setParams] = useSearchParams();
   const [notice, setNotice] = useState('');
+  const editSession = useRef(null);
   const en = language === 'en';
   const t = (zh, english) => en ? english : zh;
   const question = BEHAVIORAL_PREP_QUESTIONS.find(item => item.id === params.get('question')) || BEHAVIORAL_PREP_QUESTIONS.at(-1);
@@ -16,7 +17,11 @@ export function BehavioralWorkspace({ state, update, language }) {
   const started = BEHAVIORAL_PREP_QUESTIONS.filter(item => hasPersonalBehavioralAnswer(state, item)).length;
 
   const editAnswer = (text) => {
-    update(current => saveBehavioralAnswer(current, question, text));
+    if (editSession.current?.questionId !== question.id) {
+      editSession.current = { questionId: question.id, editId: crypto.randomUUID() };
+    }
+    const { editId } = editSession.current;
+    update(current => saveBehavioralAnswer(current, question, text, new Date(), { editId }));
     setNotice('');
   };
 
@@ -57,7 +62,9 @@ export function BehavioralWorkspace({ state, update, language }) {
         {!en && <p className="bp-question-translation">{question.titleZh}</p>}
         <p className="bp-cue">{question.cue}</p>
         <div className="bp-answer-label"><label htmlFor="bp-answer">{t('我的英文回答', 'My answer in English')}</label><span>{question.answer && !answers.some(item => item.id === question.id) ? t('Quant 方向 · 可编辑初稿', 'Quant role · editable draft') : t('编辑后自动保存', 'Edits save automatically')}</span></div>
-        <textarea id="bp-answer" className="bp-answer" value={answer} onChange={event => editAnswer(event.target.value)} spellCheck lang="en" maxLength={20000}
+        <textarea id="bp-answer" className="bp-answer" value={answer} onChange={event => editAnswer(event.target.value)}
+          onFocus={() => { editSession.current = { questionId: question.id, editId: crypto.randomUUID() }; }}
+          onBlur={() => { editSession.current = null; }} spellCheck lang="en" maxLength={20000}
           aria-describedby="bp-answer-stats" placeholder={t('从一段真实经历开始，按上方结构写下你的回答…', 'Start with a real experience and use the structure above to draft your answer…')} />
         <div className="bp-answer-actions"><span id="bp-answer-stats">{words} {t('词', 'words')}{words > 0 && ` · ≈ ${Math.round(words / 135 * 60)} sec`}</span><div className="bp-answer-buttons"><button type="button" disabled={!answer.trim()} onClick={copyAnswer}>{t('复制回答', 'Copy answer')}</button></div></div>
         <p className="bp-notice" role="status">{notice}</p>

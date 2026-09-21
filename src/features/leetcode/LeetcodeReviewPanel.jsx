@@ -61,7 +61,7 @@ export function LeetcodeReviewPanel({ lc, practiceSessions = [], pool, selectedP
   function keepFocus(event) {
     if (event.key !== "Tab") return;
     const focusable = [...dialogRef.current.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')]
-      .filter(element => element.getClientRects().length > 0);
+      .filter(element => element.getClientRects().length > 0 && !element.closest("[inert]"));
     const first = focusable[0];
     const last = focusable.at(-1);
     const active = document.activeElement;

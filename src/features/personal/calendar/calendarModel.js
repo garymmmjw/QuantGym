@@ -9,6 +9,7 @@ const list = (value) => Array.isArray(value) ? value : [];
 const countOf = (value) => Number.isFinite(Number(value)) ? Math.max(0, Math.floor(Number(value))) : 0;
 const trialKind = (trial) => trial?.settings?.trainer == null || trial.settings.trainer === 'math' ? 'mental' : trial.settings.trainer;
 const questionNumber = (question) => String(question?.provenance?.originalNumber || '').trim();
+const BEHAVIORAL_ANSWER_SOURCES = new Set(['explicit', 'answer-edit']);
 
 // Date-only strings are civil dates, never UTC instants. Noon avoids DST gaps at midnight.
 export function parseLocalDay(key) {
@@ -57,28 +58,30 @@ function normalizedActivity(raw, index) {
   };
 }
 
-/** One saved answer is one prepared question, independent of later text edits. */
+/** Each saved revision is one event; an older answer supplies one dated fallback. */
 export function collectBehavioralAnswerActivities(state = {}) {
   const records = new Map();
   const removed = new Set(list(state.removedActivityIds));
   // Tombstones target individual event ids. They suppress reconstructing an
   // answer fallback, but do not erase another surviving historical event.
-  const questionsWithRemovedEvents = new Set();
+  const questionsWithHistory = new Set();
   const dated = value => hasExplicitProblemCompletion({ completed: true, completedAt: value }) && Boolean(localDayKey(value));
   for (const id of removed) {
-    const match = /^behavioral:explicit:(.+):\d{4}-\d{2}-\d{2}$/.exec(id);
-    if (match) { try { questionsWithRemovedEvents.add(decodeURIComponent(match[1])); } catch { /* Ignore malformed historical ids. */ } }
+    const match = /^behavioral:(?:explicit|edit):(.+):[^:]+$/.exec(id)
+      || /^behavioral:answer:(.+)$/.exec(id);
+    if (match) { try { questionsWithHistory.add(decodeURIComponent(match[1])); } catch { /* Ignore malformed historical ids. */ } }
   }
   for (const activity of list(state.activities)) {
-    if (activity?.kind !== 'behavioral' || activity.source !== 'explicit') continue;
-    const key = activity.sourceId || activity.questionId;
+    if (activity?.kind !== 'behavioral') continue;
+    const key = activity.sourceId || activity.questionId || activity.problemId;
     if (typeof key !== 'string' || !key.trim()) continue;
-    if (removed.has(activity.id)) { questionsWithRemovedEvents.add(key); continue; }
-    if (activity.count !== 1 || !dated(activity.completedAt)) continue;
-    const previous = records.get(key);
+    questionsWithHistory.add(key);
+    if (!BEHAVIORAL_ANSWER_SOURCES.has(activity.source) || removed.has(activity.id)) continue;
+    if (typeof activity.id !== 'string' || !activity.id.trim() || activity.count !== 1 || !dated(activity.completedAt)) continue;
+    const previous = records.get(activity.id);
     if (!previous || Date.parse(activity.completedAt) < Date.parse(previous.completedAt)
       || Date.parse(activity.completedAt) === Date.parse(previous.completedAt) && activity.id < previous.id) {
-      records.set(key, { ...activity, sourceId: key, questionId: key });
+      records.set(activity.id, { ...activity, sourceId: key, questionId: key });
     }
   }
   let undatedLegacyCount = 0;
@@ -86,13 +89,13 @@ export function collectBehavioralAnswerActivities(state = {}) {
   for (const answer of list(state.behavioralAnswers)) {
     if (typeof answer?.id !== 'string' || !answer.id.trim() || seenAnswers.has(answer.id)) continue;
     seenAnswers.add(answer.id);
-    if (typeof answer.text !== 'string' || !answer.text.trim() || records.has(answer.id) || questionsWithRemovedEvents.has(answer.id)) continue;
+    if (typeof answer.text !== 'string' || !answer.text.trim() || questionsWithHistory.has(answer.id)) continue;
     // Older answers have no first-save field. Their stored edit time is the
     // only known date; reading them must never assign today's date instead.
     if (!dated(answer.updatedAt)) { undatedLegacyCount += 1; continue; }
     const id = `behavioral:answer:${encodeURIComponent(answer.id)}`;
     if (removed.has(id)) continue;
-    records.set(answer.id, { id, kind: 'behavioral', source: 'saved-answer', sourceId: answer.id,
+    records.set(id, { id, kind: 'behavioral', source: 'saved-answer', sourceId: answer.id,
       questionId: answer.id, count: 1, completedAt: answer.updatedAt });
   }
   return { activities: [...records.values()], undatedLegacyCount };
@@ -182,7 +185,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
   behavioral.activities.forEach(add);
   undatedLegacyCount += behavioral.undatedLegacyCount;
   list(state.activities).forEach(raw => {
-    if (raw?.kind === 'behavioral' && raw.source === 'explicit') return;
+    if (raw?.kind === 'behavioral' && BEHAVIORAL_ANSWER_SOURCES.has(raw.source)) return;
     if (TRIAL_KINDS.includes(raw?.kind) && raw.source !== 'manual') {
       const trialId = raw.trialId || (String(raw.id).startsWith(`${raw.kind}:`) ? String(raw.id).slice(raw.kind.length + 1) : '');
       const key = `${raw.kind}:${trialId}`;
@@ -219,7 +222,20 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     [item.trialId, item.id.startsWith(`${item.kind}:`) ? item.id.slice(item.kind.length + 1) : ""]
       .filter(Boolean).map((trialId) => `${item.kind}:${trialId}`))]);
   const linkedDaily = new Set(explicit.filter((item) => item.kind === "daily").flatMap((item) => [item.dailySessionId, item.sessionId, item.id.startsWith("daily:") ? item.id.slice(6) : ""]).filter(Boolean));
+  const removedDailyActivities = new Set(list(state.removedActivityIds));
   list(state.dailySessions).forEach((session) => {
+    // Restored sessions may predate their per-question calendar events. Use
+    // the original event id so a later sync cannot count that completion twice.
+    list(session?.questions).forEach(question => {
+      const answer = session.answers?.[question.id];
+      const id = `daily:${session.id}:${question.id}`;
+      if (!session.id || question.kind !== 'behavioral' || removedDailyActivities.has(id)
+        || !answer?.text?.trim() || !['independent', 'with-help', 'review'].includes(answer.selfAssessment)
+        || !hasExplicitProblemCompletion({ completed: true, completedAt: answer.completedAt })
+        || !countsTowardProblemTotal({ ...question, id: question.sourceProblemId || question.id })) return;
+      add({ id, kind: 'behavioral', source: 'daily', sessionId: session.id, questionId: question.id,
+        count: 1, completedAt: answer.completedAt });
+    });
     if (!session?.id || session.status !== "completed" || linkedDaily.has(session.id)) return;
     add({ id: `daily:${session.id}`, kind: "daily", count: 1, dailySessionId: session.id, completedAt: session.completedAt });
   });

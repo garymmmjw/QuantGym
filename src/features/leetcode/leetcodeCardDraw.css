@@ -40,15 +40,53 @@
 .lc-refined .lc-revealed-bottom time, .lc-refined .lc-card-unknown { font-size:12px; color:var(--lc-ink); }
 .lc-refined .lc-revealed-bottom > a { display:grid; place-items:center; width:34px; height:34px; border-radius:7px; background:color-mix(in srgb,var(--lc-accent) 7%,var(--lc-surface)); color:var(--lc-accent); }
 .lc-refined .lc-revealed-bottom > a:hover { background:color-mix(in srgb,var(--lc-accent) 14%,var(--lc-surface)); }
-.lc-refined .lc-flying-card { position:absolute; top:0; left:0; width:80px; height:112px; z-index:20; pointer-events:none; animation:lc-card-flight 800ms cubic-bezier(.2,.7,.15,1) both; }
-.lc-refined .lc-card-draw.is-drawing .lc-dealer-character { animation:lc-dealer-pick 780ms ease-in-out both; }
-.lc-refined .lc-card-draw.is-drawing .lc-reveal-slot { opacity:.35; transition:opacity 240ms; }
-.lc-refined .lc-revealed-card.is-entering { animation:lc-card-reveal 490ms cubic-bezier(.16,1,.3,1) both; }
+/* One physical portrait: extract from the hand, travel, turn, then settle. */
+.lc-refined .lc-reveal-slot { position:relative; perspective:1100px; }
+.lc-refined .lc-card-journey { position:relative; width:100%; z-index:20; transform-origin:center; }
+.lc-refined .lc-card-journey.is-preparing { visibility:hidden; }
+.lc-refined .lc-card-journey.is-moving { animation:lc-card-journey var(--draw-duration) both; will-change:transform; }
+.lc-refined .lc-card-turn { position:relative; width:100%; transform-style:preserve-3d; transform:rotateY(-180deg); }
+.lc-refined .is-moving .lc-card-turn { animation:lc-card-turn var(--draw-duration) both; will-change:transform; }
+.lc-refined .lc-journey-back, .lc-refined .lc-card-turn > .lc-revealed-card { backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+.lc-refined .lc-journey-back { position:absolute; inset:0; transform:translateZ(1px); }
+.lc-refined .lc-card-turn > .lc-revealed-card { transform:rotateY(180deg); box-shadow:0 12px 32px color-mix(in srgb,var(--lc-accent) 15%,transparent),0 2px 6px #28204008; }
+.lc-refined .lc-journey-back .lc-card-back { border-width:8px; border-radius:24px; }
+.lc-refined .lc-journey-back .lc-card-back::before { inset:17px; border-width:2px; border-radius:11px; }
+.lc-refined .lc-journey-back .lc-card-corner { left:30px; top:28px; font-size:28px; }
+.lc-refined .lc-journey-back .lc-card-corner.is-bottom { left:auto; top:auto; right:30px; bottom:28px; }
+.lc-refined .lc-journey-back .lc-card-emblem { font-size:82px; }
+.lc-refined .lc-journey-back .lc-card-emblem span { margin-top:11px; font-size:14px; letter-spacing:6px; }
+.lc-refined .lc-reveal-glow { position:absolute; inset:-35px; z-index:-1; pointer-events:none; border-radius:50%; background:radial-gradient(ellipse,color-mix(in srgb,var(--lc-accent) 18%,transparent),transparent 68%); opacity:0; }
+.lc-refined .is-moving .lc-reveal-glow { animation:lc-reveal-glow var(--draw-duration) both; }
+.lc-refined .lc-card-draw:is(.is-drawing,.is-revealing) .lc-dealer-character { animation:lc-dealer-pick var(--draw-duration) both; }
+.lc-refined .lc-card-draw:is(.is-drawing,.is-revealing) .lc-dealer-shadow { animation:lc-dealer-shadow var(--draw-duration) both; }
+.lc-refined .lc-card-draw:is(.is-drawing,.is-revealing) .lc-hand-card:not(.is-picked) { transform:translate(calc(var(--card-x) * .87),calc(var(--card-y) + 5px)) rotate(calc(var(--card-angle) * .85)); }
 .lc-refined .lc-card-draw.is-empty .lc-dealer-character { opacity:.75; }
+.lc-refined .lc-card-turn .lc-revealed-card::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:linear-gradient(115deg,transparent 22%,#fff9 46%,transparent 69%); opacity:0; }
+.lc-refined .is-moving .lc-revealed-card::after { animation:lc-card-sheen var(--draw-duration) both; }
 @keyframes lc-card-deal { from { opacity:0; translate:0 15px; } to { opacity:1; translate:0 0; } }
-@keyframes lc-dealer-pick { 0%,100% { transform:rotate(0); } 28% { transform:rotate(-4deg) translateY(3px); } 60% { transform:rotate(3deg) translateY(-4px); } }
-@keyframes lc-card-flight { 0% { transform:translate(var(--flight-x),var(--flight-y)) rotate(-6deg); opacity:1; } 30% { transform:translate(calc(var(--flight-x) - 6px),calc(var(--flight-y) - 72px)) rotate(-13deg) scale(1.2); opacity:1; } 72% { transform:translate(calc(var(--flight-x) + var(--flight-dx)),calc(var(--flight-y) + var(--flight-dy) - 20px)) rotateY(75deg) rotate(5deg) scale(1.5); opacity:1; } 100% { transform:translate(calc(var(--flight-x) + var(--flight-dx)),calc(var(--flight-y) + var(--flight-dy))) rotateY(100deg) scale(1.6); opacity:0; } }
-@keyframes lc-card-reveal { 0% { opacity:0; transform:rotateY(-30deg) translateY(-12px) scale(.92); } 55% { opacity:1; transform:rotateY(0) translateY(3px) scale(1.025); } 100% { opacity:1; transform:rotateY(0) translateY(0) scale(1); } }
+@keyframes lc-dealer-pick {
+  0%,100% { transform:translateY(0) rotate(0); }
+  16% { transform:translateY(5px) rotate(-2.5deg); animation-timing-function:cubic-bezier(.2,.75,.2,1); }
+  43% { transform:translateY(-6px) rotate(3deg); }
+  68% { transform:translateY(0) rotate(-1deg); }
+  83% { transform:translateY(-3px) rotate(1deg); }
+}
+@keyframes lc-dealer-shadow { 0%,100% { transform:translateX(-50%) scale(1); } 43% { transform:translateX(-50%) scale(.88); } }
+@keyframes lc-card-journey {
+  0% { transform:translate(var(--source-x),var(--source-y)) rotate(var(--source-angle)) scale(var(--source-sx),var(--source-sy)); animation-timing-function:ease-in-out; }
+  15% { transform:translate(var(--source-x),calc(var(--source-y) + 5px)) rotate(calc(var(--source-angle) - 4deg)) scale(var(--source-sx),var(--source-sy)); animation-timing-function:cubic-bezier(.2,.7,.25,1); }
+  35% { transform:translate(calc(var(--source-x) * .94),calc(var(--source-y) - 64px)) rotate(-12deg) scale(calc(var(--source-sx) * 1.3),calc(var(--source-sy) * 1.3)); animation-timing-function:cubic-bezier(.4,0,.15,1); }
+  68% { transform:translate(0,-18px) rotate(4deg) scale(1.035); animation-timing-function:cubic-bezier(.2,.75,.2,1); }
+  86% { transform:translate(0,3px) rotate(-.7deg) scale(.994); animation-timing-function:ease-out; }
+  100% { transform:translate(0,0) rotate(0) scale(1); }
+}
+@keyframes lc-card-turn {
+  0%,46% { transform:rotateY(0); animation-timing-function:cubic-bezier(.4,0,.2,1); }
+  86%,100% { transform:rotateY(-180deg); }
+}
+@keyframes lc-reveal-glow { 0%,58% { opacity:0; transform:scale(.8); } 79% { opacity:1; } 100% { opacity:0; transform:scale(1.15); } }
+@keyframes lc-card-sheen { 0%,72% { opacity:0; transform:translateX(-30%); } 82% { opacity:.7; } 100% { opacity:0; transform:translateX(30%); } }
 @media (max-width:1100px) { .lc-refined .lc-card-draw { gap:12px; padding-inline:0; }.lc-refined .lc-card-draw-content { padding-inline:0; } }
 @media (max-width:760px) {
   .lc-refined .lc-card-draw { grid-template-columns:minmax(0,1fr); gap:14px; padding:0; }
@@ -78,6 +116,8 @@
   background:var(--lc-surface); color:var(--lc-ink); box-shadow:0 22px 90px #17132d40;
   font-family:var(--qg-font-ui,system-ui,sans-serif); font-variant-numeric:tabular-nums; overscroll-behavior:contain;
 }
+.lc-draw-dialog[open] { animation:lc-draw-dialog-in 220ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes lc-draw-dialog-in { from { opacity:0; transform:translateY(8px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
 .lc-draw-dialog::backdrop { background:#1c173b65; backdrop-filter:blur(5px); }
 .lc-draw-dialog *, .lc-draw-dialog *::before, .lc-draw-dialog *::after { box-sizing:border-box; }
 .lc-draw-dialog h2, .lc-draw-dialog h3, .lc-draw-dialog p { margin:0; }
@@ -107,7 +147,7 @@
   .lc-draw-dialog.lc-refined { width:min(440px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); border-radius:13px; }
   .lc-draw-dialog-heading { padding:13px 16px; }
   .lc-draw-dialog-body { padding:0 12px 12px; }
-  .lc-draw-dialog .lc-card-draw { grid-template-columns:minmax(0,1fr); min-height:0; gap:0; }
+  .lc-draw-dialog .lc-card-draw { grid-template-columns:minmax(0,1fr); min-height:0; gap:16px; }
   .lc-draw-dialog .lc-dealer-scene { width:260px; height:197px; }
   .lc-draw-dialog .lc-dealer-character { width:245px; height:245px; margin-left:-122.5px; top:-27px; }
   .lc-draw-dialog .lc-dealer-halo { width:200px; height:170px; top:0; }
@@ -132,4 +172,4 @@
   .lc-draw-save-state { gap:8px; padding-inline:12px; }
   .lc-draw-save-state.is-error { flex-wrap:wrap; }
 }
-@media (prefers-reduced-motion:reduce) { .lc-draw-dialog::backdrop { backdrop-filter:none; } }
+@media (prefers-reduced-motion:reduce) { .lc-draw-dialog[open] { animation:none; }.lc-draw-dialog::backdrop { backdrop-filter:none; } }

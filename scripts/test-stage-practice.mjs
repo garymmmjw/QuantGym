@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { collectStagePractice, summarizeStagePractice, formatStagePeriod, readStagePractice, resolveStagePractice, stagePracticeKeys } from '../src/features/careerStages/stagePractice.js';
 import { EMPTY_LEETCODE } from '../src/features/leetcode/leetcodeModel.js';
+import { collectOverviewRecords, summarizeOverviewStages } from '../src/features/overview/activityMetrics.js';
 
 const stages = [
   { id: 's3', label: 'Stage 3', recordedDate: '2026-09-17', solvedCount: 999 },
@@ -49,6 +50,90 @@ test('daily question fallbacks deduplicate with activity and source problem, exc
   };
   const practice = collectStagePractice(personal, { problemStates: [done('bank-1', '2026-09-16')] });
   assert.equal(summarizeStagePractice(stages, practice)[1].questionCount, 2);
+});
+
+const savedBehavioralEdit = (questionId, event, day, hour = 12) => ({
+  id: `behavioral:edit:${encodeURIComponent(questionId)}:00000000-0000-4000-8000-${String(event).padStart(12, '0')}`,
+  kind: 'behavioral', source: 'answer-edit', sourceId: questionId, questionId, count: 1,
+  completedAt: new Date(2026, 8, day, hour).toISOString(), dateKey: `2026-09-${String(day).padStart(2, '0')}`,
+});
+function savedBehavioralStageCounts(personalState, legacyState = {}) {
+  const options = { today: '2026-09-19', now: new Date(2026, 8, 19, 23, 59).toISOString() };
+  const bundle = collectOverviewRecords({ personalState, legacyState }, options);
+  return {
+    allQuestions: summarizeStagePractice(stages, collectStagePractice(personalState, legacyState), options).map(stage => stage.questionCount),
+    behavioral: summarizeOverviewStages(stages, bundle, options).map(stage => stage.behavioral),
+    technical: summarizeOverviewStages(stages, bundle, options).map(stage => stage.technical),
+  };
+}
+
+test('Behavioral saves count by event across Stage boundaries while retries and per-event removal remain exact', () => {
+  const before = savedBehavioralEdit('project/story', 1, 13);
+  const first = { ...savedBehavioralEdit('project/story', 2, 15, 9), source: 'explicit' };
+  const second = savedBehavioralEdit('project/story', 3, 15, 17);
+  const nextStage = savedBehavioralEdit('project/story', 4, 16);
+  const currentStage = savedBehavioralEdit('project/story', 5, 19);
+  const future = savedBehavioralEdit('project/story', 6, 20);
+  const state = { activities: [before, first, { ...first }, second, nextStage, currentStage, future],
+    behavioralAnswers: [{ id: 'project/story', text: 'Current saved answer', updatedAt: currentStage.completedAt }] };
+  const initial = savedBehavioralStageCounts(state);
+  assert.deepEqual(initial.allQuestions, [2, 1, 1]);
+  assert.deepEqual(initial.behavioral, [2, 1, 1]);
+  const removed = { ...state, removedActivityIds: [first.id] };
+  assert.deepEqual(savedBehavioralStageCounts(removed).allQuestions, [1, 1, 1]);
+  assert.deepEqual(savedBehavioralStageCounts(removed).behavioral, [1, 1, 1]);
+  const savedAgain = { ...removed, activities: [...removed.activities, savedBehavioralEdit('project/story', 7, 15, 20)] };
+  assert.deepEqual(savedBehavioralStageCounts(savedAgain).allQuestions, [2, 1, 1]);
+  assert.deepEqual(savedBehavioralStageCounts(savedAgain).behavioral, [2, 1, 1]);
+});
+
+test('old Behavioral answers retain their original Stage once and tombstones never reconstruct deleted events', () => {
+  const local = day => new Date(2026, 8, day, 12).toISOString();
+  const oldExplicit = { id: 'behavioral:explicit:legacy:2026-09-15', kind: 'behavioral', source: 'explicit',
+    sourceId: 'legacy', questionId: 'legacy', count: 1, completedAt: local(15), dateKey: '2026-09-15' };
+  const deletedEdit = savedBehavioralEdit('removed/edit', 11, 16);
+  const state = {
+    activities: [oldExplicit, { ...oldExplicit }],
+    behavioralAnswers: [
+      { id: 'fallback', text: 'Old saved answer', updatedAt: local(14) },
+      { id: 'fallback', text: 'Duplicate recovery copy', updatedAt: local(14) },
+      { id: 'legacy', text: 'Later saved text', updatedAt: local(19) },
+      { id: 'removed-date', text: 'Answer whose event was removed', updatedAt: local(14) },
+      { id: 'removed-fallback', text: 'Removed old answer event', updatedAt: local(14) },
+      { id: 'removed/edit', text: 'Edit whose activity was compacted away', updatedAt: local(16) },
+    ],
+    removedActivityIds: ['behavioral:explicit:removed-date:2026-09-14', 'behavioral:answer:removed-fallback', deletedEdit.id],
+  };
+  assert.deepEqual(savedBehavioralStageCounts(state).allQuestions, [2, 0, 0]);
+  assert.deepEqual(savedBehavioralStageCounts(state).behavioral, [2, 0, 0]);
+  const savedAgain = { ...state, activities: [...state.activities, savedBehavioralEdit('removed/edit', 12, 18)] };
+  assert.deepEqual(savedBehavioralStageCounts(savedAgain).allQuestions, [2, 0, 1]);
+  assert.deepEqual(savedBehavioralStageCounts(savedAgain).behavioral, [2, 0, 1]);
+  const removedLegacy = { ...savedAgain, removedActivityIds: [...state.removedActivityIds, oldExplicit.id] };
+  assert.deepEqual(savedBehavioralStageCounts(removedLegacy).allQuestions, [1, 0, 1]);
+  assert.deepEqual(savedBehavioralStageCounts(removedLegacy).behavioral, [1, 0, 1]);
+});
+
+test('daily Behavioral fallbacks share their event identity while Technical practice stays distinct by question', () => {
+  const at = new Date(2026, 8, 16, 12).toISOString();
+  const answer = { text: 'Saved answer', selfAssessment: 'independent', completedAt: at };
+  const behavioral = { id: 'daily:d1:bq', kind: 'behavioral', sessionId: 'd1', questionId: 'bq', count: 1, completedAt: at };
+  const state = {
+    activities: [behavioral, { ...behavioral },
+      { id: 'daily:d1:tech', kind: 'tech', sessionId: 'd1', questionId: 'tech', count: 1, completedAt: at }],
+    dailySessions: ['d1', 'd2'].map(id => ({ id,
+      questions: [{ id: 'bq', kind: 'behavioral' }, { id: 'tech', kind: 'tech', sourceProblemId: 'bank-1' }],
+      answers: { bq: { ...answer }, tech: { ...answer } } })),
+  };
+  const legacy = { problemStates: [done('bank-1', new Date(2026, 8, 17, 12).toISOString())] };
+  const result = savedBehavioralStageCounts(state, legacy);
+  assert.deepEqual(result.behavioral, [0, 2, 0]);
+  assert.deepEqual(result.technical, [0, 1, 0]);
+  assert.deepEqual(result.allQuestions, [0, 3, 0]);
+  const removed = savedBehavioralStageCounts({ ...state, removedActivityIds: [behavioral.id] }, legacy);
+  assert.deepEqual(removed.behavioral, [0, 1, 0]);
+  assert.deepEqual(removed.technical, [0, 1, 0]);
+  assert.deepEqual(removed.allQuestions, [0, 2, 0]);
 });
 
 test('unknown dates and unavailable sources stay unknown, valid empty ranges and same-day stages are zero', () => {

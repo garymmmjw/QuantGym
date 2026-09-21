@@ -386,7 +386,7 @@ try {
     const { page: dark, fixture: darkFixture } = await makePage({ name: 'dark-reduced-motion', dark: true, reducedMotion: 'reduce' });
     assert.equal(await dark.locator('html').getAttribute('data-qg-theme'), 'dark');
     await drawRandom(dark);
-    assert.equal(await dark.locator('.lc-flying-card').count(), 0);
+    assert.equal(await dark.locator('.lc-card-journey.is-moving').count(), 0);
     await dark.keyboard.press('Tab');
     assert.equal(await dark.locator('.lc-draw-dialog').evaluate(dialog => dialog.contains(document.activeElement)), true);
     await dark.keyboard.press('Shift+Tab');
@@ -403,7 +403,8 @@ try {
     const { page: canceled, fixture: canceledFixture } = await makePage({ name: 'cancel-draw' });
     await canceled.locator('.lc-review-entry').click();
     await canceled.getByRole('button', { name: '关闭抽卡', exact: true }).click();
-    await canceled.waitForTimeout(1800);
+    // The full automatic timeline lasts 540ms + 1560ms.
+    await canceled.waitForTimeout(2400);
     assert.equal(await canceled.locator('.lc-draw-dialog').count(), 0);
     assert.equal(canceledFixture.backpackRequests.length, 0);
     assert.deepEqual(canceledFixture.data.reviewBackpack, []);
