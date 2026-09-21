@@ -55,7 +55,13 @@ export function normalizeProblemCompanies(raw = {}, tags = [], source = "", deps
     ...(Array.isArray(tags) ? tags : []),
     source
   ].filter(Boolean);
-  const companies = [];
+  // Explicit source attribution must survive even when a firm has no company
+  // profile yet. Only infer extra firms from tags when they match known aliases.
+  const companies = [...new Set(explicitValues.flatMap((value) => {
+    const label = typeof value === "string" ? value.trim() : "";
+    if (!label) return [];
+    return [getCompanyDef(label, companyDefs)?.name || label];
+  }))];
   textHints.forEach((value) => {
     const company = getCompanyDef(value, companyDefs);
     if (!company || companies.includes(company.name)) return;

@@ -132,8 +132,8 @@ export function getRuntimeCatalogProblems() {
   const value = runtimeGlobal.quantProblemCatalog || runtimeWindow.quantProblemCatalog;
   return Array.isArray(value) ? value : catalogProblems;
 }
-export const disabledProblemSources = new Set(["question-bank"]);
-export const disabledProblemBookNames = new Set(["Archived Question Bank"]);
+export const disabledProblemSources = new Set();
+export const disabledProblemBookNames = new Set();
 
 export const seedNews = [
   {

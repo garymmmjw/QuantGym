@@ -20,6 +20,13 @@ const CATEGORY_LABELS_ZH = {
   coding: "编程",
   cppProgramming: "C++ 编程",
   pandasNumpy: "Pandas/NumPy",
+  behavioral: "行为面",
+  systemDesign: "系统设计",
+  dataEngineering: "数据工程",
+  systemsNetworking: "系统与网络",
+  aiEngineering: "AI 工程",
+  enterpriseTools: "企业工具",
+  assessment: "综合测评",
   // English display names (formatCategoryLabel output) → zh
   "Mental Math": "速算",
   "Probability/Expectation": "概率期望",
@@ -34,7 +41,8 @@ const CATEGORY_LABELS_ZH = {
   Market: "市场",
   Option: "期权",
   LeetCode: "编程",
-  "C++ Programming": "C++ 编程"
+  "C++ Programming": "C++ 编程",
+  "Behavioral/Fit": "行为面"
 };
 
 const DIFFICULTY_LABELS_ZH = {
@@ -49,6 +57,10 @@ const DIFFICULTY_LABELS_ZH = {
 };
 
 const SOURCE_SHORT_LABELS = {
+  "question-bank": "紫皮书",
+  "interview-xiaohongshu": "小红书面经",
+  "interview-onepoint3acres": "一亩三分地面经",
+  "interview-glassdoor": "Glassdoor 面经",
   "green-book": "绿皮书",
   "yellow-book": "黄皮书",
   "red-book": "红宝书",

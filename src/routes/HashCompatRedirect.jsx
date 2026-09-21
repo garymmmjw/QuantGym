@@ -35,8 +35,10 @@ export function HashCompatRedirect() {
   useEffect(() => {
     function navigateToModule(moduleId, options = {}) {
       const targetPath = getModulePath(normalizeHashModule(moduleId));
-      const nextUrl = `${targetPath}${window.location.search}`;
-      if (window.location.pathname === targetPath) {
+      const requestedSearch = typeof options.search === "string" ? options.search : window.location.search;
+      const search = requestedSearch && !requestedSearch.startsWith("?") ? `?${requestedSearch}` : requestedSearch;
+      const nextUrl = `${targetPath}${search}`;
+      if (window.location.pathname === targetPath && window.location.search === search) {
         if (window.location.hash) window.history.replaceState(null, "", nextUrl);
         return;
       }
@@ -53,7 +55,8 @@ export function HashCompatRedirect() {
     function handleModuleNavigation(event) {
       const moduleId = event?.detail?.moduleId;
       if (!moduleId) return;
-      navigateToModule(moduleId, { replace: event.detail.replace });
+      event.preventDefault?.();
+      navigateToModule(moduleId, { replace: event.detail.replace, search: event.detail.search });
     }
 
     redirectHashRoute();

@@ -26,6 +26,8 @@ import {
   getProblemBrowserMatches as getProblemBrowserMatchesForState
 } from "../../modules/problems/search.js";
 import { getProblemBrowserViewState } from "../../modules/problems/viewState.js";
+import { getFreePracticeStatus, startFreePractice, recordFreePracticeOutcome, markFreePracticeReveal } from "../../modules/problems/freePracticeAttempts.js";
+import { getPracticeBank } from "../../features/problems/practiceBanks.js";
 
 export function createProblemsPageApi(deps = {}) {
   let searchQuery = "";
@@ -41,6 +43,22 @@ export function createProblemsPageApi(deps = {}) {
     if (Array.isArray(stateProblems) && stateProblems.length) return stateProblems;
     const catalogProblems = deps.getCatalogProblems?.();
     return Array.isArray(catalogProblems) ? catalogProblems : [];
+  }
+
+  function updateFreePractice(problemId, transition) {
+    const problem = getProblems().find(item => item.id === problemId);
+    if (!problem || !getPracticeBank(problem)) return null;
+    const state = getState();
+    const current = (state.problemStates || []).find(item => item.problemId === problemId) || { problemId };
+    const at = Date.now();
+    const next = transition(current, at);
+    const fields = item => ({ freePracticeAttempts: item.freePracticeAttempts, freePracticeSession: item.freePracticeSession });
+    if (JSON.stringify(fields(current)) !== JSON.stringify(fields(next))) {
+      if (deps.updateProblemState) deps.updateProblemState(problemId, fields(next));
+      else state.problemStates = [...(state.problemStates || []).filter(item => item.problemId !== problemId), { ...next, problemId, updatedAt: new Date(at).toISOString() }];
+      deps.saveState?.();
+    }
+    return getFreePracticeStatus(next, at);
   }
 
   function getLeetcodeHotItems() {
@@ -172,7 +190,8 @@ export function createProblemsPageApi(deps = {}) {
   function syncElements() {
     deps.rebindElements?.();
     const els = deps.elements || {};
-    if (els.problemSearch) els.problemSearch.value = searchQuery;
+    // The source-first React workspace owns its query in the URL.
+    if (els.problemSearch && !globalThis.document?.querySelector?.("[data-free-practice-root]")) els.problemSearch.value = searchQuery;
   }
 
   function sync(options = {}) {
@@ -567,10 +586,19 @@ export function createProblemsPageApi(deps = {}) {
   }
 
   return {
+    getPracticeCatalog: () => getProblems().filter((problem) => deps.isCatalogProblem?.(problem) ?? true),
     getSearchQuery: () => searchQuery,
     getSearchDebounceMs: () => Math.max(0, Number(deps.searchDebounceMs ?? 140)),
     getViewModel,
     prewarmSearchIndex,
+
+    startPractice(problemId) {
+      return updateFreePractice(problemId, (state, at) => startFreePractice(state, at, globalThis.crypto?.randomUUID?.()));
+    },
+
+    recordPracticeOutcome(problemId, outcome) {
+      return updateFreePractice(problemId, (state, at) => recordFreePracticeOutcome(state, outcome, at, globalThis.crypto?.randomUUID?.()));
+    },
 
     mountRichText(node, text) {
       deps.renderRichText?.(node, text);
@@ -659,6 +687,8 @@ export function createProblemsPageApi(deps = {}) {
     },
 
     revealBlock(problemId, blockKey) {
+      if (!getProblems().some(problem => problem.id === problemId)) return;
+      updateFreePractice(problemId, (state, at) => markFreePracticeReveal(state, blockKey, at));
       deps.revealProblemDetailBlock?.(problemId, blockKey);
       sync();
     },

@@ -6,6 +6,7 @@ import {
 } from "../../modules/library/readerAccess.js";
 import { getLibraryPracticeNavigation } from "../../modules/library/navigation.js";
 import { probePdfUrl } from "../../modules/library/readerProbe.js";
+import { getPracticeBank } from "../../features/problems/practiceBanks.js";
 
 // User decision #8 — self-reported reading progress. The PDF renders inside a
 // cross-origin iframe, so the app cannot observe the real page number; the
@@ -128,13 +129,16 @@ export function createLibraryPageApi(deps = {}) {
     return Boolean(entry.sourceSlug && entry.problemCount > 0);
   }
 
-  function dispatchModuleNavigation(moduleId) {
+  function dispatchModuleNavigation(moduleId, search) {
     const windowRef = deps.windowRef || globalThis.window;
     const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
-    if (!windowRef?.dispatchEvent || !CustomEventCtor) return;
-    windowRef.dispatchEvent(new CustomEventCtor("quantgym:navigate-module", {
-      detail: { moduleId, replace: false }
-    }));
+    if (!windowRef?.dispatchEvent || !CustomEventCtor) return false;
+    // The React router acknowledges navigation by cancelling the event. The
+    // shell can then update its state without issuing a second, queryless route.
+    return windowRef.dispatchEvent(new CustomEventCtor("quantgym:navigate-module", {
+      cancelable: true,
+      detail: { moduleId, replace: false, ...(search === undefined ? {} : { search }) }
+    })) === false;
   }
 
   function openPracticeEntry(entry) {
@@ -163,8 +167,10 @@ export function createLibraryPageApi(deps = {}) {
       deps.setProblemDetailId?.("");
       deps.setProblemSearchQuery?.("");
       if (deps.elements?.problemSearch) deps.elements.problemSearch.value = "";
-      dispatchModuleNavigation("problems");
-      deps.switchModule?.("problems");
+      const bank = getPracticeBank({ source: entry.sourceSlug });
+      const search = `?${new URLSearchParams(bank ? { bank: bank.id } : { source: entry.sourceSlug })}`;
+      const navigated = dispatchModuleNavigation("problems", search);
+      deps.switchModule?.("problems", { updateRoute: !navigated });
       deps.renderProblems?.();
       return true;
     }

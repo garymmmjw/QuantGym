@@ -649,6 +649,7 @@ windowRef
     getProblemFilterValue,
     setProblemFilterState,
     getProblemPersonalState,
+    updateProblemState: deps.updateProblemState,
     getProblemDisplayTitle,
     getProblemExcerptText,
     getProblemSocial,

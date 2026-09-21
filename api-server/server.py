@@ -42,6 +42,8 @@ from personal_prep import (
     validate_personal_prep_request,
 )
 from guardian import GUARDIAN_SCHEMA, GuardianService
+from free_practice_attempts import merge_free_practice_state
+from private_practice_catalog import is_curated_private_problem, is_retired_private_problem, lock_problem_catalog
 
 try:
     import psycopg
@@ -1250,7 +1252,14 @@ def sanitize_problem(problem: dict | None, *, visibility: str = "public", owner_
         raise HttpError(400, "Problem title is required")
     if not prompt_en and not prompt_zh:
         raise HttpError(400, "Problem prompt is required")
-    next_visibility = "user" if visibility == "user" or owner_user_id else "public"
+    requested_visibility = str(visibility or "").strip().lower()
+    if requested_visibility == "user" or owner_user_id:
+        next_visibility = "user"
+    elif requested_visibility == "public":
+        next_visibility = "public"
+    else:
+        # Unknown catalog visibility fails closed instead of becoming public.
+        next_visibility = "private"
     cleaned = {
         **raw,
         "id": problem_id,
@@ -1714,7 +1723,7 @@ class Database:
 
                 CREATE TABLE IF NOT EXISTS problems (
                   id TEXT PRIMARY KEY,
-                  visibility TEXT NOT NULL CHECK (visibility IN ('public', 'user')),
+                  visibility TEXT NOT NULL CHECK (visibility IN ('public', 'private', 'user')),
                   owner_user_id TEXT,
                   title_en TEXT NOT NULL,
                   title_zh TEXT NOT NULL,
@@ -1792,6 +1801,68 @@ class Database:
                 """
             )
             conn.executescript(GUARDIAN_SCHEMA)
+            self.ensure_sqlite_private_problem_visibility(conn)
+
+    def ensure_sqlite_private_problem_visibility(self, conn: sqlite3.Connection) -> None:
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'problems'"
+        ).fetchone()
+        schema_sql = str(row["sql"] or "") if row else ""
+        if "'private'" in schema_sql.lower():
+            return
+
+        # SQLite cannot alter a CHECK constraint in place. Rebuild only the
+        # problems table while retaining its rows and the foreign-key targets.
+        conn.commit()
+        conn.execute("PRAGMA foreign_keys = OFF")
+        try:
+            conn.executescript(
+                """
+                BEGIN IMMEDIATE;
+                DROP TABLE IF EXISTS problems_visibility_migration;
+                CREATE TABLE problems_visibility_migration (
+                  id TEXT PRIMARY KEY,
+                  visibility TEXT NOT NULL CHECK (visibility IN ('public', 'private', 'user')),
+                  owner_user_id TEXT,
+                  title_en TEXT NOT NULL,
+                  title_zh TEXT NOT NULL,
+                  category TEXT NOT NULL,
+                  difficulty TEXT NOT NULL,
+                  tags_json TEXT NOT NULL,
+                  source TEXT NOT NULL,
+                  source_url TEXT NOT NULL,
+                  prompt_en TEXT NOT NULL,
+                  prompt_zh TEXT NOT NULL,
+                  answer TEXT NOT NULL,
+                  explanation TEXT NOT NULL,
+                  problem_json TEXT NOT NULL,
+                  created_at TEXT NOT NULL,
+                  updated_at TEXT NOT NULL,
+                  FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+                INSERT INTO problems_visibility_migration (
+                  id, visibility, owner_user_id, title_en, title_zh, category, difficulty,
+                  tags_json, source, source_url, prompt_en, prompt_zh, answer, explanation,
+                  problem_json, created_at, updated_at
+                )
+                SELECT
+                  id, visibility, owner_user_id, title_en, title_zh, category, difficulty,
+                  tags_json, source, source_url, prompt_en, prompt_zh, answer, explanation,
+                  problem_json, created_at, updated_at
+                FROM problems;
+                DROP TABLE problems;
+                ALTER TABLE problems_visibility_migration RENAME TO problems;
+                CREATE INDEX IF NOT EXISTS idx_problems_visibility_category
+                ON problems (visibility, category);
+                CREATE INDEX IF NOT EXISTS idx_problems_owner
+                ON problems (owner_user_id);
+                COMMIT;
+                """
+            )
+        finally:
+            if conn.in_transaction:
+                conn.rollback()
+            conn.execute("PRAGMA foreign_keys = ON")
 
     def health(self) -> dict:
         if self.backend == "postgres":
@@ -2180,7 +2251,7 @@ class Database:
                 """
                 SELECT problem_json
                 FROM problems
-                WHERE visibility = 'public' OR owner_user_id = ?
+                WHERE visibility IN ('public', 'private') OR owner_user_id = ?
                 ORDER BY source, id
                 """,
                 (owner_user_id,),
@@ -2194,7 +2265,8 @@ class Database:
                 ORDER BY source, id
                 """
             ).fetchall()
-        return [parse_json(row["problem_json"], {}) for row in rows]
+        problems = [parse_json(row["problem_json"], {}) for row in rows]
+        return [problem for problem in problems if not is_retired_private_problem(problem)]
 
     def upsert_problems(
         self,
@@ -2203,12 +2275,16 @@ class Database:
         *,
         visibility: str = "public",
         owner_user_id: str | None = None,
+        preserve_problem_visibility: bool = False,
     ) -> list[dict]:
         saved = []
         for raw in problems if isinstance(problems, list) else []:
             if not isinstance(raw, dict):
                 continue
-            problem = sanitize_problem(raw, visibility=visibility, owner_user_id=owner_user_id)
+            requested_visibility = visibility
+            if preserve_problem_visibility:
+                requested_visibility = str(raw.get("visibility") or "").strip().lower() or "public"
+            problem = sanitize_problem(raw, visibility=requested_visibility, owner_user_id=owner_user_id)
             previous = conn.execute(
                 "SELECT created_at, visibility, owner_user_id FROM problems WHERE id = ?",
                 (problem["id"],),
@@ -2217,7 +2293,7 @@ class Database:
                 previous["visibility"] != "user" or previous["owner_user_id"] != owner_user_id
             ):
                 continue
-            if previous and visibility == "public" and previous["visibility"] != "public":
+            if previous and not owner_user_id and previous["visibility"] == "user":
                 continue
             previous_created_at = api_timestamp(previous["created_at"]) if previous else ""
             created_at = previous_created_at if is_valid_timestamp(previous_created_at) else problem["createdAt"]
@@ -2289,14 +2365,21 @@ class Database:
         return [parse_json(row["state_json"], {}) for row in rows]
 
     def save_problem_states(self, conn: sqlite3.Connection, user_id: str, states) -> list[dict]:
+        # Serialize read/merge/write, including the first state for a problem.
+        # The caller's connection context commits or rolls back this lock.
+        if self.backend == "postgres":
+            conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", (user_id,)).fetchone()
+        elif not conn.in_transaction:
+            conn.execute("BEGIN IMMEDIATE")
         for raw in states if isinstance(states, list) else []:
             if not isinstance(raw, dict):
                 continue
             state = sanitize_problem_state(raw)
             previous = conn.execute(
-                "SELECT created_at FROM user_problem_states WHERE user_id = ? AND problem_id = ?",
+                "SELECT created_at, state_json FROM user_problem_states WHERE user_id = ? AND problem_id = ?",
                 (user_id, state["problemId"]),
             ).fetchone()
+            state = merge_free_practice_state(parse_json(previous["state_json"], {}) if previous else {}, state)
             created_at = previous["created_at"] if previous else utc_now()
             updated_at = utc_now()
             state["updatedAt"] = updated_at
@@ -2316,7 +2399,7 @@ class Database:
     def ensure_visible_problem(self, conn: sqlite3.Connection, problem_id: str, user_id: str | None = None) -> None:
         if user_id:
             row = conn.execute(
-                "SELECT id FROM problems WHERE id = ? AND (visibility = 'public' OR owner_user_id = ?)",
+                "SELECT id FROM problems WHERE id = ? AND (visibility IN ('public', 'private') OR owner_user_id = ?)",
                 (problem_id, user_id),
             ).fetchone()
         else:
@@ -2331,7 +2414,7 @@ class Database:
         visibility_sql = "p.visibility = 'public'"
         params: list[str] = []
         if user_id:
-            visibility_sql = "(p.visibility = 'public' OR p.owner_user_id = ?)"
+            visibility_sql = "(p.visibility IN ('public', 'private') OR p.owner_user_id = ?)"
             params.append(user_id)
         rows = conn.execute(
             f"""
@@ -2468,7 +2551,15 @@ class Database:
         catalog_ids = [str(problem.get("id") or "").strip() for problem in problems if isinstance(problem, dict)]
         catalog_ids = [problem_id for problem_id in catalog_ids if problem_id]
         with self.connect() as conn:
-            saved = self.upsert_problems(conn, problems, visibility="public")
+            lock_problem_catalog(conn, self.backend)
+            private_rows = conn.execute("SELECT problem_json FROM problems WHERE visibility = 'private'").fetchall()
+            curated_sources = {problem["source"] for row in private_rows
+                               if is_curated_private_problem(problem := parse_json(row["problem_json"], {}))}
+            # Curated runtime sources are updated only by the operator import.
+            # In particular, a redeploy must not restore the older 1,204-row QG
+            # snapshot or overwrite the new Purple Book chapter metadata.
+            pending = [problem for problem in problems if isinstance(problem, dict) and problem.get("source") not in curated_sources]
+            saved = self.upsert_problems(conn, pending, visibility="public", preserve_problem_visibility=True)
             if catalog_ids:
                 placeholders = ",".join("?" for _ in catalog_ids)
                 conn.execute(
@@ -2903,7 +2994,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
 
     def end_headers(self):
-        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password"} or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/")):
+        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password", "/api/problems"} or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/")):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
             self.send_header("Vary", "Authorization")

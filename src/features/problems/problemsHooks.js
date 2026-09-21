@@ -1,7 +1,7 @@
 import { getProblemCompletionCount } from '../../modules/problems/progress.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getStreak } from "../../modules/skills/data.js";
-import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
+import { useAuthStore, useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 
 const EMPTY_PROBLEM_FORM = {
@@ -23,6 +23,8 @@ export function useProblemsPageModel() {
   const pageApi = usePageApi();
   const formatDate = pageApi?.formatDate;
   const userState = useUserStateStore((state) => state.value || {});
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const catalogProblems = useMemo(() => api?.getPracticeCatalog?.() || [], [api, userState.problems]);
   const [searchQuery, setSearchQueryState] = useState(() => api?.getSearchQuery?.() || "");
   const [revision, setRevision] = useState(0);
   const [showProblemForm, setShowProblemForm] = useState(false);
@@ -201,6 +203,9 @@ export function useProblemsPageModel() {
 
   return {
     view,
+    catalogProblems,
+    problemStates: userState.problemStates || [],
+    accountId: currentUser?.id || "local",
     headerStats,
     searchQuery,
     setSearchQuery,
@@ -233,6 +238,8 @@ export function useProblemsPageModel() {
     openProblem: (problemId) => { api?.openDetail?.(problemId); bump(); },
     returnToList: () => { api?.returnToList?.(); bump(); },
     toggleCompleted: (problemId) => { api?.toggleCompleted?.(problemId); bump(); },
+    startPractice: (problemId) => { const result = api?.startPractice?.(problemId); bump(); return result; },
+    recordPracticeOutcome: (problemId, outcome) => { const result = api?.recordPracticeOutcome?.(problemId, outcome); bump(); return result; },
     toggleSaved: (problemId) => { api?.toggleSaved?.(problemId); bump(); },
     revealBlock: (problemId, blockKey) => { api?.revealBlock?.(problemId, blockKey); bump(); },
     toggleLike: (problemId) => bumpAfter(api?.toggleLike?.(problemId)),
