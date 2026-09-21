@@ -10,7 +10,7 @@ import json
 import math
 import re
 from datetime import date, datetime, timezone
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 from technical_metadata import validate_technical_provenance
 
 PERSONAL_PREP_VERSION = 1
@@ -363,6 +363,57 @@ def get_personal_prep(conn, user_id: str) -> dict:
     }
 
 
+def is_behavioral_completion(activity):
+    """Recognize both historical confirmations and individual answer edits."""
+    fields = {"id", "kind", "source", "sourceId", "questionId", "count", "completedAt", "dateKey"}
+    if (not isinstance(activity, dict) or set(activity) != fields
+            or activity.get("kind") != "behavioral" or activity.get("source") not in ("explicit", "answer-edit")
+            or type(activity.get("count")) is not int or activity["count"] != 1
+            or not valid_event_timestamp(activity.get("completedAt"))
+            or not valid_civil_date(activity.get("dateKey"))):
+        return False
+    source_id = activity.get("sourceId")
+    if (not isinstance(source_id, str) or not source_id or source_id.strip() != source_id
+            or len(source_id) > 200 or activity.get("questionId") != source_id):
+        return False
+    encoded = quote(source_id, safe="~()*!.'-_")
+    identity = activity.get("id")
+    if activity["source"] == "explicit" and identity == f"behavioral:explicit:{encoded}:{activity['dateKey']}":
+        return True
+    prefix = f"behavioral:edit:{encoded}:"
+    return isinstance(identity, str) and identity.startswith(prefix) and bool(re.fullmatch(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", identity[len(prefix):], re.IGNORECASE))
+
+
+def retain_behavioral_completions(incoming, previous):
+    # A client that has only an older answer snapshot must not erase later
+    # saved edits. Their UUIDs deduplicate delivery, while independent edits
+    # on the same question/day remain separate completion events.
+    prefixes = ("behavioral:explicit:", "behavioral:edit:", "behavioral:answer:")
+    removed = set(incoming["removedActivityIds"])
+    removed.update(identity for identity in previous.get("removedActivityIds", []) if identity.startswith(prefixes))
+    events = {}
+    for activity in [*previous.get("activities", []), *incoming["activities"]]:
+        if not is_behavioral_completion(activity):
+            continue
+        stored = events.get(activity["id"])
+        if stored is None or (event_order(activity, "completedAt"), activity["dateKey"]) < (event_order(stored, "completedAt"), stored["dateKey"]):
+            events[activity["id"]] = activity
+    # Preserve the client's ordering when all events are present. Moving the
+    # Behavioral subset after experience-read events would fight the browser's
+    # canonical ordering and cause an unnecessary PUT on every later sync.
+    activities, emitted = [], set()
+    for activity in incoming["activities"]:
+        if not is_behavioral_completion(activity):
+            activities.append(activity)
+        elif activity["id"] not in removed:
+            activities.append(events[activity["id"]])
+            emitted.add(activity["id"])
+    activities.extend(events[identity] for identity in sorted(events) if identity not in emitted and identity not in removed)
+    incoming["activities"] = activities
+    incoming["removedActivityIds"] = sorted(removed)
+
+
 def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -> tuple[bool, dict]:
     """Atomically compare-and-swap, returning the current row on a stale write.
 
@@ -397,6 +448,7 @@ def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -
         # Retain practice tombstones before reconstructing calendar activities.
         retained = {identity for identity in current["data"].get("removedActivityIds", []) if identity.startswith("practice:")}
         incoming["removedActivityIds"] = sorted(retained | set(incoming["removedActivityIds"]))
+        retain_behavioral_completions(incoming, current["data"])
     restore_practice_activities(incoming)
     _, data_json = validate_personal_prep_request({"version": PERSONAL_PREP_VERSION, "baseRevision": base_revision, "data": incoming})
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")

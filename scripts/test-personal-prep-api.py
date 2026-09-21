@@ -614,8 +614,104 @@ class PersonalPrepApiTests(unittest.TestCase):
         self.assertEqual(status, 200, saved)
         self.assert_private(headers)
         self.assertEqual(self.request("GET", token=token)[1]["data"]["activities"], state["activities"])
+        status, retried, _ = self.put(token, state, saved["revision"])
+        self.assertEqual(status, 200, retried)
+        self.assertEqual(retried["data"]["activities"], state["activities"],
+                         "The server must preserve the frontend's mixed explicit-event order to avoid perpetual sync writes")
         other, _ = self.new_user()
         self.assertIsNone(self.request("GET", token=other)[1]["data"])
+
+    def test_independent_behavioral_edits_keep_legacy_events_and_survive_retries_and_old_snapshots(self):
+        token, _ = self.new_user()
+        question = "behavioral:team / 中文"
+        encoded_question = "behavioral%3Ateam%20%2F%20%E4%B8%AD%E6%96%87"
+        legacy = {"id": f"behavioral:explicit:{encoded_question}:2026-09-18", "kind": "behavioral",
+                  "source": "explicit", "sourceId": question, "questionId": question, "count": 1,
+                  "completedAt": "2026-09-18T12:00:00.000Z", "dateKey": "2026-09-18"}
+        first = {**legacy, "id": f"behavioral:edit:{encoded_question}:11111111-1111-4111-8111-111111111111",
+                 "source": "answer-edit", "completedAt": "2026-09-19T12:00:00.000Z", "dateKey": "2026-09-19"}
+        second = {**first, "id": f"behavioral:edit:{encoded_question}:22222222-2222-4222-8222-222222222222",
+                  "completedAt": "2026-09-19T13:00:00.000Z"}
+        state = empty_state()
+        state["activities"] = [legacy, first, second]
+        state["behavioralAnswers"] = [{"id": question, "text": "Most recently saved answer", "updatedAt": second["completedAt"]}]
+        status, saved, headers = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        self.assert_private(headers)
+        self.assertEqual(saved["data"]["activities"], state["activities"])
+        self.assertTrue(all(set(row) == set(first) for row in saved["data"]["activities"]))
+
+        # A lost acknowledgement followed by an identical stale PUT must not
+        # append another completion; the conflict carries the committed data.
+        status, conflict, _ = self.put(token, state, 0)
+        self.assertEqual(status, 409, conflict)
+        self.assertEqual(conflict["data"], saved["data"])
+        retried = copy.deepcopy(state)
+        retried["activities"] = [{**first, "completedAt": "2026-09-19T14:00:00.000Z"}]
+        status, saved, _ = self.put(token, retried, conflict["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual({row["id"]: row for row in saved["data"]["activities"]},
+                         {row["id"]: row for row in state["activities"]})
+
+        # Older clients can know the newest revision but still omit these new
+        # activity IDs. The server, not another online device, retains them.
+        older = empty_state()
+        del older["behavioralAnswers"]
+        status, saved, _ = self.put(token, older, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        read = self.request("GET", token=token)[1]
+        self.assertEqual({row["id"]: row for row in read["data"]["activities"]},
+                         {row["id"]: row for row in state["activities"]})
+        self.assertEqual(read["data"]["behavioralAnswers"], state["behavioralAnswers"])
+        other, _ = self.new_user()
+        self.assertIsNone(self.request("GET", token=other)[1]["data"])
+        other_state = empty_state()
+        other_state["activities"] = [{**first, "completedAt": "2026-09-19T15:00:00.000Z"}]
+        self.assertEqual(self.put(other, other_state)[0], 200)
+        self.assertEqual(self.request("GET", token=other)[1]["data"]["activities"], other_state["activities"])
+        self.assertEqual(self.request("GET", token=token)[1], read)
+
+    def test_behavioral_edit_and_legacy_tombstones_survive_stale_uploads_without_suppressing_later_edits(self):
+        token, _ = self.new_user()
+        first = {"id": "behavioral:edit:behavioral-fixture:33333333-3333-4333-8333-333333333333",
+                 "kind": "behavioral", "source": "answer-edit", "sourceId": "behavioral-fixture",
+                 "questionId": "behavioral-fixture", "count": 1, "completedAt": "2026-09-19T12:00:00.000Z", "dateKey": "2026-09-19"}
+        second = {**first, "id": "behavioral:edit:behavioral-fixture:44444444-4444-4444-8444-444444444444",
+                  "completedAt": "2026-09-19T13:00:00.000Z"}
+        legacy = {**first, "id": "behavioral:explicit:behavioral-fixture:2026-09-18",
+                  "source": "explicit", "completedAt": "2026-09-18T12:00:00.000Z", "dateKey": "2026-09-18"}
+        original = {**empty_state(), "activities": [legacy, first, second]}
+        status, saved, _ = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        removed = {**empty_state(), "activities": [second], "removedActivityIds": [first["id"], legacy["id"]]}
+        status, saved, _ = self.put(token, removed, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["activities"], [second])
+        for stale in (original, {**original, "removedActivityIds": []}):
+            status, saved, _ = self.put(token, stale, saved["revision"])
+            self.assertEqual(status, 200, saved)
+            self.assertEqual(saved["data"]["activities"], [second])
+            self.assertEqual(set(saved["data"]["removedActivityIds"]), set(removed["removedActivityIds"]))
+        third = {**first, "id": "behavioral:edit:behavioral-fixture:55555555-5555-4555-8555-555555555555",
+                 "completedAt": "2026-09-19T14:00:00.000Z"}
+        status, saved, _ = self.put(token, {**empty_state(), "activities": [third]}, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual({row["id"] for row in saved["data"]["activities"]}, {second["id"], third["id"]})
+
+    def test_behavioral_edit_source_aliases_preserve_one_event_and_the_earliest_date(self):
+        token, _ = self.new_user()
+        prior = {"id": "behavioral:edit:behavioral-fixture:66666666-6666-4666-8666-666666666666",
+                 "kind": "behavioral", "source": "explicit", "sourceId": "behavioral-fixture",
+                 "questionId": "behavioral-fixture", "count": 1, "completedAt": "2026-09-19T12:00:00.000Z", "dateKey": "2026-09-19"}
+        status, saved, _ = self.put(token, {**empty_state(), "activities": [prior]})
+        self.assertEqual(status, 200, saved)
+        current = {**prior, "source": "answer-edit", "completedAt": "2026-09-19T13:00:00.000Z"}
+        status, saved, _ = self.put(token, {**empty_state(), "activities": [current]}, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["activities"], [prior])
+        status, saved, _ = self.put(token, empty_state(), saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["activities"], [prior], "Compatibility edit IDs remain durable across old clients")
 
     def test_behavioral_answers_round_trip_legacy_writes_and_explicit_clear(self):
         token, _ = self.new_user()
