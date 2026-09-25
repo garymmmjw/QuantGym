@@ -107,6 +107,9 @@ export function transitionTrial(trial, action, now = Date.now(), rng = Math.rand
   if (action.type === 'tick') return trial;
   const current = trial.currentQuestion;
   if (!current) return trial;
+  // An input/submit/skip captured for a resolved question must never affect its
+  // successor, even when both questions happen to have the same answer.
+  if (action.questionId != null && action.questionId !== current.id) return trial;
   const eventAt = Math.max(Date.parse(current.startedAt), now);
   if (action.type === 'input' || action.type === 'submit') {
     const value = String(action.value ?? trial.currentAnswer);

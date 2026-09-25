@@ -82,6 +82,21 @@ test('empty or malformed input does not advance or add a wrong submission', () =
   }
 });
 
+test('question-scoped events cannot score, overwrite or skip the next question', () => {
+  const trial = make();
+  const answer = { type: 'input', value: '5', questionId: trial.currentQuestion.id };
+  const next = transitionTrial(trial, answer, start + 100);
+  assert.equal(next.correct, 1);
+  for (const action of [answer, { ...answer, type: 'submit' },
+    { ...answer, value: '4' }, { ...answer, type: 'skip' }]) {
+    assert.equal(transitionTrial(next, action, start + 200), next);
+  }
+  assert.equal(transitionTrial(next, { ...answer, questionId: next.currentQuestion.id }, start + 300).correct, 2);
+  const finished = transitionTrial(next, answer, start + 10000);
+  assert.equal(finished.status, 'completed');
+  assert.equal(finished.correct, 1);
+});
+
 test('skip and timeout remain distinct and retain partial-question time', () => {
   let trial = make();
   trial = transitionTrial(trial, { type: 'skip' }, start + 2500);
