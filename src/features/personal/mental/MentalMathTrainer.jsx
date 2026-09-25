@@ -7,6 +7,7 @@ import { AttemptTrend, TrialHistory } from './AttemptTrend.jsx';
 import { formatAttemptSettings } from './attemptHistory.js';
 import { PreparationCountdown } from './PreparationCountdown.jsx';
 import { PracticeFocus, requestPracticeFullscreen } from './PracticeFocus.jsx';
+import { MentalAnswerInput } from './MentalAnswerInput.jsx';
 import './moduleSetup.css';
 import { trainerKind, TRAINER_LABELS } from './trainingSettings.js';
 import { cancelTrialPreparation } from './reasoningEngine.js';
@@ -73,10 +74,12 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
   }, [settingsSignature, durationSeconds]);
 
   function applyAction(action, at = Date.now()) {
+    const scopedAction = ['input', 'submit', 'skip'].includes(action.type)
+      ? { ...action, questionId: active?.currentQuestion?.id } : action;
     let finished = null;
     callbacks.current.update((latest) => {
       if (latest.activeTrial?.id !== active?.id || trainerKind(latest.activeTrial) !== 'math') return latest;
-      const next = transitionTrial(latest.activeTrial, action, at);
+      const next = transitionTrial(latest.activeTrial, scopedAction, at);
       if (!next || next === latest.activeTrial) return latest;
       if (next.status !== 'active') finished = next;
       return persistTrialTransition(latest, next);
@@ -216,9 +219,11 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     {active && !preparing && <div className="pm-arena">
       {(active.dailySessionId || null) !== (dailySessionId || null) && <p className="pm-context-note">{en ? 'An earlier trial is still running. Finish it before starting this session.' : '另一个试次仍在计时，请先继续完成或提前结束，再开始本次训练。'}</p>}
       <div className="pm-arena-stats"><div><span>{en ? 'Remaining' : '剩余时间'}</span><strong className={remaining <= 10000 ? 'pm-time-low' : ''}>{clockLabel(remaining)}</strong></div><div><span>{en ? 'Correct' : '已答对'}</span><strong>{active.correct}</strong></div></div>
-      <form className="pm-question-form" onSubmit={(event) => { event.preventDefault(); applyAction({ type: 'submit' }); inputRef.current?.select(); }}>
+      <form className="pm-question-form" onSubmit={(event) => { event.preventDefault(); applyAction({ type: 'submit' }); }}>
         <label className={`pm-equation${`${active.currentQuestion?.a}${active.currentQuestion?.b}`.length > 9 ? ' pm-equation-long' : ''}`} htmlFor={`${configId}-answer`}><span>{active.currentQuestion?.a}</span><span>{SYMBOLS[active.currentQuestion?.operator]}</span><span>{active.currentQuestion?.b}</span><span className="pm-equals">=</span>
-          <input ref={inputRef} id={`${configId}-answer`} className={`pm-answer${active.currentAnswer?.length > 4 ? ' pm-answer-long' : ''}`} type="text" inputMode="numeric" enterKeyHint="done" pattern="-?[0-9]*" autoComplete="off" autoCorrect="off" spellCheck="false" aria-label={en ? 'Your answer' : '输入答案'} value={active.currentAnswer || ''} onChange={(event) => applyAction({ type: 'input', value: event.target.value })} />
+          <MentalAnswerInput key={`${active.id}:${active.currentQuestion?.id}`} inputRef={inputRef} id={`${configId}-answer`}
+            aria-label={en ? 'Your answer' : '输入答案'} value={active.currentAnswer || ''}
+            onAnswer={value => applyAction({ type: 'input', value })} />
         </label>
         <p className="pm-visually-hidden" role="status" aria-atomic="true">{en ? 'Question' : '第'} {active.currentQuestion?.index} {en ? '' : '题'}: {active.currentQuestion?.a} {({ add: en ? 'plus' : '加', subtract: en ? 'minus' : '减', multiply: en ? 'times' : '乘', divide: en ? 'divided by' : '除以' })[active.currentQuestion?.operator]} {active.currentQuestion?.b}</p>
         {active.settings.operations.includes('subtract') && <button type="button" className="pm-text-button pm-sign-toggle" aria-label={en ? 'Toggle answer sign' : '切换答案正负号'} onMouseDown={event => event.preventDefault()} onClick={() => { const value = active.currentAnswer || ''; applyAction({ type: 'input', value: value.startsWith('-') ? value.slice(1) : `-${value}` }); inputRef.current?.focus(); }}>± {en ? 'Change sign' : '正负号'}</button>}
