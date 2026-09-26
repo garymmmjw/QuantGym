@@ -290,7 +290,7 @@ try {
     await libraryCard.locator('.library-practice-btn').click();
     await page.waitForFunction(() => location.pathname === '/problems' && new URL(location.href).searchParams.get('bank') === 'quantguide');
     await page.locator('.fp-question-row').first().waitFor();
-    assert.equal(await page.locator('.fp-header h1').innerText(), 'QuantGuide');
+    assert.equal(await page.locator('.fp-header h1').innerText(), '蓝宝书');
     assert.equal(await page.locator('.fp-group[data-group-id]').count(), 5);
     evidence.libraryNavigation = { pathname: new URL(page.url()).pathname, bank: new URL(page.url()).searchParams.get('bank'), groups: 5 };
     await screenshot('release-library-practice.png');
