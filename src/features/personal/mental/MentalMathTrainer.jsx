@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   MENTAL_OPERATORS, normalizeMentalSettings, mentalSettingsKey, createTrial,
   remainingTrialMs, transitionTrial, summarizeTrial, getPersonalBests, persistTrialTransition,
@@ -40,6 +40,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
   const detailsRef = useRef(null);
   const setupRef = useRef(null);
   const inputRef = useRef(null);
+  const answerDraftRef = useRef(null);
   const callbacks = useRef({ update, onComplete, dailySessionId });
   callbacks.current = { update, onComplete, dailySessionId };
   const reported = useRef(new Set());
@@ -74,12 +75,19 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
   }, [settingsSignature, durationSeconds]);
 
   function applyAction(action, at = Date.now()) {
+    const draft = answerDraftRef.current?.snapshot();
     const scopedAction = ['input', 'submit', 'skip'].includes(action.type)
-      ? { ...action, questionId: active?.currentQuestion?.id } : action;
+      ? { ...action, questionId: active?.currentQuestion?.id,
+        ...(action.type === 'submit' && draft?.questionId === active?.currentQuestion?.id ? { value: draft.value } : {}) } : action;
     let finished = null;
     callbacks.current.update((latest) => {
       if (latest.activeTrial?.id !== active?.id || trainerKind(latest.activeTrial) !== 'math') return latest;
-      const next = transitionTrial(latest.activeTrial, scopedAction, at);
+      // Read the live question's draft, including from the deadline timer's
+      // original closure. Capturing it must never award a late/skipped answer.
+      const current = (['skip', 'abort', 'tick'].includes(action.type) || at >= Date.parse(latest.activeTrial.deadlineAt))
+        && draft?.questionId === latest.activeTrial.currentQuestion?.id
+        ? { ...latest.activeTrial, currentAnswer: draft.value } : latest.activeTrial;
+      const next = transitionTrial(current, scopedAction, at);
       if (!next || next === latest.activeTrial) return latest;
       if (next.status !== 'active') finished = next;
       return persistTrialTransition(latest, next);
@@ -134,7 +142,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     };
   }, [active?.id, active?.deadlineAt]);
 
-  useEffect(() => { if (active && !preparing) inputRef.current?.focus(); }, [active?.id, active?.currentQuestion?.id, preparing]);
+  useLayoutEffect(() => { if (active && !preparing) inputRef.current?.focus({ preventScroll: true }); }, [active?.id, active?.currentQuestion?.id, preparing]);
 
   function exitPractice() {
     if (!active) return;
@@ -222,11 +230,12 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
       <form className="pm-question-form" onSubmit={(event) => { event.preventDefault(); applyAction({ type: 'submit' }); }}>
         <label className={`pm-equation${`${active.currentQuestion?.a}${active.currentQuestion?.b}`.length > 9 ? ' pm-equation-long' : ''}`} htmlFor={`${configId}-answer`}><span>{active.currentQuestion?.a}</span><span>{SYMBOLS[active.currentQuestion?.operator]}</span><span>{active.currentQuestion?.b}</span><span className="pm-equals">=</span>
           <MentalAnswerInput key={`${active.id}:${active.currentQuestion?.id}`} inputRef={inputRef} id={`${configId}-answer`}
+            draftRef={answerDraftRef} questionId={active.currentQuestion?.id} expectedAnswer={active.currentQuestion?.answer}
             aria-label={en ? 'Your answer' : '输入答案'} value={active.currentAnswer || ''}
             onAnswer={value => applyAction({ type: 'input', value })} />
         </label>
         <p className="pm-visually-hidden" role="status" aria-atomic="true">{en ? 'Question' : '第'} {active.currentQuestion?.index} {en ? '' : '题'}: {active.currentQuestion?.a} {({ add: en ? 'plus' : '加', subtract: en ? 'minus' : '减', multiply: en ? 'times' : '乘', divide: en ? 'divided by' : '除以' })[active.currentQuestion?.operator]} {active.currentQuestion?.b}</p>
-        {active.settings.operations.includes('subtract') && <button type="button" className="pm-text-button pm-sign-toggle" aria-label={en ? 'Toggle answer sign' : '切换答案正负号'} onMouseDown={event => event.preventDefault()} onClick={() => { const value = active.currentAnswer || ''; applyAction({ type: 'input', value: value.startsWith('-') ? value.slice(1) : `-${value}` }); inputRef.current?.focus(); }}>± {en ? 'Change sign' : '正负号'}</button>}
+        {active.settings.operations.includes('subtract') && <button type="button" className="pm-text-button pm-sign-toggle" aria-label={en ? 'Toggle answer sign' : '切换答案正负号'} onMouseDown={event => event.preventDefault()} onClick={() => answerDraftRef.current?.toggleSign()}>± {en ? 'Change sign' : '正负号'}</button>}
         <p className="pm-question-meta">{en ? 'Question' : '第'} {active.currentQuestion?.index} {en ? '' : '题'} · {en ? 'Time on this question' : '本题用时'} <span>{seconds(Math.max(0, Math.min(now, Date.parse(active.deadlineAt)) - Date.parse(active.currentQuestion?.startedAt)))}</span></p>
         {active.currentQuestion?.mistakes?.length > 0 && <p className="pm-wrong-note" role="status">{en ? 'Not yet — try again. Wrong submissions:' : '答案还不对，继续试试。已记录错误提交：'} {active.currentQuestion.mistakes.length}</p>}
         <div className="pm-answer-controls"><button type="button" className="pm-text-button" onClick={() => applyAction({ type: 'skip' })}>{en ? 'Skip question' : '跳过本题'}</button><span>{en ? 'Correct = next · Enter = submit' : '答对自动下一题 · Enter 提交'}</span></div>
