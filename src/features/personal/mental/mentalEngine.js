@@ -112,7 +112,12 @@ export function transitionTrial(trial, action, now = Date.now(), rng = Math.rand
   if (action.questionId != null && action.questionId !== current.id) return trial;
   const eventAt = Math.max(Date.parse(current.startedAt), now);
   if (action.type === 'input' || action.type === 'submit') {
-    const value = String(action.value ?? trial.currentAnswer);
+    // Chinese keyboards can commit full-width digits, and copied negative
+    // answers often use a mathematical minus. Canonicalize only these integer
+    // characters; decimals, exponents and expressions still remain invalid.
+    const value = String(action.value ?? trial.currentAnswer).trim()
+      .replace(/[０-９]/g, digit => String(digit.charCodeAt(0) - 0xff10))
+      .replace(/[−－]/g, '-');
     if (!/^-?\d*$/.test(value) || value.length > 12) return trial;
     const completeValue = /^-?\d+$/.test(value);
     if (completeValue && Number(value) === current.answer) {

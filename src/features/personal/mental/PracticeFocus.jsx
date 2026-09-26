@@ -77,6 +77,9 @@ export function PracticeFocus({ active = true, language = 'zh', title, onExit, c
     document.body.appendChild(portal);
     const dialog = dialogRef.current;
     let exiting = false;
+    let composing = false;
+    const compositionStart = () => { composing = true; };
+    const compositionEnd = () => { composing = false; };
     const finish = () => {
       if (exiting) return;
       exiting = true;
@@ -106,6 +109,9 @@ export function PracticeFocus({ active = true, language = 'zh', title, onExit, c
 
     const handleKeyDown = event => {
       if (event.key === 'Escape') {
+        // Escape first belongs to the input method when it dismisses a candidate
+        // or cancels composition. It must not abort the timed practice as well.
+        if (composing || event.isComposing || event.keyCode === 229) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         finish();
@@ -131,6 +137,8 @@ export function PracticeFocus({ active = true, language = 'zh', title, onExit, c
       else if (session.entered) finish();
     };
     window.addEventListener('keydown', handleKeyDown, true);
+    dialog.addEventListener('compositionstart', compositionStart, true);
+    dialog.addEventListener('compositionend', compositionEnd, true);
     document.addEventListener('focusin', retainFocus, true);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
 
@@ -138,6 +146,8 @@ export function PracticeFocus({ active = true, language = 'zh', title, onExit, c
       exiting = true;
       observer.disconnect();
       window.removeEventListener('keydown', handleKeyDown, true);
+      dialog.removeEventListener('compositionstart', compositionStart, true);
+      dialog.removeEventListener('compositionend', compositionEnd, true);
       document.removeEventListener('focusin', retainFocus, true);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       for (const [element, original] of background) {

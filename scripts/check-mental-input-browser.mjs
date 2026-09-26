@@ -132,6 +132,38 @@ try {
     assert.equal((await read()).activeTrial.correct, 1);
     assert.equal(await input.inputValue(), '');
   });
+  await check('full-width IME digits count once after composition commits', 12, async ({ input, read }) => {
+    await input.dispatchEvent('compositionstart');
+    await input.evaluate(element => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(element, '１２');
+      element.dispatchEvent(new InputEvent('input', { bubbles: true, data: '１２', inputType: 'insertCompositionText', isComposing: true }));
+    });
+    assert.equal((await read()).activeTrial.correct, 0);
+    await input.dispatchEvent('compositionend', { data: '１２' });
+    assert.equal((await read()).activeTrial.correct, 1);
+    assert.equal((await read()).activeTrial.questions[0].submittedAnswer, '12');
+    assert.equal(await input.inputValue(), '');
+  });
+  await check('Escape cancels IME composition without ending the trial', 12, async ({ page, input, read }) => {
+    await input.dispatchEvent('compositionstart');
+    await input.dispatchEvent('keydown', { key: 'Escape', code: 'Escape', isComposing: true, bubbles: true });
+    assert.equal((await read()).activeTrial?.status, 'active');
+    // Some input methods omit isComposing on the cancellation keystroke.
+    await input.dispatchEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true });
+    assert.equal((await read()).activeTrial?.status, 'active');
+    await input.dispatchEvent('compositionend', { data: '' });
+    await input.pressSequentially('12');
+    assert.equal((await read()).activeTrial.correct, 1);
+    await page.keyboard.press('Escape');
+    assert.equal((await read()).activeTrial, null);
+    assert.equal((await read()).trials[0].status, 'aborted');
+  });
+  await check('pasted negative answers accept a mathematical minus sign', -12, async ({ input, read }) => {
+    await input.fill('−１２');
+    assert.equal((await read()).activeTrial.correct, 1);
+    assert.equal((await read()).activeTrial.questions[0].submittedAnswer, '-12');
+    assert.equal(await input.inputValue(), '');
+  });
   await check('negative answers retain their sign and keyboard focus after advancing', -12, async ({ page, input, read }) => {
     await input.pressSequentially('-1');
     await page.clock.runFor(300);

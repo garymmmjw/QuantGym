@@ -170,7 +170,7 @@ export function getProblemCollectionEntries(options = {}) {
       total: hot.total,
       done: hot.done
     },
-    sourceEntry("quantguide", "quantguide", "QuantGuide 题库", "QuantGuide Bank", "1200+ 高频 quant 面试题，适合日常主线刷题。", "1200+ quant interview prompts for the daily grind.", "sparkles", "indigo"),
+    sourceEntry("quantguide", "quantguide", "蓝宝书", "Sapphire Book", "1200+ 高频 quant 面试题，适合日常主线刷题。", "1200+ quant interview prompts for the daily grind.", "sparkles", "indigo"),
     sourceEntry("stat110", "stat110-strategic-practice", "Stat 110 概率练习", "Stat 110 Practice", "Harvard 概率战略练习，按题单进入题库。", "Harvard probability practice sheets linked into the bank.", "dice-5", "emerald"),
     sourceEntry("hull-derivatives", "hull-derivatives", "Hull 衍生品", "Hull Derivatives", "期权、期货、Greek、对冲与风险中性定价。", "Options, futures, Greeks, hedging, and risk-neutral pricing.", "line-chart", "rose"),
     themeEntry("probability-core", "probabilityExpectation", "概率 / 期望核心", "Probability Core", "所有概率、期望、分布、条件概率相关题。", "All probability, expectation, distribution, and conditioning problems.", "sigma", "blue"),

@@ -8,6 +8,7 @@ import { ACCOUNT_SECTIONS, findAccountSections, validPassword } from "./accountC
 import { GuardianAccessPanel } from "../guardian/GuardianAccessPanel.jsx";
 import { AdminOverviewPanel } from "./AdminOverviewPanel.jsx";
 import { AdminInvitationsPanel } from "./AdminInvitationsPanel.jsx";
+import { AdminMembershipPanel } from "./AdminMembershipPanel.jsx";
 import { AccountImage } from './AccountImage.jsx';
 import { locationDefs } from "../../prep-data.js";
 import { getCountryLabel, getRegionLabel, getDefaultRegion } from "../../modules/account/data.js";
@@ -15,6 +16,7 @@ import "./accountCenter.css";
 
 const AVATARS = ["happy", "focused", "wink", "wow"].map(name => `/assets/generated/playful-precision/avatar-${name}-v2.png`);
 const INVITATIONS_SECTION = { id: "invitations", icon: "ticket", zh: "邀请码管理", en: "Invitations", description: ["生成、查看与停用注册邀请码", "Create, review and revoke registration invitations"], keywords: "邀请码 注册 白名单 invite invitation registration allowlist" };
+const MEMBERSHIPS_SECTION = { id: "memberships", icon: "flower-2", zh: "会员邮箱名单", en: "Membership emails", description: ["添加或移除葵花宝典会员邮箱", "Manage member access to the Sunflower Manual"], keywords: "会员 邮箱 名单 葵花宝典 membership member email sunflower" };
 
 function Icon({ name }) { return <i data-lucide={name} aria-hidden="true" />; }
 function Feedback({ model, section }) {
@@ -196,7 +198,7 @@ export function AccountPageContent() {
   const model = useAccountPageModel();
   const [params, setParams] = useSearchParams();
   const admin = Boolean(model.user?.isAdmin || model.user?.subscriptionTier === "admin");
-  const sections = admin ? [...ACCOUNT_SECTIONS, INVITATIONS_SECTION] : ACCOUNT_SECTIONS;
+  const sections = admin ? [...ACCOUNT_SECTIONS, INVITATIONS_SECTION, MEMBERSHIPS_SECTION] : ACCOUNT_SECTIONS;
   const section = sections.some(item => item.id === params.get("section")) ? params.get("section") : "profile";
   const [query, setQuery] = useState("");
   const results = findAccountSections(query, sections);
@@ -215,6 +217,7 @@ export function AccountPageContent() {
       {query ? <section className="ac-search-results" aria-live="polite"><SectionHead title={copy("搜索结果", "Search results")}>{results.length ? copy(`找到 ${results.length} 个相关设置`, `${results.length} matching settings`) : copy("未找到相关设置。试试“密码”“语言”或“LeetCode”。", "No matches. Try password, language or LeetCode.")}</SectionHead>{results.map(item => <button type="button" key={item.id} onClick={() => navigate(item.id)}><Icon name={item.icon} /><span><strong>{title(item)}</strong><small>{item.description[model.zh ? 0 : 1]}</small></span><Icon name="arrow-right" /></button>)}</section> : null}
       {Object.entries(panels).map(([id, Panel]) => <div key={`${model.user.id}-${id}`} hidden={Boolean(query) || section !== id}><Panel model={model} /></div>)}
       {!query && section === "invitations" && admin && <AdminInvitationsPanel key={model.user.id} model={model} />}
+      {!query && section === "memberships" && admin && <AdminMembershipPanel key={model.user.id} model={model} />}
       {!query && section === "guardian" && <><SectionHead title={copy("监护人", "Guardian")}>{copy("由你决定谁可以查看进度，以及何时停止共享。", "You decide who can see your progress and when sharing ends.")}</SectionHead><GuardianAccessPanel /></>}
     </div></div>
   </section>;

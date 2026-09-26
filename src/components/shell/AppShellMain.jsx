@@ -29,7 +29,7 @@ const SHEET_NAV_GROUPS = [
     label: "训练",
     labelKey: "navTraining",
     items: [
-      ["technical-interview", "Technical Interview", "messages-square", "technicalInterview"],
+      ["problems", "题目", "library-big", "problems"],
       ["behavioral-interview", "Behavioral Interview", "speech", "behavioralInterview"],
       ["leetcode", "LeetCode", "code-2"],
       ["tools", "Mental Math", "brain"]
@@ -39,7 +39,6 @@ const SHEET_NAV_GROUPS = [
     label: "资源",
     labelKey: "navResources",
     items: [
-      ["problems", "题目", "library-big", "problems"],
       ["experiences", "面经", "notebook-pen", "experiences"]
     ]
   },

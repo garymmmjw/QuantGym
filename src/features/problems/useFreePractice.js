@@ -2,22 +2,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { PRACTICE_BANKS, getBankProblems, getBankGroups, getBankStats, getPracticeBank, getSourcePracticeBank, getPracticeBrowserProblems, matchesBankGroup, hasPracticeRecord } from "./practiceBanks.js";
 
+
 const PAGE_SIZE = 20;
 const SELECTION_KEYS = ["bank", "source", "group", "section", "q", "difficulty", "topic", "status", "page", "question"];
 const clean = value => String(value || "").trim().toLocaleLowerCase();
 
-export function useFreePractice(model) {
+export function useFreePractice(model, membership = { isMember: false }) {
   const [params, setParams] = useSearchParams();
   const [companySearch, setCompanySearch] = useState("");
-  const catalog = model.catalogProblems;
+  const catalog = useMemo(() => model.catalogProblems.filter(problem => !getPracticeBank(problem)?.membersOnly || membership.isMember), [model.catalogProblems, membership.isMember]);
   const personal = useMemo(() => new Map((Array.isArray(model.problemStates) ? model.problemStates : []).map(item => [item.problemId, item])), [model.problemStates]);
   const selectedId = params.get("question") || "";
   const selectedProblem = catalog.find(problem => problem.id === selectedId) || null;
   const requestedBankId = params.get("bank");
   const requestedSource = params.get("source");
-  const bank = useMemo(() => PRACTICE_BANKS.find(item => item.id === requestedBankId)
-    || getSourcePracticeBank(catalog, requestedSource)
-    || (selectedProblem ? getPracticeBank(selectedProblem) : null), [catalog, requestedBankId, requestedSource, selectedProblem]);
+  const requestedProblem = model.catalogProblems.find(problem => problem.id === selectedId);
+  const bank = useMemo(() => (requestedProblem ? getPracticeBank(requestedProblem) : null)
+    || PRACTICE_BANKS.find(item => item.id === requestedBankId)
+    || getSourcePracticeBank(catalog, requestedSource), [catalog, requestedBankId, requestedSource, requestedProblem]);
+  const membershipRequired = Boolean(bank?.membersOnly && !membership.isMember);
   const groupId = params.get("group") || "all";
   const sectionId = params.get("section") || "all";
   const query = params.get("q") || "";
@@ -91,7 +94,7 @@ export function useFreePractice(model) {
   useEffect(() => {
     if (selectedProblem) openRef.current(selectedProblem.id);
     else closeRef.current();
-  }, [selectedProblem?.id]);
+  }, [selectedProblem?.id, membership.isMember]);
 
   useEffect(() => {
     const handleOpen = event => {
@@ -154,7 +157,7 @@ export function useFreePractice(model) {
   } : summaries.find(item => item.id === bank?.id);
 
   return {
-    bank, groups, group, section, groupId, sectionId, summaries, summary, catalog,
+    bank, groups, group, section, groupId, sectionId, summaries, summary, catalog, membership, membershipRequired,
     bankProblems, directoryProblems, filtered, pageItems, page, totalPages, pageSize: PAGE_SIZE,
     companySearch, setCompanySearch, query, difficulty, status, topic, isEnglish,
     selectedProblem, selectedId, navigation, personal,

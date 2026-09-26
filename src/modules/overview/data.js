@@ -1,3 +1,4 @@
+import { getFreePracticeActivities } from '../problems/practiceActivity.js';
 import { dayKey, shiftDate } from '../../lib/date.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../problems/completion.js';
 
@@ -36,12 +37,18 @@ export function getContributionStatsByDay(options = {}) {
   const completedByDay = new Map();
   const catalog = new Map((Array.isArray(problems) ? problems : []).map(problem => [problem.id, problem]));
   const completedIds = new Set();
+  const practiceDays = new Set();
+  getFreePracticeActivities({ problems, problemStates }, { now: today }).forEach(activity => {
+    const key = dayKey(activity.completedAt);
+    practiceDays.add(`${activity.problemId}:${key}`);
+    completedByDay.set(key, (completedByDay.get(key) || 0) + 1);
+  });
   (Array.isArray(entries) ? entries : []).forEach((entry) => {
     const key = dayKey(entry.date);
     xpByDay.set(key, (xpByDay.get(key) || 0) + Number(entry.totalXp || 0));
   });
   (Array.isArray(problemStates) ? problemStates : []).forEach((item) => {
-    if (!item.problemId || completedIds.has(item.problemId) || !hasExplicitProblemCompletion(item)
+    if (!item.problemId || completedIds.has(item.problemId) || practiceDays.has(`${item.problemId}:${dayKey(item.completedAt)}`) || !hasExplicitProblemCompletion(item)
       || !countsTowardProblemTotal(catalog.get(item.problemId) || { id: item.problemId })
       || Date.parse(item.completedAt) > new Date(today).getTime()) return;
     const key = dayKey(item.completedAt);

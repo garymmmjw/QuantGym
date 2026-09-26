@@ -8,14 +8,13 @@ export const MOBILE_SECTIONS = [
     { id: 'tracker', label: '投递', accessibleLabel: '投递 Tracker' },
     { id: 'calendar', label: '日历', accessibleLabel: '训练日历' },
   ] },
-  { id: 'training', label: '训练', defaultModuleId: 'technical-interview', modules: [
-    { id: 'technical-interview', label: '技术面试', accessibleLabel: '技术面试 Technical Interview' },
+  { id: 'training', label: '训练', defaultModuleId: 'problems', modules: [
+    { id: 'problems', label: '题目', accessibleLabel: '题目 Questions' },
     { id: 'behavioral-interview', label: '行为面试', accessibleLabel: '行为面试 Behavioral Interview' },
     { id: 'leetcode', label: 'LeetCode', accessibleLabel: 'LeetCode 刷题训练' },
     { id: 'tools', label: '速算', accessibleLabel: '速算 Mental Math' },
   ] },
-  { id: 'resources', label: '资源', defaultModuleId: 'problems', modules: [
-    { id: 'problems', label: '题目', accessibleLabel: '题目' },
+  { id: 'resources', label: '资源', defaultModuleId: 'experiences', modules: [
     { id: 'experiences', label: '面经', accessibleLabel: '面经' },
   ] },
   { id: 'mine', label: '我的', defaultModuleId: 'account', modules: [
@@ -27,7 +26,7 @@ export const MOBILE_SECTIONS = [
 const SECTION_BY_MODULE = new Map([
   ...MOBILE_SECTIONS.flatMap(section => section.modules.map(module => [module.id, section.id])),
   ...['plan', 'resume', 'jobs', 'companies'].map(id => [id, 'career']),
-  ...['skills', 'league', 'interview', 'pk'].map(id => [id, 'training']),
+  ...['skills', 'league', 'interview', 'technical-interview', 'pk'].map(id => [id, 'training']),
   ...['library', 'courses', 'memory', 'news'].map(id => [id, 'resources']),
   ...['settings', 'community', 'messages', 'network'].map(id => [id, 'mine']),
 ]);

@@ -1,13 +1,14 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { installFreePracticeFixture } from './lib/free-practice-browser-fixture.mjs';
 
 const output = new URL('../artifacts/free-practice-attempts/', import.meta.url);
 await fs.mkdir(output, { recursive: true });
 const base = process.env.FREE_PRACTICE_QA_URL || 'http://127.0.0.1:5176';
 const stopOnFailure = process.argv.includes('--stop-on-failure');
 const accountIds = ['local:practice-attempts-qa-a', 'local:practice-attempts-qa-b'];
-const accounts = accountIds.map((id, index) => ({ id, provider: 'local', cloudLinked: true, name: `Attempt QA ${index + 1}`, email: `attempts-qa-${index + 1}@quantgym.local`, country: 'china', region: '上海', graduationTerm: '2027-09', passwordHash: '6246e686ac437c36bc94b6bd3b6cf9e578267cad791c8b2c1ea13e286b011f92', createdAt: '2026-09-20T00:00:00.000Z' }));
+const accounts = accountIds.map((id, index) => ({ id, provider: 'local', cloudLinked: true, emailVerified: true, name: `Attempt QA ${index + 1}`, email: `attempts-qa-${index + 1}@example.invalid`, country: 'china', region: '上海', graduationTerm: '2027-09', createdAt: '2026-09-20T00:00:00.000Z' }));
 // Local file overrides keep licensed question content outside the release tree.
 const purplePath = process.env.FREE_PRACTICE_QA_PURPLE || new URL('../data/question-banks/question-bank/problems.json', import.meta.url);
 const source = JSON.parse(await fs.readFile(purplePath, 'utf8'));
@@ -25,7 +26,8 @@ let catalogResponses = 0;
 const ids = ['catalog-problem-001', 'catalog-problem-002', 'catalog-problem-003'];
 assert.ok(ids.every(id => problems.has(id)), 'Expected stable purple-book questions');
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
-const context = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1050 }, serviceWorkers: 'block' });
+await installFreePracticeFixture(context, { base, accounts, problems: catalog || purpleProblems });
 if (catalog) {
   const catalogScript = `window.quantProblemCatalog = ${JSON.stringify(catalog)};`;
   await context.route('**/data/problem-catalog.js*', async route => {
@@ -54,7 +56,8 @@ const screenshot = async name => {
   await page.screenshot({ path: new URL(name, output).pathname, fullPage: true });
   screenshots.push(name);
 };
-const detail = () => page.locator('#problemDetail .qg-detail-title').waitFor();
+// Member verification can refresh the complete external catalog on navigation.
+const detail = () => page.locator('#problemDetail .qg-detail-title').waitFor({ timeout: 30000 });
 const open = async (id, extra = {}) => {
   await page.goto(`${base}/problems?${new URLSearchParams({ bank: 'purple', question: id, ...extra })}`);
   await detail();

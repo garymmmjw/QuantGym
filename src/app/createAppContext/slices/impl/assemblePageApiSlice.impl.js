@@ -460,6 +460,7 @@ export function assemblePageApiSliceImpl(shared, ctx) {
     companyTierFilterState,
     companyTierWeight,
     getCatalogProblems,
+    refreshProblemCatalog: (force = true) => deps.problemsRuntime?.refreshCatalog(force),
     getCompanyProblemStats,
     getCompanyJobs,
     formatCompanySummary,

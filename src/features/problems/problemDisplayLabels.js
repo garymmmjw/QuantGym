@@ -57,15 +57,15 @@ const DIFFICULTY_LABELS_ZH = {
 };
 
 const SOURCE_SHORT_LABELS = {
-  "question-bank": "紫皮书",
-  "interview-xiaohongshu": "小红书面经",
-  "interview-onepoint3acres": "一亩三分地面经",
-  "interview-glassdoor": "Glassdoor 面经",
+  "question-bank": "葵花宝典",
+  "interview-xiaohongshu": "红宝书",
+  "interview-onepoint3acres": "种田秘籍",
+  "interview-glassdoor": "绿宝书",
   "green-book": "绿皮书",
   "yellow-book": "黄皮书",
   "red-book": "红宝书",
   "hull-derivatives": "Hull",
-  quantguide: "QuantGuide",
+  quantguide: "蓝宝书",
   "stat110-strategic-practice": "Stat 110"
 };
 

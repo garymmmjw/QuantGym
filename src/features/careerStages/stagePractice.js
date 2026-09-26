@@ -27,7 +27,7 @@ export function collectStagePractice(personalState = {}, legacyState = {}, leetc
   const removed = new Set(list(personalState.removedActivityIds));
   const { activities } = collectCalendarActivities(personalState, {
     ...legacyState,
-    problemStates: list(legacyState.problemStates).filter(record => record?.completed === true),
+    problemStates: list(legacyState.problemStates),
   });
   activities.forEach(activity => {
     if (!QUESTION_KINDS.has(activity.kind) || activity.source === 'manual' || activity.countedAsSolved === false

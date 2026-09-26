@@ -16,6 +16,7 @@ import threading
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from free_practice_attempts import merge_free_practice_attempts
 
 from leetcode_sync import synced_accepted_submissions, synced_lifetime_solved_count
 from technical_practice import load_technical_questions
@@ -209,6 +210,8 @@ def is_leetcode_question(record):
 def counted_practice(practice, zone):
     """Count each trainer session once and LeetCode retries at least 3h apart."""
     result, last_counted, trainers = [], {}, {}
+    practice_days = {(row.get("_problemId"), timestamp(row["completedAt"]).astimezone(zone).date())
+                     for row in practice if row.get("_freePractice")}
     # Ascending order makes the cooldown anchor the last counted AC, including
     # records before the selected day or goal period. Civil midnight never resets it.
     for item in sorted(practice, key=lambda row: (row["completedAt"], row["id"])):
@@ -233,7 +236,10 @@ def counted_practice(practice, zone):
             if previous is not None and when - previous < timedelta(hours=3):
                 continue
             last_counted[slug] = when
-        result.append(item)
+        if (item["kind"] in {"quant", "tech"} and not item.get("_freePractice") and item["source"] != "manual"
+                and (item.get("_problemId"), timestamp(item["completedAt"]).astimezone(zone).date()) in practice_days):
+            continue
+        result.append({field: value for field, value in item.items() if not field.startswith("_")})
     return sorted([*result, *trainers.values()], key=lambda item: (item["completedAt"], item["id"]), reverse=True)
 
 
@@ -278,6 +284,10 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
             "source": key(raw.get("source")) if key(raw.get("source")) in {"manual", "legacy", "leetcode"} else "automatic",
             "problemNumber": "" if kind in TRAINER_KINDS else problem_number(raw), "isSummary": kind in TRAINER_KINDS,
         }
+        if kind in {"quant", "tech"} and key(raw.get("problemId")):
+            events[event_id]["_problemId"] = key(raw["problemId"])
+            if raw.get("_freePractice"):
+                events[event_id]["_freePractice"] = True
         if kind in TRAINER_KINDS:
             events[event_id]["_trainerKey"] = key(raw.get("_trainerKey")) or event_id
         if identity:
@@ -288,6 +298,28 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
             if key(raw.get(field)):
                 legacy_ids.add(key(raw[field]))
         return True
+
+    practice_by_problem = {}
+    for record in rows(problem_states) + rows(legacy.get("problemStates")):
+        pid = key(record.get("problemId"))
+        problem = catalog.get(pid, {})
+        if not pid or is_leetcode_question(problem) or is_leetcode_question({"id": pid}) or problem_kind(problem) in TRAINER_KINDS:
+            continue
+        practice_by_problem[pid] = merge_free_practice_attempts([practice_by_problem.get(pid, []), record.get("freePracticeAttempts", [])])
+    practice_times = {pid: [timestamp(attempt["recordedAt"]) for attempt in attempts] for pid, attempts in practice_by_problem.items()}
+
+    def overlaps_free_practice(pid, value):
+        when = timestamp(value)
+        # A legacy completion mirrored at the same timestamp is the same action.
+        return when is not None and when in practice_times.get(pid, [])
+
+    for pid, attempts in practice_by_problem.items():
+        problem = catalog.get(pid, {})
+        for attempt in attempts:
+            add({"id": f"free-practice:{pid}:{attempt['id']}", "kind": "tech", "count": 1,
+                 "completedAt": attempt["recordedAt"], "problemId": pid, "_freePractice": True,
+                 "title": problem.get("titleZh") or problem.get("titleEn"), "titleEn": problem.get("titleEn"),
+                 "problemNumber": question_number(problem)}, ("free-practice", pid, attempt["id"]))
 
     standalone = {key(session.get("id")): session for session in rows(personal.get("practiceSessions"))}
     daily = {key(session.get("id")): session for session in rows(personal.get("dailySessions"))}
@@ -379,7 +411,10 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
             identity = ("problem", key(activity["problemId"]), stamp(timestamp(activity["completedAt"])))
         else:
             identity = ("activity", aid)
-        raw = {**activity, "kind": kind, "problemNumber": question_number(linked_question) or problem_number(activity)}
+        practice_pid = key(activity.get("problemId")) or key(linked_question.get("sourceProblemId")) or key(linked_question.get("id"))
+        if kind in {"quant", "tech"} and overlaps_free_practice(practice_pid, activity.get("completedAt")):
+            continue
+        raw = {**activity, "kind": kind, "problemId": practice_pid, "problemNumber": question_number(linked_question) or problem_number(activity)}
         if kind in TRAINER_KINDS:
             raw["_trainerKey"] = f"trial:{tid}" if tid else f"daily:{key(activity['sessionId'])}" if key(activity.get("sessionId")) else f"activity:{aid}"
         if key(activity.get("problemId")):
@@ -423,6 +458,7 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
             add({"id": f"daily:{sid}:{qid}", "kind": kind, "count": 1,
                  "title": question.get("title"), "titleEn": question.get("titleEn"),
                  "completedAt": answer.get("completedAt"), "problemNumber": question_number(question),
+                 "problemId": key(question.get("sourceProblemId")) or qid,
                  "_trainerKey": f"daily:{sid}"}, ("daily", sid, qid))
 
     # Current standalone technical/coding sessions normally have a canonical
@@ -436,9 +472,12 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
         if is_leetcode_question(question):
             continue
         kind = problem_kind(question) if problem_kind(question) in TRAINER_KINDS else kind
+        if kind in {"quant", "tech"} and overlaps_free_practice(key(question.get("sourceProblemId")) or key(question.get("id")), session.get("completedAt")):
+            continue
         add({"id": f"practice:{sid}", "kind": kind, "count": 1,
              "title": question.get("title"), "titleEn": question.get("titleEn"),
              "completedAt": session.get("completedAt"), "problemNumber": question_number(question),
+             "problemId": key(question.get("sourceProblemId")) or key(question.get("id")),
              "_trainerKey": f"practice:{sid}"}, ("activity", f"practice:{sid}"))
 
     for record in rows(problem_states) + rows(legacy.get("problemStates")):

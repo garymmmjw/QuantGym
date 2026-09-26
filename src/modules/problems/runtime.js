@@ -11,6 +11,7 @@ export function createProblemsRuntime(deps = {}) {
     if (!catalogSyncController) {
       catalogSyncController = createProblemCatalogSyncController({
         getState: deps.getState,
+        getSessionKey: deps.getSessionKey,
         requestCatalog: deps.requestCatalog,
         getUserCatalogProblems: deps.getUserCatalogProblems,
         mergeProblems: deps.mergeProblems,

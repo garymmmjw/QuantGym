@@ -1,11 +1,11 @@
 import { normalizeFreePracticeAttempts } from "../../modules/problems/freePracticeAttempts.js";
 /** Source-first practice navigation. Problem IDs and objects stay shared with the main catalog. */
 export const PRACTICE_BANKS = Object.freeze([
-  { id: 'purple', source: 'question-bank', nameZh: '紫皮书', nameEn: 'Purple Book', kind: 'chapters', descriptionZh: '按原书章节与小节练习', descriptionEn: 'Practice by chapter and section', icon: 'book-open' },
-  { id: 'quantguide', source: 'quantguide', nameZh: 'QuantGuide', nameEn: 'QuantGuide', kind: 'topics', descriptionZh: '按原站五大主题练习', descriptionEn: 'Explore the five original topics', icon: 'layers' },
-  { id: 'xiaohongshu', source: 'interview-xiaohongshu', nameZh: '小红书面经', nameEn: 'Xiaohongshu Interviews', kind: 'companies', descriptionZh: '按公司查看面试题', descriptionEn: 'Interview questions by company', icon: 'message-square' },
-  { id: 'onepoint3acres', source: 'interview-onepoint3acres', nameZh: '一亩三分地面经', nameEn: '1Point3Acres Interviews', kind: 'companies', descriptionZh: '按公司查看面试题', descriptionEn: 'Interview questions by company', icon: 'messages-square' },
-  { id: 'glassdoor', source: 'interview-glassdoor', nameZh: 'Glassdoor 面经', nameEn: 'Glassdoor Interviews', kind: 'companies', descriptionZh: '按公司查看面试题', descriptionEn: 'Interview questions by company', icon: 'building-2' },
+  { id: 'quantguide', source: 'quantguide', nameZh: '蓝宝书', nameEn: 'Sapphire Book', kind: 'topics', descriptionZh: '量化面试精选题', descriptionEn: 'Curated quant interview questions', symbol: 'sapphire' },
+  { id: 'xiaohongshu', source: 'interview-xiaohongshu', nameZh: '红宝书', nameEn: 'Ruby Book', kind: 'companies', descriptionZh: '小红书面经', descriptionEn: 'Xiaohongshu interviews', symbol: 'ruby' },
+  { id: 'onepoint3acres', source: 'interview-onepoint3acres', nameZh: '种田秘籍', nameEn: 'Field Guide', kind: 'companies', descriptionZh: '一亩三分地面经', descriptionEn: '1Point3Acres interviews', symbol: 'field' },
+  { id: 'glassdoor', source: 'interview-glassdoor', nameZh: '绿宝书', nameEn: 'Emerald Book', kind: 'companies', descriptionZh: 'Glassdoor 面经', descriptionEn: 'Glassdoor interviews', symbol: 'emerald' },
+  { id: 'purple', source: 'question-bank', nameZh: '葵花宝典', nameEn: 'Sunflower Manual', kind: 'chapters', descriptionZh: '量化面试进阶题集', descriptionEn: 'Advanced quant interview collection', symbol: 'sunflower', membersOnly: true },
 ].map(Object.freeze));
 
 const TOPICS = [

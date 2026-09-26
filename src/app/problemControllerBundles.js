@@ -73,6 +73,7 @@ export function createAppProblemControllerBundles(deps = {}) {
   const problemsRuntimeBundle = createProblemsRuntimeBundle({
     windowRef: window,
     getState: () => userState.value,
+    getSessionKey: deps.getCatalogSessionKey,
     cloudApi,
     isCatalogProblem,
     isDisabledProblemSource,

@@ -10,7 +10,7 @@ import "./overviewDashboard.css";
 const TOTALS = [
   { key: "applications", label: "已投递申请", unit: "份" },
   { key: "leetcode", label: "LeetCode", unit: "次" },
-  { key: "technical", label: "Tech 已解决", unit: "题" },
+  { key: "technical", label: "题目已练习", unit: "题" },
   { key: "behavioral", label: "Behavioral 已准备", unit: "次" },
   { key: "mock", label: "Mock 已完成", unit: "次", note: "旧 Mock 历史未记录账号归属，暂无法核实累计次数。" },
   { key: "experiences", label: "面经已读", unit: "篇", note: "按面经页的已读标记累计；旧阅读历史未记录。" }
@@ -19,7 +19,7 @@ const TASKS = [
   { key: "leetcode", title: "一道 LeetCode", points: 5, to: "/leetcode", Icon: Code2 },
   { key: "mentalMath", title: "一次 Mental Math", points: 5, to: "/tools", Icon: Calculator },
   { key: "applications", title: "一份 Application", points: 2, to: "/tracker", Icon: BriefcaseBusiness },
-  { key: "technical", title: "一道 Tech", points: 10, to: "/technical-interview", Icon: BrainCircuit },
+  { key: "technical", title: "一道题目", points: 10, to: "/problems", Icon: BrainCircuit },
   { key: "behavioral", title: "一道 Behavioral", points: 10, to: "/behavioral-interview", Icon: MessagesSquare }
 ];
 const number = value => value == null ? "—" : Number(value).toLocaleString("zh-CN");

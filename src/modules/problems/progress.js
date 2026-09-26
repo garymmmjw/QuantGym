@@ -1,3 +1,4 @@
+import { normalizeFreePracticeAttempts } from './freePracticeAttempts.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion } from './completion.js';
 
 export function getCatalogProblems(problems = [], isCatalogProblem = () => true) {
@@ -5,7 +6,8 @@ export function getCatalogProblems(problems = [], isCatalogProblem = () => true)
 }
 
 export function isProblemCompleted(problemId, getPersonalState = () => ({})) {
-  return hasExplicitProblemCompletion(getPersonalState(problemId));
+  const personal = getPersonalState(problemId) || {};
+  return hasExplicitProblemCompletion(personal) || normalizeFreePracticeAttempts(personal.freePracticeAttempts).some(attempt => Date.parse(attempt.recordedAt) <= Date.now());
 }
 
 export function getProblemCompletionCount(problems = [], getPersonalState = () => ({})) {
