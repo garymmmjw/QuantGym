@@ -62,7 +62,7 @@ async function check(name, answer, run, options = {}) {
     if (url.origin === new URL(baseUrl).origin && ['GET', 'HEAD'].includes(method)) return route.continue();
     return route.abort();
   });
-  await context.addInitScript(({ seed, ownerId, storageKey, account, endpoint }) => {
+  await context.addInitScript(({ seed, ownerId, storageKey, account, endpoint, slowPersistenceMs }) => {
     if (!localStorage.getItem(storageKey)) {
       localStorage.setItem('quantMemoryBoard.auth.v1', JSON.stringify({ accounts: [account], currentUserId: ownerId, lastAuthenticatedAt: new Date().toISOString() }));
       localStorage.setItem('quantMemoryBoard.cloud.v1', JSON.stringify({ endpoint, token: 'isolated-fixture-not-a-real-credential', userId: ownerId }));
@@ -70,7 +70,18 @@ async function check(name, answer, run, options = {}) {
       localStorage.setItem(`quantgym.ui.onboarded.v1:${ownerId}`, '1');
       localStorage.setItem(storageKey, JSON.stringify({ version: 1, ownerId, updatedAt: new Date().toISOString(), data: seed }));
     }
-  }, { seed, ownerId, storageKey, account, endpoint });
+    const nativeNow = performance.now.bind(performance);
+    const setItem = Storage.prototype.setItem;
+    window.__mentalInputQa = { writes: 0 };
+    Storage.prototype.setItem = function (key, value) {
+      if (this === localStorage && key === storageKey) {
+        const started = nativeNow();
+        while (nativeNow() - started < slowPersistenceMs) { /* Controlled slow local storage, never a real account. */ }
+        window.__mentalInputQa.writes++;
+      }
+      return setItem.call(this, key, value);
+    };
+  }, { seed, ownerId, storageKey, account, endpoint, slowPersistenceMs: options.slowPersistenceMs || 0 });
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
   const errors = [];
@@ -105,6 +116,152 @@ async function check(name, answer, run, options = {}) {
 }
 
 try {
+  await check('draft persistence batches rapid edits without resetting the local input on timer ticks', 1234, async ({ page, input, read }) => {
+    await page.evaluate(() => { window.__mentalInputQa.writes = 0; });
+    await page.keyboard.type('987654321', { delay: 0 });
+    for (let press = 0; press < 3; press++) await page.keyboard.press('Backspace');
+    assert.equal(await input.inputValue(), '987654');
+    assert.equal(await page.evaluate(() => window.__mentalInputQa.writes), 0,
+      'Incomplete edits must not synchronously rewrite the full personal history');
+    await page.clock.runFor(80);
+    assert.equal(await input.inputValue(), '987654');
+    await page.keyboard.type('1', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    assert.equal(await input.inputValue(), '98765');
+    await page.clock.runFor(80);
+    assert.equal(await input.inputValue(), '98765');
+    await page.clock.runFor(160);
+    assert.equal((await read()).activeTrial.currentAnswer, '98765');
+    assert.equal(await input.inputValue(), '98765');
+    assert.equal(await page.evaluate(() => window.__mentalInputQa.writes), 1,
+      'A burst of 15 edits must be coalesced into one personal-history write');
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.type('1234', { delay: 0 });
+    assert.equal((await read()).activeTrial.correct, 1, 'Correct answers must still persist immediately');
+    assert.equal(await input.inputValue(), '');
+  }, { slowPersistenceMs: 40 });
+  await check('draft persistence flushes unfinished input before an immediate reload', 12, async ({ page, input, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    assert.equal(await input.inputValue(), '987');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.equal((await read()).activeTrial.currentAnswer, '987');
+    await page.clock.resume();
+    await input.waitFor();
+    assert.equal(await input.inputValue(), '987');
+    assert.equal((await read()).activeTrial.currentAnswer, '987');
+  });
+  await check('draft persistence flushes unfinished input when the answer loses focus', 12, async ({ page, input, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    await page.locator('.pm-focus-exit').focus();
+    assert.equal((await read()).activeTrial.currentAnswer, '987');
+    assert.equal(await input.inputValue(), '987');
+  });
+  await check('draft persistence flushes unfinished input when the page loses focus', 12, async ({ page, input, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+    assert.equal((await read()).activeTrial.currentAnswer, '987');
+    assert.equal(await input.inputValue(), '987');
+  });
+  await check('draft persistence flushes unfinished input before leaving the page', 12, async ({ page, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    await page.goto(`${baseUrl}/account`, { waitUntil: 'domcontentloaded' });
+    assert.equal((await read()).activeTrial.currentAnswer, '987');
+    await page.clock.resume();
+    await page.goto(`${baseUrl}/tools?trainer=math`, { waitUntil: 'domcontentloaded' });
+    const resumedInput = page.locator('.pm-focus .pm-answer');
+    await resumedInput.waitFor();
+    assert.equal(await resumedInput.inputValue(), '987');
+  });
+  await check('draft persistence submits the latest unsaved digits on Enter', 12, async ({ page, input, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Enter');
+    const trial = (await read()).activeTrial;
+    assert.equal(trial.currentAnswer, '98');
+    assert.equal(trial.currentQuestion.mistakes.length, 1);
+    assert.equal(trial.currentQuestion.mistakes[0].value, '98');
+    assert.equal(await input.inputValue(), '98');
+  });
+  await check('draft persistence records the latest unsaved digits when skipping', 12, async ({ page, input, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.getByRole('button', { name: '跳过本题', exact: true }).click();
+    const trial = (await read()).activeTrial;
+    assert.equal(trial.questions[0].outcome, 'skipped');
+    assert.equal(trial.questions[0].submittedAnswer, '98');
+    assert.equal(trial.currentAnswer, '');
+    assert.equal(await input.inputValue(), '');
+    await page.clock.runFor(200);
+    assert.equal((await read()).activeTrial.currentAnswer, '', 'An old pending draft must not leak into the next question');
+  });
+  await check('draft persistence records the latest unsaved digits when time expires', 12, async ({ page, read }) => {
+    await page.keyboard.type('1212', { delay: 0 });
+    assert.equal((await read()).activeTrial.correct, 2);
+    const remaining = await page.evaluate(key => Date.parse(JSON.parse(localStorage.getItem(key)).data.activeTrial.deadlineAt) - Date.now(), storageKey);
+    await page.clock.runFor(remaining - 50);
+    await page.keyboard.type('987', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.clock.runFor(150);
+    const state = await read();
+    assert.equal(state.activeTrial, null);
+    assert.equal(state.trials.length, 1);
+    assert.equal(state.trials[0].correct, 2);
+    assert.equal(state.trials[0].questions.length, 3);
+    assert.equal(state.trials[0].questions.at(-1).outcome, 'timeout');
+    assert.equal(state.trials[0].questions.at(-1).submittedAnswer, '98');
+  });
+  await check('draft persistence keeps the last answer when Enter arrives after a sleeping page expires', 12, async ({ page, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    const trial = (await read()).activeTrial;
+    // Advance wall time without running the regular timer: a foreground/input
+    // event can be the first code to notice that a sleeping page has expired.
+    await page.clock.setSystemTime(new Date(Date.parse(trial.deadlineAt) + 1));
+    await page.keyboard.press('Enter');
+    const state = await read();
+    assert.equal(state.activeTrial, null);
+    assert.equal(state.trials[0].correct, 0);
+    assert.equal(state.trials[0].questions.at(-1).outcome, 'timeout');
+    assert.equal(state.trials[0].questions.at(-1).submittedAnswer, '98');
+  });
+  await check('draft persistence toggles the sign of the latest unsaved digits', -123, async ({ page, input, read }) => {
+    await page.keyboard.type('12', { delay: 0 });
+    await page.getByRole('button', { name: '切换答案正负号', exact: true }).click();
+    assert.equal(await input.inputValue(), '-12');
+    await page.clock.runFor(160);
+    assert.equal((await read()).activeTrial.currentAnswer, '-12');
+    await page.keyboard.type('3', { delay: 0 });
+    assert.equal((await read()).activeTrial.correct, 1);
+    assert.equal((await read()).activeTrial.questions[0].submittedAnswer, '-123');
+  });
+  await check('draft persistence does not reset or submit a newer IME composition', 12, async ({ page, input, read }) => {
+    await page.keyboard.type('9', { delay: 0 });
+    await page.clock.runFor(80);
+    await input.dispatchEvent('compositionstart');
+    await input.evaluate(element => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(element, '１２');
+      element.dispatchEvent(new InputEvent('input', { bubbles: true, data: '１２', inputType: 'insertCompositionText', isComposing: true }));
+    });
+    await page.clock.runFor(200);
+    assert.equal(await input.inputValue(), '１２');
+    assert.equal((await read()).activeTrial.correct, 0);
+    await input.dispatchEvent('compositionend', { data: '１２' });
+    assert.equal((await read()).activeTrial.correct, 1);
+    assert.equal(await input.inputValue(), '');
+    await page.clock.runFor(200);
+    assert.equal((await read()).activeTrial.correct, 1);
+    assert.equal(await input.inputValue(), '');
+  });
+  await check('draft persistence records the latest unsaved digits when practice is stopped', 12, async ({ page, read }) => {
+    await page.keyboard.type('987', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Escape');
+    const state = await read();
+    assert.equal(state.activeTrial, null);
+    assert.equal(state.trials[0].status, 'aborted');
+    assert.equal(state.trials[0].questions.at(-1).submittedAnswer, '98');
+  });
   await check('rapid keyboard after fullscreen countdown preserves answers and deletions', 12, async ({ page, input, read }) => {
     assert.equal(await input.evaluate(element => document.activeElement === element), true);
     await page.keyboard.type('1212121212', { delay: 0 });
@@ -172,9 +329,11 @@ try {
     for (let repeat = 0; repeat < 4; repeat++) await page.keyboard.down('Backspace');
     await page.keyboard.up('Backspace');
     assert.equal(await input.inputValue(), '9876');
+    await page.clock.runFor(160);
     assert.equal((await read()).activeTrial.currentAnswer, '9876');
     for (let press = 0; press < 6; press++) await page.keyboard.press('Backspace');
     assert.equal(await input.inputValue(), '');
+    await page.clock.runFor(160);
     assert.equal((await read()).activeTrial.currentAnswer, '');
     await page.keyboard.type('1234');
     assert.equal((await read()).activeTrial.correct, 1);
@@ -213,6 +372,7 @@ try {
     await page.keyboard.press('Shift+ArrowRight');
     await page.keyboard.type('42');
     assert.equal(await input.inputValue(), '142');
+    await page.clock.runFor(160);
     assert.equal((await read()).activeTrial.currentAnswer, '142');
     await page.keyboard.press('ControlOrMeta+A');
     await page.keyboard.type('9876');
@@ -230,6 +390,7 @@ try {
     await edit('9', 'deleteContentBackward');
     await edit('', 'deleteContentBackward');
     assert.equal(await input.inputValue(), '');
+    await page.clock.runFor(160);
     assert.equal((await read()).activeTrial.currentAnswer, '');
     await edit('1', 'insertText', '1');
     await edit('12', 'insertText', '2');
@@ -269,6 +430,18 @@ try {
     assert.equal((await read()).activeTrial.correct, 1);
     await page.keyboard.press('5');
     assert.equal((await read()).activeTrial.correct, 2);
+  });
+  await check('held digit can repeat while editing the same unanswered question', 1112, async ({ page, input, read }) => {
+    await input.focus();
+    await page.keyboard.down('1');
+    await page.keyboard.down('1');
+    await page.keyboard.down('1');
+    await page.keyboard.up('1');
+    assert.equal(await input.inputValue(), '111');
+    await page.keyboard.press('2');
+    assert.equal((await read()).activeTrial.correct, 1);
+    assert.equal((await read()).activeTrial.questions[0].submittedAnswer, '1112');
+    assert.equal(await input.inputValue(), '');
   });
   await check('held Enter records one incorrect submission', 12, async ({ page, input, read }) => {
     await input.pressSequentially('9');

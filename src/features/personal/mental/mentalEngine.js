@@ -91,6 +91,13 @@ function closeQuestion(question, outcome, value, now) {
   };
 }
 
+export function normalizeMentalAnswer(raw) {
+  const value = String(raw ?? '').trim()
+    .replace(/[０-９]/g, digit => String(digit.charCodeAt(0) - 0xff10))
+    .replace(/[−－]/g, '-');
+  return /^-?\d*$/.test(value) && value.length <= 12 ? value : null;
+}
+
 export function transitionTrial(trial, action, now = Date.now(), rng = Math.random) {
   if (!trial || trial.status !== 'active' || (trial.settings?.trainer && trial.settings.trainer !== 'math') || now < Date.parse(trial.startedAt)) return trial;
   const deadline = Date.parse(trial.deadlineAt);
@@ -115,10 +122,8 @@ export function transitionTrial(trial, action, now = Date.now(), rng = Math.rand
     // Chinese keyboards can commit full-width digits, and copied negative
     // answers often use a mathematical minus. Canonicalize only these integer
     // characters; decimals, exponents and expressions still remain invalid.
-    const value = String(action.value ?? trial.currentAnswer).trim()
-      .replace(/[０-９]/g, digit => String(digit.charCodeAt(0) - 0xff10))
-      .replace(/[−－]/g, '-');
-    if (!/^-?\d*$/.test(value) || value.length > 12) return trial;
+    const value = normalizeMentalAnswer(action.value ?? trial.currentAnswer);
+    if (value === null) return trial;
     const completeValue = /^-?\d+$/.test(value);
     if (completeValue && Number(value) === current.answer) {
       return { ...trial, correct: trial.correct + 1,
