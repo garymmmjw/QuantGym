@@ -1,3 +1,4 @@
+import { getFreePracticeActivities } from '../../modules/problems/practiceActivity.js';
 const VERSION = 1;
 const PREFIX = "quantgym.career-stages.v1:";
 const UPDATED_EVENT = "quantgym:career-stages-updated";
@@ -318,6 +319,7 @@ export function getSavedQuestionCount({ ownerId, storage = browserStorage(), nam
     if (!object(state) || !Array.isArray(state.problemStates)
       || state.problemStates.some((item) => !object(item) || typeof item.problemId !== "string" || !item.problemId.trim()
         || (item.completed != null && typeof item.completed !== "boolean"))) return null;
-    return new Set(state.problemStates.filter((item) => item.completed === true).map((item) => item.problemId)).size;
+    return new Set([...state.problemStates.filter((item) => item.completed === true).map((item) => item.problemId),
+      ...getFreePracticeActivities(state).map(item => item.problemId)]).size;
   } catch { return null; }
 }

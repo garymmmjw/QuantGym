@@ -1,3 +1,4 @@
+import { getFreePracticeActivities } from '../../../modules/problems/practiceActivity.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion, isLeetcodeCatalogProblem, isTrainerCatalogProblem } from '../../../modules/problems/completion.js';
 
 export const ACTIVITY_KINDS = ["quant", "mental", "sequence", "pattern", "tech", "coding", "behavioral", "daily"];
@@ -166,6 +167,10 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
       if (problemId && activity.countedAsSolved !== false) problemCompletions.add(completionKey(problemId, activity.completedAt));
     }
   };
+  const freePractice = getFreePracticeActivities(legacyState);
+  const practiceDays = new Set(freePractice.map(activity => `${activity.problemId}:${localDayKey(activity.completedAt)}`));
+  const overlapsFreePractice = (problemId, completedAt) => Boolean(problemId && practiceDays.has(`${problemId}:${localDayKey(completedAt)}`));
+  freePractice.forEach(add);
   const trialsById = new Map();
   for (const trial of [...list(state.trials), ...(state.activeTrial ? [state.activeTrial] : [])]) {
     const kind = trialKind(trial);
@@ -180,6 +185,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     trainerActivities(trialsById.get(key), kind, fallback).forEach(add);
   };
   const practiceById = new Map(list(state.practiceSessions).map(session => [`practice:${session.id}`, session]));
+  const dailyById = new Map(list(state.dailySessions).map(session => [session.id, session]));
   const recordedLegacyMental = new Set();
   const behavioral = collectBehavioralAnswerActivities(state);
   behavioral.activities.forEach(add);
@@ -205,7 +211,10 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
       }
     }
     const session = practiceById.get(raw?.id);
-    const problemId = raw?.problemId || raw?.questionId;
+    const dailyQuestion = list(dailyById.get(raw?.sessionId)?.questions).find(question => question.id === raw?.questionId);
+    const problemId = raw?.problemId || session?.question?.sourceProblemId || session?.question?.id
+      || dailyQuestion?.sourceProblemId || dailyQuestion?.id || raw?.questionId;
+    if (['quant', 'tech'].includes(raw?.kind) && raw.source !== 'manual' && overlapsFreePractice(problemId, raw.completedAt)) return;
     const problem = problems.get(problemId) || { id: problemId };
     // A historical local coding review is not a verified LeetCode accepted submission.
     // Keep its history while separating it from solved-problem statistics.
@@ -243,7 +252,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
   const legacyReferences = new Set(explicit.flatMap((item) => [item.legacyId, item.sourceId]).filter(Boolean));
   const hasSameProblemEvent = (problemId, completedAt) => problemCompletions.has(completionKey(problemId, completedAt));
   list(legacyState.problemStates).forEach((record) => {
-    if (record?.completed !== true || !record.problemId) return;
+    if (record?.completed !== true || !record.problemId || overlapsFreePractice(record.problemId, record.completedAt)) return;
     if (!hasExplicitProblemCompletion(record) || !localDayKey(record.completedAt)) { undatedLegacyCount += 1; return; }
     const problem = problems.get(record.problemId) || { id: record.problemId };
     const kind = problemKind(problem);
@@ -261,7 +270,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
   // Scores, evaluations, and the entry's logging date do not prove completion.
   // Only an explicit confirmation with its own completion timestamp can count.
   list(legacyState.entries).forEach((entry, index) => {
-    if (!entry?.problemId || entry.completed !== true) return;
+    if (!entry?.problemId || entry.completed !== true || overlapsFreePractice(entry.problemId, entry.completedAt)) return;
     if (!hasExplicitProblemCompletion(entry) || !localDayKey(entry.completedAt)) { undatedLegacyCount += 1; return; }
     const problem = problems.get(entry.problemId) || { id: entry.problemId };
     const kind = problemKind(problem, true);

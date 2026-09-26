@@ -162,3 +162,6 @@ body.is-authenticated .ac-center select { background: var(--ac-bg); color: var(-
 .ac-center .lc-connection { border: 0; border-radius: 0; padding: 0; background: transparent; box-shadow: none; }
 .ac-center .lc-eyebrow { display: none; }
 .ac-center .qg-cloud-activation { background: var(--ac-soft); border-color: var(--ac-line); margin: 0 0 24px; }
+.ac-membership-search { display: grid; gap: 8px; margin: 20px 0; font-size: 13px; }
+.ac-membership-search input { min-height: 44px; padding: 10px 12px; border: 1px solid var(--border, #d9dce2); border-radius: 10px; background: var(--surface, #fff); color: inherit; }
+.ac-memberships .ac-invitation-history strong { overflow-wrap: anywhere; }

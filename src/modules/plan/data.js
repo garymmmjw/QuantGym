@@ -173,10 +173,10 @@ export function getPrepDailyTasks(plan, deps = {}) {
       id: "verbal",
       title: stageIndex >= 3 ? "面试口述模拟" : `${formatCategoryLabel(secondary)} 主题复盘`,
       detail: stageIndex >= 3
-        ? "进行 3 题 technical mock：先澄清，再口述假设与结论。"
+        ? "在题目中完成 3 道练习，记录结果并复盘思路。"
         : `学习 ${formatCategoryLabel(secondary)}，并把一道题讲成面试回答。`,
       minutes: 35,
-      action: stageIndex >= 3 ? "interview" : "problems",
+      action: "problems",
       query: secondary
     },
     {

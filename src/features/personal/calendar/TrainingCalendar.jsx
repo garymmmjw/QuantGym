@@ -5,8 +5,8 @@ import { collectLeetCodeActivities, leetcodeDailySummary } from "./leetcodeCalen
 import "./calendar.css";
 
 const KIND_LABELS = {
-  zh: { quant: "量化题目", mental: "Mental Math", sequence: "数列 / 字母推理", pattern: "图形推理", tech: "Technical Interview", coding: "编程练习（历史）", behavioral: "Behavioral", daily: "历史综合训练" },
-  en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Technical Interview", coding: "Past coding practice", behavioral: "Behavioral", daily: "Past combined practice" }
+  zh: { quant: "量化题目", mental: "Mental Math", sequence: "数列 / 字母推理", pattern: "图形推理", tech: "题目练习", coding: "编程练习（历史）", behavioral: "Behavioral", daily: "历史综合训练" },
+  en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Questions", coding: "Past coding practice", behavioral: "Behavioral", daily: "Past combined practice" }
 };
 
 export function TrainingCalendar({ state = {}, update, legacyState = {}, language = "zh", leetcode }) {
@@ -123,7 +123,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         <h1 id="pc-title">{t("训练日历", "Training calendar")}</h1>
         <div className="pc-practice-links">
           <Link className="pc-text-button" to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link>
-          <Link className="pc-text-button" to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link>
+          <Link className="pc-text-button" to="/problems">{t("题目", "Questions")} <span aria-hidden="true">↗</span></Link>
         </div>
       </header>
 
@@ -228,7 +228,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           <span className="pc-empty-symbol" aria-hidden="true">○</span>
           <h3>{leetcodeDay.acceptedSubmissions > 0 ? t("这一天的通过记录尚未达到再次计数间隔", "Accepted attempts are within the repeat-count interval") : leetcodeDay.sourceSubmissions > 0 ? t("这一天的题目明细尚未同步", "Problem details have not been synced for this day") : t("暂无训练记录", "No training records")}</h3>
           {(leetcodeDay.acceptedSubmissions > 0 || leetcodeDay.sourceSubmissions > 0) && <p>{leetcodeDay.acceptedSubmissions > 0 ? t(`已保留 ${leetcodeDay.acceptedSubmissions} 次通过提交；与同题上次计入记录相隔不足 3 小时，总数不再增加。`, `${leetcodeDay.acceptedSubmissions} accepted submissions are retained. They are less than 3 hours after the last counted solve of the same problem, so the total does not increase.`) : t("力扣日历中有提交记录，但没有对应的已同步通过题目。提交次数不计入完成题数。", "LeetCode’s calendar has submissions, but no accepted problem details are synced. Submission totals do not count as completed problems.")}</p>}
-          <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link><Link to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link></div>
+          <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link><Link to="/problems">{t("题目", "Questions")} <span aria-hidden="true">↗</span></Link></div>
         </div>}
       </section>
 

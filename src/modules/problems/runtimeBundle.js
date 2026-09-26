@@ -5,6 +5,7 @@ export function createProblemsRuntimeBundle(deps = {}) {
   const runtime = createProblemsRuntime({
     windowRef: deps.windowRef,
     getState: deps.getState,
+    getSessionKey: deps.getSessionKey,
     requestCatalog: () => requestProblemCatalog(deps.cloudApi, {
       isCatalogProblem: deps.isCatalogProblem,
       isDisabledProblemSource: deps.isDisabledProblemSource

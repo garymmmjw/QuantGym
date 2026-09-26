@@ -671,6 +671,8 @@ export function initDomainSliceImpl(shared, ctx) {
     applyProblemNavigationFilters,
     clearProblemLookupCaches,
     cloudApi,
+    getCatalogSessionKey: () => JSON.stringify([appState.currentUser?.id, appState.cloudConfig?.userId,
+      appState.cloudConfig?.endpoint, appState.cloudConfig?.token]),
     companies: quantCompanyDefs,
     companyTierWeight,
     documentRef: document,

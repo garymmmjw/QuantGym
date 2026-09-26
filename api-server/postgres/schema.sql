@@ -80,6 +80,15 @@ CREATE TABLE email_verification_codes (
 CREATE INDEX idx_email_verification_expires
 ON email_verification_codes (expires_at);
 
+-- Membership grants are independent of registration invitations.
+CREATE TABLE memberships (
+  email_norm text PRIMARY KEY,
+  added_by text REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL,
+  revoked_at timestamptz
+);
+
 -- Invitation plaintext is returned only when generated and is never persisted.
 CREATE TABLE registration_invitations (
   id text PRIMARY KEY,

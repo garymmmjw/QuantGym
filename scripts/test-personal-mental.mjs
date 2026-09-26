@@ -82,6 +82,26 @@ test('empty or malformed input does not advance or add a wrong submission', () =
   }
 });
 
+test('Chinese keyboard digits and copied mathematical minus signs are accepted as integer answers', () => {
+  const trial = make();
+  const next = transitionTrial(trial, { type: 'input', value: '５' }, start + 100);
+  assert.equal(next.correct, 1);
+  assert.equal(next.questions[0].submittedAnswer, '5');
+
+  const negative = createTrial({ operations: ['subtract'], ranges: { subtract: { minA: 2, maxA: 2, minB: 5, maxB: 5 } } }, { now: start });
+  for (const value of ['−3', '－３', ' \n−３\t']) {
+    const answered = transitionTrial(negative, { type: 'input', value }, start + 100);
+    assert.equal(answered.correct, 1, value);
+    assert.equal(answered.questions[0].submittedAnswer, '-3');
+  }
+  const partial = transitionTrial(negative, { type: 'input', value: '－' }, start + 100);
+  assert.equal(partial.currentAnswer, '-');
+  assert.equal(partial.correct, 0);
+  for (const value of ['３.０', '３e０', '３ ０', '³', '−−３']) {
+    assert.equal(transitionTrial(negative, { type: 'submit', value }, start + 100), negative, value);
+  }
+});
+
 test('question-scoped events cannot score, overwrite or skip the next question', () => {
   const trial = make();
   const answer = { type: 'input', value: '5', questionId: trial.currentQuestion.id };

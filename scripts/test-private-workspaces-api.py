@@ -36,6 +36,7 @@ class PrivateWorkspacesApiTests(unittest.TestCase):
     request = base.__dict__["request"]
     sql = base.__dict__["sql"]
     new_user = base.__dict__["new_user"]
+    grant_membership = base.__dict__["grant_membership"]
     put = base.__dict__["put"]
     assert_private = base.__dict__["assert_private"]
 
@@ -132,9 +133,12 @@ class PrivateWorkspacesApiTests(unittest.TestCase):
         self.assertIn(problem["id"], json.dumps(self.request("GET", "/api/problems", token)[1]))
 
     def test_shared_technical_catalog_remains_available_without_private_progress(self):
-        token, _ = self.new_user()
-        other, _ = self.new_user()
+        token, owner = self.new_user()
+        other, other_owner = self.new_user()
         self.assertEqual(self.request("GET", "/api/practice/technical/questions")[0], 401)
+        self.assertEqual(self.request("GET", "/api/practice/technical/questions", token)[0], 403)
+        self.grant_membership(owner)
+        self.grant_membership(other_owner)
         first = self.request("GET", "/api/practice/technical/questions", token)
         second = self.request("GET", "/api/practice/technical/questions", other)
         self.assertEqual(first[0], 200, first[1])

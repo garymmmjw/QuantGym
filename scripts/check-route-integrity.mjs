@@ -124,6 +124,10 @@ function checkPageWrappers() {
       expect(text.includes("<Navigate") && text.includes("/account?") && text.includes('"preferences"'), "Settings must redirect to the account preferences section.");
       continue;
     }
+    if (id === "technical-interview") {
+      expect(text.includes("<Navigate") && text.includes("pathname: '/problems'") && text.includes("search: location.search"), "Technical Interview must redirect to Questions and preserve selection parameters.");
+      continue;
+    }
     expect(/import \{ useSyncModuleRoute \} from ["']\.\.\/hooks\/useSyncModuleRoute\.js["'];/.test(text), `${pageName}.jsx must import useSyncModuleRoute.`);
     expect(text.includes(`export function ${pageName}()`), `${pageName}.jsx must export function ${pageName}.`);
     expect(new RegExp(`useSyncModuleRoute\\(["']${id}["']\\)`).test(text), `${pageName}.jsx must sync module route "${id}".`);

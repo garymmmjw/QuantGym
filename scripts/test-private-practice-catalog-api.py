@@ -59,7 +59,9 @@ def isolated_database():
                  "is_curated_private_problem": is_curated_private_problem, "is_retired_private_problem": is_retired_private_problem,
                  "lock_problem_catalog": lock_problem_catalog}
     exec(compile(ast.Module(body=[*helpers, *methods], type_ignores=[]), "isolated-catalog-methods", "exec"), namespace)
-    result = SimpleNamespace(backend="sqlite", connect=lambda: conn, conn=conn)
+    # Catalog import tests use a member owner; HTTP membership enforcement is
+    # covered by test-memberships-api.py, without coupling this SQL fixture to accounts.
+    result = SimpleNamespace(backend="sqlite", connect=lambda: conn, conn=conn, user_is_member=lambda conn, user_id: bool(user_id))
     for name in names:
         setattr(result, name, MethodType(namespace[name], result))
     return result

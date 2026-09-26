@@ -3,8 +3,10 @@ import { ProblemDetail } from "./ProblemDetail.jsx";
 import { localizeCategoryLabel, localizeDifficultyLabel } from "./problemDisplayLabels.js";
 import { useProblemsPageModel } from "./problemsHooks.js";
 import { getPracticeBank, getPracticeCompanies, hasPracticeRecord } from "./practiceBanks.js";
+import { useMembership } from "../membership/useMembership.js";
 import { useFreePractice } from "./useFreePractice.js";
 import { useFreePracticeAttempt } from "./useFreePracticeAttempt.js";
+import { BankSymbol } from "./BankSymbol.jsx";
 import { skillDefs } from "../../skills.js";
 import "./freePractice.css";
 
@@ -15,29 +17,36 @@ const topicLabel = (value, en) => en ? skillDefs[value]?.name || extraTopics[val
 
 function BankCard({ bank, practice: p }) {
   const en = p.isEnglish;
-  const featured = bank.kind !== "companies";
-  return <article className={`fp-bank-card fp-bank-${bank.id}${featured ? " fp-bank-featured" : ""}`} data-bank-card={bank.id}>
+  const locked = bank.membersOnly && !p.membership.isMember;
+  return <article className={`fp-bank-card fp-bank-featured fp-bank-${bank.id}${bank.membersOnly ? " fp-bank-member" : ""}`} data-bank-card={bank.id}>
     <button className="fp-bank-open" type="button" onClick={() => p.selectBank(bank.id)} aria-label={`${en ? "Open " : "进入"}${name(bank, en)}`}>
-      <span className="fp-bank-icon" aria-hidden="true"><i data-lucide={bank.icon} /></span>
-      <span className="fp-bank-copy"><span className="fp-bank-kind">{en ? (featured ? "BY TOPIC" : "BY COMPANY") : (bank.kind === "chapters" ? "按原书章节" : bank.kind === "topics" ? "按原站主题" : "按公司整理")}</span><h3>{name(bank, en)}</h3><p>{en ? bank.descriptionEn : bank.descriptionZh}</p></span>
+      <span className="fp-bank-icon" aria-hidden="true"><BankSymbol symbol={bank.symbol} /></span>
+      <span className="fp-bank-copy"><span className="fp-bank-title"><h3>{name(bank, en)}</h3>{bank.membersOnly ? <span className="fp-member-badge"><i data-lucide="lock-keyhole" />{en ? "Members only" : "会员专享"}</span> : null}</span><p>{en ? bank.descriptionEn : bank.descriptionZh}</p></span>
       <span className="fp-bank-arrow" aria-hidden="true">↗</span>
     </button>
     <div className="fp-bank-bottom">
+      {locked ? <><span className="fp-member-note">{en ? "Access with your member email" : "会员邮箱登录后即可练习"}</span><button className="fp-resume" type="button" onClick={() => p.selectBank(bank.id)}>{en ? "View access" : "查看权限"}<span aria-hidden="true"> →</span></button></> : <>
       <div className="fp-bank-count"><strong data-bank-count>{number(bank.total)}</strong><span>{en ? "questions" : "道题"}</span></div>
       <div className="fp-bank-progress"><span>{en ? `${number(bank.completed)} practiced` : `已练 ${number(bank.completed)}`}</span><progress value={bank.completed} max={bank.total || 1} aria-label={en ? `${name(bank, en)} progress` : `${name(bank, en)}练习进度`} /></div>
-      {bank.resumeId ? <button className="fp-resume" type="button" onClick={() => p.resumeBank(bank)}>{en ? "Continue" : "继续刷题"}<span aria-hidden="true"> →</span></button> : <button className="fp-resume" type="button" disabled={!bank.total} onClick={() => p.selectBank(bank.id)}>{bank.total ? (en ? "Review" : "回顾题目") : (en ? "Not loaded" : "暂未加载")}</button>}
+      {bank.resumeId ? <button className="fp-resume" type="button" onClick={() => p.resumeBank(bank)}>{en ? "Continue" : "继续刷题"}<span aria-hidden="true"> →</span></button> : <button className="fp-resume" type="button" disabled={!bank.total} onClick={() => p.selectBank(bank.id)}>{bank.total ? (en ? "Review" : "回顾题目") : (en ? "Not loaded" : "暂未加载")}</button>}</>}
     </div>
   </article>;
 }
 
 function BankHome({ practice: p }) {
+  return <div className="fp-book-grid">{p.summaries.map(bank => <BankCard key={bank.id} bank={bank} practice={p} />)}</div>;
+}
+
+function MemberAccess({ practice: p }) {
   const en = p.isEnglish;
-  return <>
-    <div className="fp-home-section-title"><h2>{en ? "Books & curated questions" : "按知识体系练习"}</h2><p>{en ? "Follow the original chapters and topics." : "沿着原书章节和原站主题，逐步练习。"}</p></div>
-    <div className="fp-book-grid">{p.summaries.filter(bank => bank.kind !== "companies").map(bank => <BankCard key={bank.id} bank={bank} practice={p} />)}</div>
-    <div className="fp-home-section-title fp-interview-heading"><h2>{en ? "Interview question banks" : "按目标公司练习"}</h2><p>{en ? "Browse collected interviews by source and company." : "保留面经来源，集中练习目标公司的题目。"}</p></div>
-    <div className="fp-interview-banks">{p.summaries.filter(bank => bank.kind === "companies").map(bank => <BankCard key={bank.id} bank={bank} practice={p} />)}</div>
-  </>;
+  const { loading, error, connected, refresh } = p.membership;
+  return <section className="fp-member-access" aria-live="polite">
+    <span className="fp-access-symbol"><BankSymbol symbol="sunflower" /></span>
+    <span className="fp-member-badge"><i data-lucide="lock-keyhole" />{en ? "Members only" : "会员专享"}</span>
+    <h2>{loading ? (en ? "Checking membership…" : "正在确认会员权限…") : (en ? "Unlock the Sunflower Manual" : "开启葵花宝典")}</h2>
+    <p>{loading ? (en ? "Your access will appear here shortly." : "请稍候，正在查询当前账号。") : error ? (en ? "Could not check your membership. Please try again." : "暂时无法确认会员权限，请稍后重试。") : connected ? (en ? "This collection is available to member emails. Contact an administrator to add your sign-in email." : "本题集仅向会员开放。请联系管理员，将你的登录邮箱加入会员名单。") : (en ? "Sign in to your online account with a member email to access this collection." : "请使用已加入会员名单的邮箱登录云端账号，即可进入本题集。")}</p>
+    <div><button type="button" onClick={p.goHome}>{en ? "Browse question banks" : "返回全部题库"}</button><button type="button" disabled={loading} onClick={() => refresh()}>{en ? "Check again" : "重新检查权限"}</button></div>
+  </section>;
 }
 
 function BankDirectory({ practice: p }) {
@@ -110,7 +119,8 @@ function QuestionDetail({ practice: p, model }) {
 
 export function FreePracticeWorkspace() {
   const model = useProblemsPageModel();
-  const p = useFreePractice(model);
+  const membership = useMembership();
+  const p = useFreePractice(model, membership);
   const en = p.isEnglish;
   const bank = p.bank;
   const summary = p.summary;
@@ -120,7 +130,7 @@ export function FreePracticeWorkspace() {
   useEffect(() => { window.lucide?.createIcons?.(); }, [bank?.id, p.selectedId, p.groups, p.page, p.companySearch]);
   return <section className="problem-section qg-training-page qg-problems-page qg-free-practice" data-free-practice-root>
     {bank || p.selectedId ? <nav className="fp-breadcrumbs" aria-label={en ? "Breadcrumb" : "浏览路径"}><button type="button" onClick={p.goHome}>{en ? "All question banks" : "全部题库"}</button><span aria-hidden="true">/</span>{bank ? <button type="button" onClick={() => p.selectBank(bank.id)}>{name(bank, en)}</button> : <span>{en ? "Question" : "题目"}</span>}{p.group ? <><span aria-hidden="true">/</span><span>{p.group.label}</span></> : null}{p.section ? <><span aria-hidden="true">/</span><span>{p.section.label}</span></> : null}</nav> : null}
-    <header className="fp-header"><div><h1>{bank ? name(bank, en) : (en ? "Free practice" : "自由刷题")}</h1><p>{bank ? (en ? bank.descriptionEn : bank.descriptionZh) : (en ? "Choose a bank. Follow a topic or prepare for a company." : "选一本题库，按知识点深入，或按目标公司练习。")}</p></div><div className="fp-header-stats"><span><strong>{number(summary?.total ?? total)}</strong>{en ? " questions" : " 道题"}</span><span><strong>{number(summary?.completed ?? completed)}</strong>{en ? " practiced" : " 已练"}</span></div></header>
-    {!bank && !p.selectedId ? <BankHome practice={p} /> : <div className={`fp-workspace${!hasDirectory ? " fp-without-directory" : ""}`}><>{hasDirectory ? <BankDirectory practice={p} /> : null}</><main className="fp-main">{p.selectedId && p.selectedProblem ? <QuestionDetail practice={p} model={model} /> : p.selectedId ? <div className="fp-empty"><h2>{en ? "Question unavailable" : "暂时找不到这道题"}</h2><p>{en ? "The question may have moved or may require sign-in." : "这道题可能已调整，或需要登录后加载。"}</p><button type="button" onClick={p.closeQuestion}>{en ? "Back" : "返回题目列表"}</button></div> : <QuestionList practice={p} />}</main></div>}
+    <header className="fp-header"><div><h1>{bank ? name(bank, en) : (en ? "Questions" : "题目")}</h1><p>{bank ? (en ? bank.descriptionEn : bank.descriptionZh) : (en ? "Choose a collection and build your next solution." : "选一本题集，从下一道题开始。")}</p></div>{!p.membershipRequired ? <div className="fp-header-stats"><span><strong>{number(summary?.total ?? total)}</strong>{en ? " questions" : " 道题"}</span><span><strong>{number(summary?.completed ?? completed)}</strong>{en ? " practiced" : " 已练"}</span></div> : null}</header>
+    {p.membershipRequired ? <MemberAccess practice={p} /> : !bank && !p.selectedId ? <BankHome practice={p} /> : <div className={`fp-workspace${!hasDirectory ? " fp-without-directory" : ""}`}><>{hasDirectory ? <BankDirectory practice={p} /> : null}</><main className="fp-main">{p.selectedId && p.selectedProblem ? <QuestionDetail practice={p} model={model} /> : p.selectedId ? <div className="fp-empty"><h2>{en ? "Question unavailable" : "暂时找不到这道题"}</h2><p>{en ? "The question may have moved or may require sign-in." : "这道题可能已调整，或需要登录后加载。"}</p><button type="button" onClick={p.closeQuestion}>{en ? "Back" : "返回题目列表"}</button></div> : <QuestionList practice={p} />}</main></div>}
   </section>;
 }

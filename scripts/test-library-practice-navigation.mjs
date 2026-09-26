@@ -153,7 +153,7 @@ const sourceCatalog = [
 
 // Render the actual hook used by FreePracticeWorkspace inside React Router.
 // URL-only navigation assertions would miss a page that ignored the source.
-function renderPracticeRoute(url, catalog = sourceCatalog) {
+function renderPracticeRoute(url, catalog = sourceCatalog, membership = { isMember: true }) {
   let practice;
   function Probe() {
     practice = useFreePractice({
@@ -162,7 +162,7 @@ function renderPracticeRoute(url, catalog = sourceCatalog) {
       accountId: "fixture",
       view: { isEnglish: true },
       openProblem() {}, returnToList() {}
-    });
+    }, membership);
     return createElement("ul", null, practice.pageItems.map(problem => createElement("li", { key: problem.id }, problem.titleEn)));
   }
   const html = renderToStaticMarkup(createElement(MemoryRouter, { initialEntries: [url] }, createElement(Probe)));
@@ -215,4 +215,13 @@ test("an explicit empty query clears stale selection, while same-path hashes sti
   browser.windowRef.dispatchEvent(new browser.windowRef.CustomEvent("hashchange"));
   assert.equal(browser.replacements[0], "/problems?lang=en");
   assert.equal(browser.navigations.length, 1);
+});
+
+
+test("non-members cannot expose cached member questions through a conflicting public bank query", () => {
+  const locked = renderPracticeRoute("/problems?bank=quantguide&question=purple-one", sourceCatalog, { isMember: false }).practice;
+  assert.equal(locked.membershipRequired, true);
+  assert.equal(locked.bank.id, "purple");
+  assert.equal(locked.selectedProblem, null);
+  assert.deepEqual(locked.pageItems, []);
 });

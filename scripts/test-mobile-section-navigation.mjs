@@ -5,12 +5,12 @@ import { MODULE_MANIFEST } from '../src/modules/manifest.js';
 import { isModuleVisible } from '../src/modules/availability.js';
 import { getModulePath } from '../src/routes/routeConfig.js';
 
-test('the five mobile categories cover the ten supported entries exactly once', () => {
+test('the five mobile categories cover the nine supported entries exactly once', () => {
   assert.deepEqual(MOBILE_SECTIONS.map(section => section.label), ['总览', '求职', '训练', '资源', '我的']);
   const entries = MOBILE_SECTIONS.flatMap(section => section.modules.map(module => module.id));
   assert.equal(new Set(entries).size, entries.length);
   assert.deepEqual([...entries].sort(), [
-    'overview', 'tracker', 'calendar', 'technical-interview', 'behavioral-interview',
+    'overview', 'tracker', 'calendar', 'behavioral-interview',
     'leetcode', 'tools', 'problems', 'experiences', 'account',
   ].sort());
   for (const section of MOBILE_SECTIONS) {
@@ -69,7 +69,7 @@ test('pressing the selected bottom category preserves the current child page, qu
 });
 
 test('entering a different category uses its default route without copying page-specific state', () => {
-  const defaults = { overview: 'overview', career: 'tracker', training: 'technical-interview', resources: 'problems', mine: 'account' };
+  const defaults = { overview: 'overview', career: 'tracker', training: 'problems', resources: 'experiences', mine: 'account' };
   for (const [sectionId, moduleId] of Object.entries(defaults)) {
     const pathname = sectionId === 'mine' ? '/tracker' : '/account';
     assert.equal(getMobileSectionHref(sectionId, { pathname, search: '?section=security', hash: '#password' }), getModulePath(moduleId));
@@ -79,11 +79,11 @@ test('entering a different category uses its default route without copying page-
 test('the compact LeetCode page returns to the training entry through its selected bottom category', () => {
   for (const pathname of ['/leetcode', '/leetcode/']) {
     const location = { pathname, search: '?qa=fixture&problem=two-sum', hash: '#notes' };
-    assert.equal(getMobileSectionHref('training', location), '/technical-interview?qa=fixture');
+    assert.equal(getMobileSectionHref('training', location), '/problems?qa=fixture');
     assert.equal(getMobileModuleHref('leetcode', location), `${pathname}?qa=fixture&problem=two-sum#notes`);
     assert.equal(getMobileSectionHref('career', location), '/tracker?qa=fixture');
   }
-  assert.equal(getMobileSectionHref('training', { pathname: '/leetcode', search: '?problem=two-sum', hash: '#notes' }), '/technical-interview');
+  assert.equal(getMobileSectionHref('training', { pathname: '/leetcode', search: '?problem=two-sum', hash: '#notes' }), '/problems');
   for (const pathname of ['/technical-interview', '/behavioral-interview', '/tools']) {
     const location = { pathname, search: '?qa=fixture&mode=current', hash: '#practice' };
     assert.equal(getMobileSectionHref('training', location), `${pathname}?qa=fixture&mode=current#practice`);
@@ -92,7 +92,7 @@ test('the compact LeetCode page returns to the training entry through its select
 
 test('cross-page links retain QA isolation while clearing the previous page filters', () => {
   const location = { pathname: '/tracker', search: '?qa=fixture&status=offer', hash: '#application' };
-  assert.equal(getMobileSectionHref('training', location), '/technical-interview?qa=fixture');
+  assert.equal(getMobileSectionHref('training', location), '/problems?qa=fixture');
   assert.equal(getMobileModuleHref('calendar', location), '/calendar?qa=fixture');
   assert.equal(getMobileModuleHref('calendar', { ...location, search: '?qa&status=offer' }), '/calendar?qa=');
   assert.equal(getMobileModuleHref('calendar', { ...location, search: '?status=offer' }), '/calendar');

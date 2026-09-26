@@ -1,11 +1,22 @@
 export function createProblemCatalogSyncController(deps = {}) {
   let refreshPromise = null;
+  let refreshSession = null;
+  let requestSequence = 0;
   const getState = () => deps.getState?.() || {};
+  const getSessionKey = deps.getSessionKey || getState;
 
   const refresh = (force = false) => {
-    if (refreshPromise && !force) return refreshPromise;
-    refreshPromise = deps.requestCatalog?.()
+    const session = getSessionKey();
+    if (refreshPromise && !force && refreshSession === session) return refreshPromise;
+    const sequence = ++requestSequence;
+    refreshSession = session;
+    refreshPromise = Promise.resolve().then(() => deps.requestCatalog?.() || [])
       .then((problems = []) => {
+        // A late response must not reach a switched account or replace the
+        // result of a newer access check for this same account.
+        if (getSessionKey() !== session || sequence !== requestSequence) {
+          return { changed: false, count: 0, discarded: true };
+        }
         if (!problems.length) return { changed: false, count: 0 };
         const state = getState();
         state.problems = deps.mergeProblems?.(
@@ -23,7 +34,7 @@ export function createProblemCatalogSyncController(deps = {}) {
       })
       .catch((error) => ({ changed: false, count: 0, error }))
       .finally(() => {
-        refreshPromise = null;
+        if (sequence === requestSequence) refreshPromise = null;
       });
     return refreshPromise;
   };

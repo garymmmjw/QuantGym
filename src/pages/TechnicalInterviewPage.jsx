@@ -1,8 +1,7 @@
-import { useSyncModuleRoute } from '../hooks/useSyncModuleRoute.js';
-import { PersonalWorkspace } from '../features/personal/PersonalWorkspace.jsx';
-import { TechnicalInterviewWorkspace } from '../features/personal/practice/TechnicalInterviewWorkspace.jsx';
+import { Navigate, useLocation } from 'react-router-dom';
 
+// Keep saved technical-practice links working while the question bank owns UI.
 export function TechnicalInterviewPage() {
-  useSyncModuleRoute('technical-interview');
-  return <PersonalWorkspace>{props => <TechnicalInterviewWorkspace {...props} />}</PersonalWorkspace>;
+  const location = useLocation();
+  return <Navigate to={{ pathname: '/problems', search: location.search }} replace />;
 }

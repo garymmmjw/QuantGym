@@ -223,7 +223,7 @@ export function createPrepPlanController(deps = {}) {
   }
 
   function openTask(action, query = "") {
-    if (action === "problems") {
+    if (action === "problems" || action === "interview") {
       openProblemTask(query);
       return;
     }

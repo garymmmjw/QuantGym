@@ -44,6 +44,10 @@ from personal_prep import (
 from guardian import GUARDIAN_SCHEMA, GuardianService
 from privacy_policy import PRIVATE_WORKSPACES
 from free_practice_attempts import merge_free_practice_state
+from memberships import (
+    MEMBERSHIP_SCHEMA, MembershipError, add_membership, has_membership,
+    list_memberships, remove_membership,
+)
 from private_practice_catalog import is_curated_private_problem, is_retired_private_problem, lock_problem_catalog
 from invitations import (
     INVITATION_SCHEMA,
@@ -1043,6 +1047,10 @@ def account_is_admin(user: dict) -> bool:
     return email in ADMIN_EMAILS or account_subscription_tier(user) == "admin"
 
 
+def account_is_member(conn, user: dict | None) -> bool:
+    return bool(user and (account_is_admin(user) or has_membership(conn, user.get("email_norm"))))
+
+
 def account_response_payload(user: dict) -> dict:
     account = parse_json(user.get("account_json") if isinstance(user, dict) else "", {})
     account.update(id=user["id"], provider=user["provider"], email=user["email_norm"])
@@ -1817,6 +1825,7 @@ class Database:
             )
             conn.executescript(GUARDIAN_SCHEMA)
             conn.executescript(INVITATION_SCHEMA)
+            conn.executescript(MEMBERSHIP_SCHEMA)
             self.ensure_sqlite_private_problem_visibility(conn)
 
     def ensure_sqlite_private_problem_visibility(self, conn: sqlite3.Connection) -> None:
@@ -2186,7 +2195,14 @@ class Database:
 
     def get_state(self, conn: sqlite3.Connection, user_id: str) -> dict:
         row = conn.execute("SELECT state_json FROM user_states WHERE user_id = ?", (user_id,)).fetchone()
-        return parse_json(row["state_json"], {}) if row else {}
+        return self.filter_member_state(conn, user_id, parse_json(row["state_json"], {}) if row else {})
+
+    def filter_member_state(self, conn, user_id, state):
+        if not isinstance(state, dict) or not isinstance(state.get("problems"), list) or self.user_is_member(conn, user_id):
+            return state
+        member_ids = {row["id"] for row in conn.execute("SELECT id FROM problems WHERE source = 'question-bank'").fetchall()}
+        return {**state, "problems": [problem for problem in state["problems"] if isinstance(problem, dict)
+                                      and problem.get("source") != "question-bank" and problem.get("id") not in member_ids]}
 
     def get_leaderboard(self, conn: sqlite3.Connection) -> list[dict]:
         if PRIVATE_WORKSPACES:
@@ -2224,7 +2240,7 @@ class Database:
         return leaderboard
 
     def save_state(self, conn: sqlite3.Connection, user_id: str, state: dict | None) -> dict:
-        next_state = state if isinstance(state, dict) else {}
+        next_state = self.filter_member_state(conn, user_id, state if isinstance(state, dict) else {})
         next_state["updatedAt"] = utc_now()
         conn.execute(
             """
@@ -2270,6 +2286,7 @@ class Database:
         return next_community
 
     def get_problems(self, conn: sqlite3.Connection, owner_user_id: str | None = None) -> list[dict]:
+        member = self.user_is_member(conn, owner_user_id)
         if owner_user_id:
             rows = conn.execute(
                 """
@@ -2290,7 +2307,12 @@ class Database:
                 """
             ).fetchall()
         problems = [parse_json(row["problem_json"], {}) for row in rows]
-        return [problem for problem in problems if not is_retired_private_problem(problem)]
+        return [problem for problem in problems if not is_retired_private_problem(problem)
+                and (member or problem.get("source") != "question-bank")]
+
+    def user_is_member(self, conn, user_id):
+        user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone() if user_id else None
+        return account_is_member(conn, dict(user) if user else None)
 
     def upsert_problems(
         self,
@@ -2423,16 +2445,18 @@ class Database:
     def ensure_visible_problem(self, conn: sqlite3.Connection, problem_id: str, user_id: str | None = None) -> None:
         if user_id:
             row = conn.execute(
-                "SELECT id FROM problems WHERE id = ? AND (visibility IN ('public', 'private') OR owner_user_id = ?)",
+                "SELECT id, source FROM problems WHERE id = ? AND (visibility IN ('public', 'private') OR owner_user_id = ?)",
                 (problem_id, user_id),
             ).fetchone()
         else:
             row = conn.execute(
-                "SELECT id FROM problems WHERE id = ? AND visibility = 'public'",
+                "SELECT id, source FROM problems WHERE id = ? AND visibility = 'public'",
                 (problem_id,),
             ).fetchone()
         if not row:
             raise HttpError(404, "Problem not found")
+        if row["source"] == "question-bank" and not self.user_is_member(conn, user_id):
+            raise HttpError(403, "Membership is required for this question bank")
 
     def get_problem_social_summaries(self, conn: sqlite3.Connection, user_id: str | None = None) -> list[dict]:
         visibility_sql = "p.visibility = 'public'"
@@ -2440,6 +2464,8 @@ class Database:
         if user_id:
             visibility_sql = "(p.visibility IN ('public', 'private') OR p.owner_user_id = ?)"
             params.append(user_id)
+        if not self.user_is_member(conn, user_id):
+            visibility_sql += " AND p.source != 'question-bank'"
         rows = conn.execute(
             f"""
             SELECT p.id AS problem_id,
@@ -3090,6 +3116,15 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.patch_account()
             if path == "/api/admin/metrics" and self.command == "GET":
                 return self.get_admin_metrics()
+            if path == "/api/membership" and self.command == "GET":
+                return self.get_membership()
+            if path == "/api/admin/memberships" and self.command == "GET":
+                return self.get_admin_memberships()
+            if path == "/api/admin/memberships" and self.command == "POST":
+                return self.post_admin_membership()
+            member_match = re.fullmatch(r"/api/admin/memberships/([^/]+)", path)
+            if member_match and self.command == "DELETE":
+                return self.delete_admin_membership(unquote(member_match.group(1)))
             if path == "/api/admin/audit-events" and self.command == "GET":
                 return self.get_admin_audit_events()
             if path == "/api/admin/invitations" and self.command == "GET":
@@ -3179,7 +3214,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.serve_library_pdf(unquote(library_pdf_match.group(1)))
             self.record_http_error(404, "Not found")
             return self.send_json(404, {"error": "Not found"})
-        except (HttpError, InvitationError) as error:
+        except (HttpError, InvitationError, MembershipError) as error:
             self.record_http_error(error.status, error.message)
             return self.send_json(error.status, {"error": error.message})
         except Exception as error:  # pragma: no cover - defensive server boundary
@@ -3364,6 +3399,34 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 conn=conn,
             )
             self.send_json(200, {"events": events})
+
+    def get_membership(self):
+        user = self.require_user()
+        with db.connect() as conn:
+            self.send_json(200, {"isMember": account_is_member(conn, user)},
+                           headers={"Cache-Control": "private, no-store", "Vary": "Authorization"})
+
+    def get_admin_memberships(self):
+        user = self.require_admin_user()
+        with db.connect() as conn:
+            members = list_memberships(conn)
+            self.audit_event("admin.memberships.view", user=user, conn=conn)
+        self.send_json(200, {"memberships": members}, headers={"Cache-Control": "private, no-store"})
+
+    def post_admin_membership(self):
+        user = self.require_admin_user()
+        data = self.read_json()
+        with db.connect() as conn:
+            member = add_membership(conn, data.get("email"), user["id"])
+            self.audit_event("admin.memberships.add", user=user, metadata={"email": member["email"]}, conn=conn)
+        self.send_json(200, {"membership": member}, headers={"Cache-Control": "private, no-store"})
+
+    def delete_admin_membership(self, email):
+        user = self.require_admin_user()
+        with db.connect() as conn:
+            email = remove_membership(conn, email)
+            self.audit_event("admin.memberships.remove", user=user, metadata={"email": email}, conn=conn)
+        self.send_json(200, {"removed": email}, headers={"Cache-Control": "private, no-store"})
 
     def get_admin_invitations(self):
         user = self.require_admin_user()
@@ -4125,7 +4188,10 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             raise HttpError(error.status, str(error))
 
     def get_technical_practice_questions(self):
-        self.require_user()
+        user = self.require_user()
+        with db.connect() as conn:
+            if not account_is_member(conn, user):
+                raise HttpError(403, "Membership is required for this question bank")
         try:
             questions = load_technical_questions()
         except (OSError, ValueError, TypeError):

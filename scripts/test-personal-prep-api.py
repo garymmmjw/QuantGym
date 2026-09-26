@@ -276,6 +276,11 @@ class PersonalPrepApiTests(unittest.TestCase):
     def put(self, token, state, revision=0, **extra):
         return self.request("PUT", token=token, payload={"version": 1, "baseRevision": revision, "data": state, **extra})
 
+    def grant_membership(self, user_id):
+        with self.connect_database() as conn:
+            conn.execute(self.sql("INSERT INTO memberships (email_norm, added_by, created_at, updated_at) SELECT email_norm, id, ?, ? FROM users WHERE id = ?"),
+                         ("2026-09-20T12:00:00Z", "2026-09-20T12:00:00Z", user_id))
+
     def assert_private(self, headers):
         self.assertIn("no-store", headers.get("Cache-Control", ""))
         self.assertIn("private", headers.get("Cache-Control", ""))
@@ -295,7 +300,9 @@ class PersonalPrepApiTests(unittest.TestCase):
             self.assertEqual(status, 401, data)
             self.assertNotIn("questions", data)
             self.assert_private(headers)
-        token, _ = self.new_user()
+        token, user_id = self.new_user()
+        self.assertEqual(self.request("GET", path, token=token)[0], 403)
+        self.grant_membership(user_id)
         status, data, headers = self.request("GET", path, token=token)
         self.assertEqual(status, 200, data)
         self.assert_private(headers)

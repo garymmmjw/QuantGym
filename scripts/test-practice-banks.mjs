@@ -8,7 +8,7 @@ import {
 const question = (id, source, extra = {}) => ({ id, source, ...extra });
 
 test('the five source entrances do not absorb other books or interview sources', () => {
-  assert.deepEqual(PRACTICE_BANKS.map((bank) => bank.id), ['purple', 'quantguide', 'xiaohongshu', 'onepoint3acres', 'glassdoor']);
+  assert.deepEqual(PRACTICE_BANKS.map((bank) => bank.id), ['quantguide', 'xiaohongshu', 'onepoint3acres', 'glassdoor', 'purple']);
   const rows = PRACTICE_BANKS.map((bank) => question(bank.id, bank.source));
   rows.push(question('wechat', 'interview-wechat'), question('green', 'green-book', { bookSlug: 'question-bank' }));
   for (const bank of PRACTICE_BANKS) {
