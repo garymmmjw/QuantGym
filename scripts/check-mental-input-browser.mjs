@@ -15,13 +15,32 @@ const browser = await chromium.launch({
   headless: true,
 });
 const failures = [];
-async function check(name, answer, run) {
+async function check(name, answer, run, options = {}) {
+  if (process.env.MENTAL_QA_FILTER && !name.includes(process.env.MENTAL_QA_FILTER)) return;
   const context = await browser.newContext({ serviceWorkers: 'block' });
   const seed = createPersonalState();
   const operator = answer < 0 ? 'subtract' : 'add';
   seed.activeTrial = createTrial({ durationSeconds: 120, operations: [operator],
     ranges: { [operator]: { minA: 0, maxA: 0, minB: Math.abs(answer), maxB: Math.abs(answer) } },
   }, { now: Date.now(), id: name });
+  for (let index = 0; index < (options.historyTrials || 0); index++) {
+    const now = Date.now() - (index + 1) * 86400000;
+    const trial = createTrial(seed.activeTrial.settings, { now, id: `history-${index}` });
+    trial.status = 'completed';
+    trial.completedAt = trial.deadlineAt;
+    trial.correct = 100;
+    trial.questions = Array.from({ length: 100 }, (_, questionIndex) => ({
+      ...trial.currentQuestion, id: `q${questionIndex + 1}`, index: questionIndex + 1,
+      completedAt: trial.deadlineAt, elapsedMs: 1200, outcome: 'correct', submittedAnswer: String(answer),
+    }));
+    trial.currentQuestion = null;
+    trial.currentAnswer = '';
+    seed.trials.push(trial);
+  }
+  if (options.startFromSetup) {
+    seed.mentalSettings = seed.activeTrial.settings;
+    seed.activeTrial = null;
+  }
   // Test the real UI with an isolated account and intercepted API requests,
   // including when baseUrl points to the deployed static assets.
   let remote = { version: 1, revision: 1, data: seed, updatedAt: new Date().toISOString() };
@@ -60,8 +79,18 @@ async function check(name, answer, run) {
     await page.clock.install();
     await page.goto(`${baseUrl}/tools?trainer=math`, { waitUntil: 'domcontentloaded' });
     const input = page.locator('.pm-focus .pm-answer');
+    if (options.startFromSetup) {
+      await page.locator('[data-pm-start]').click();
+      await page.locator('.pm-preparation').waitFor();
+      assert.equal(await page.evaluate(() => document.fullscreenElement === document.documentElement), true);
+      await page.clock.runFor(5100);
+    }
     await input.waitFor();
     await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 100)));
+    if (options.cpuRate) {
+      const session = await context.newCDPSession(page);
+      await session.send('Emulation.setCPUThrottlingRate', { rate: options.cpuRate });
+    }
     const read = () => page.evaluate(key => JSON.parse(localStorage.getItem(key)).data, storageKey);
     await run({ page, input, read });
     assert.deepEqual(errors, []);
@@ -76,6 +105,143 @@ async function check(name, answer, run) {
 }
 
 try {
+  await check('rapid keyboard after fullscreen countdown preserves answers and deletions', 12, async ({ page, input, read }) => {
+    assert.equal(await input.evaluate(element => document.activeElement === element), true);
+    await page.keyboard.type('1212121212', { delay: 0 });
+    await page.keyboard.type('98', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('12', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('12', { delay: 0 });
+    assert.equal((await read()).activeTrial.correct, 7);
+    assert.equal(await input.inputValue(), '');
+    assert.equal(await input.evaluate(element => document.activeElement === element), true);
+  }, { startFromSetup: true });
+  await check('rapid queued keyboard events preserve input across question transitions', 12, async ({ page, input, read }) => {
+    await input.focus();
+    const session = await page.context().newCDPSession(page);
+    const keys = [...'1298', 'Backspace', 'Backspace', ...'12', 'Backspace', ...'121212'];
+    // Browser-level trusted events arrive without waiting for each prior event's
+    // rendering work. This models keys queued while a slower device is busy.
+    const events = keys.flatMap(key => {
+      const digit = /^\d$/.test(key);
+      const code = digit ? `Digit${key}` : key;
+      const windowsVirtualKeyCode = digit ? key.charCodeAt(0) : 8;
+      return [
+        { type: 'keyDown', key, code, windowsVirtualKeyCode, ...(digit ? { text: key, unmodifiedText: key } : {}) },
+        { type: 'keyUp', key, code, windowsVirtualKeyCode },
+      ];
+    });
+    await Promise.all(events.map(event => session.send('Input.dispatchKeyEvent', event)));
+    const state = await read();
+    assert.equal(state.activeTrial.correct, 5);
+    assert.equal(await input.inputValue(), '');
+    assert.equal(await input.evaluate(element => document.activeElement === element), true);
+  }, { historyTrials: 100, cpuRate: 4 });
+  await check('rapid keyboard uninterrupted answers retain every next-question first digit', 12, async ({ page, input, read }) => {
+    await input.focus();
+    await page.keyboard.type('1212121212', { delay: 0 });
+    assert.equal((await read()).activeTrial.correct, 5);
+    assert.equal(await input.inputValue(), '');
+    await page.keyboard.type('12', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('12', { delay: 0 });
+    assert.equal((await read()).activeTrial.correct, 7);
+    assert.equal(await input.inputValue(), '');
+  });
+  await check('rapid keyboard with substantial history preserves digits and repeated deletions', 12, async ({ page, input, read }) => {
+    await input.focus();
+    await page.keyboard.type('987654321', { delay: 0 });
+    for (let press = 0; press < 9; press++) await page.keyboard.press('Backspace');
+    await page.keyboard.type('1212121212', { delay: 0 });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('12', { delay: 0 });
+    const state = await read();
+    assert.equal(state.activeTrial.correct, 6);
+    assert.equal(state.trials.length, 100);
+    assert.equal(state.trials[0].questions.length, 100);
+    assert.equal(await input.inputValue(), '');
+    assert.equal(await input.evaluate(element => document.activeElement === element), true);
+  }, { historyTrials: 100, cpuRate: 4 });
+  await check('rapid keyboard digits and repeated Backspace preserve the current answer', 1234, async ({ page, input, read }) => {
+    await input.focus();
+    await page.keyboard.type('987654321');
+    assert.equal(await input.inputValue(), '987654321');
+    await page.keyboard.down('Backspace');
+    for (let repeat = 0; repeat < 4; repeat++) await page.keyboard.down('Backspace');
+    await page.keyboard.up('Backspace');
+    assert.equal(await input.inputValue(), '9876');
+    assert.equal((await read()).activeTrial.currentAnswer, '9876');
+    for (let press = 0; press < 6; press++) await page.keyboard.press('Backspace');
+    assert.equal(await input.inputValue(), '');
+    assert.equal((await read()).activeTrial.currentAnswer, '');
+    await page.keyboard.type('1234');
+    assert.equal((await read()).activeTrial.correct, 1);
+  });
+  await check('rapid keyboard answers retain following digits and deletions after advancing', 12, async ({ page, input, read }) => {
+    await input.focus();
+    // No locator or state reads between keystrokes: later input must reach the
+    // newly mounted question even while React is processing the previous one.
+    for (let round = 0; round < 8; round++) {
+      await page.keyboard.type('1298');
+      await page.keyboard.press('Backspace');
+      await page.keyboard.press('Backspace');
+      await page.keyboard.type('12');
+      await page.keyboard.press('Backspace');
+    }
+    const trial = (await read()).activeTrial;
+    assert.equal(trial.correct, 16);
+    assert.equal(trial.questions.length, 16);
+    assert.equal(await input.inputValue(), '');
+    assert.equal(await input.evaluate(element => document.activeElement === element), true);
+    assert.ok(trial.questions.every(question => question.submittedAnswer === '12'));
+  });
+  await check('rapid keyboard middle edits preserve the caret and selected range', 9876, async ({ page, input, read }) => {
+    await input.focus();
+    await page.keyboard.type('1357');
+    for (let step = 0; step < 3; step++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.type('2');
+    assert.equal(await input.inputValue(), '12357');
+    assert.equal(await input.evaluate(element => element.selectionStart), 2);
+    await page.keyboard.press('Backspace');
+    assert.equal(await input.inputValue(), '1357');
+    assert.equal(await input.evaluate(element => element.selectionStart), 1);
+    await page.keyboard.press('Delete');
+    assert.equal(await input.inputValue(), '157');
+    await page.keyboard.press('Shift+ArrowRight');
+    await page.keyboard.press('Shift+ArrowRight');
+    await page.keyboard.type('42');
+    assert.equal(await input.inputValue(), '142');
+    assert.equal((await read()).activeTrial.currentAnswer, '142');
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.type('9876');
+    assert.equal((await read()).activeTrial.correct, 1);
+  });
+  await check('rapid mobile deletion input events preserve editing and answer advancement', 12, async ({ page, input, read }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await input.fill('991');
+    const edit = async (value, inputType, data = null) => input.evaluate((element, event) => {
+      element.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, ...event }));
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(element, event.value);
+      element.dispatchEvent(new InputEvent('input', { bubbles: true, ...event }));
+    }, { value, inputType, data });
+    await edit('99', 'deleteContentBackward');
+    await edit('9', 'deleteContentBackward');
+    await edit('', 'deleteContentBackward');
+    assert.equal(await input.inputValue(), '');
+    assert.equal((await read()).activeTrial.currentAnswer, '');
+    await edit('1', 'insertText', '1');
+    await edit('12', 'insertText', '2');
+    assert.equal((await read()).activeTrial.correct, 1);
+    await edit('', 'deleteContentBackward');
+    await edit('1', 'insertText', '1');
+    assert.equal(await input.inputValue(), '1');
+    await edit('', 'deleteContentForward');
+    assert.equal(await input.inputValue(), '');
+    await edit('12', 'insertFromPaste', '12');
+    assert.equal((await read()).activeTrial.correct, 2);
+  });
   await check('partial input survives timer ticks and correct answers count once', 12, async ({ page, input, read }) => {
     for (let count = 1; count <= 5; count++) {
       await input.pressSequentially('1');
