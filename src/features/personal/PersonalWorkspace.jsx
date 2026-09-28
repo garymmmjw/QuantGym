@@ -59,7 +59,7 @@ function ScopedWorkspace({ personal, children }) {
       <button type="button" onClick={exportBackup}>{en ? "Export current work" : "导出当前记录"}</button>
       {!snapshot.conflict && <button type="button" onClick={store.retry}>{en ? "Retry saving" : "重试保存"}</button>}
     </div>}
-    <PersonalErrorBoundary>{children({ state: snapshot.data, update: store.update, legacyState, language })}</PersonalErrorBoundary>
+    <PersonalErrorBoundary>{children({ state: snapshot.data, update: store.update, beginTrialEdit: store.beginTrialEdit, legacyState, language })}</PersonalErrorBoundary>
     <footer className="personal-workspace-footer">
       <div><button type="button" onClick={exportBackup}>{en ? "Export backup" : "导出备份"}</button><button type="button" onClick={() => inputRef.current?.click()}>{en ? "Restore backup" : "恢复备份"}</button></div>
       <input ref={inputRef} type="file" accept=".json,application/json" hidden onChange={importBackup} aria-label={en ? "Restore training backup" : "恢复训练备份"} />

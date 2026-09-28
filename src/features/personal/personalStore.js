@@ -331,6 +331,8 @@ function parseEnvelope(raw, ownerId) {
 export function createPersonalStore({ ownerId, storage, eventTarget, now = () => new Date().toISOString() }) {
   const key = personalStorageKey(ownerId);
   const listeners = new Set();
+  const trialEditors = new Set();
+  let pendingTrialWrite = false;
   let persistedRaw = null;
   let blockedRead = false;
   let snapshot = { data: createPersonalState(), error: "", dirty: false, conflict: false };
@@ -353,9 +355,35 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
   }
   readInitial();
 
+  function keepEditedTrial(incoming, current = snapshot.data) {
+    const trial = current.activeTrial;
+    if (!trial || trainerOf(trial) !== "math" || ![...trialEditors].some(editor => editor.id === trial.id)) return incoming;
+    // A running practice is edited by its page. Downloads and acknowledgements
+    // may update other records, but never move, clear, or finish its live question.
+    return { ...incoming, activeTrial: trial,
+      trials: incoming.trials.filter(row => row.id !== trial.id),
+      activities: incoming.activities.filter(row => row.trialId !== trial.id && row.id !== `mental:${trial.id}`),
+    };
+  }
+
+  function applyExternal(updater) {
+    return update(current => {
+      const next = keepEditedTrial(updater(current), current);
+      return JSON.stringify(next) === JSON.stringify(current) ? current : next;
+    });
+  }
+
+  function checkpointTrial() {
+    // Read storage even when its asynchronous event has not reached this tab.
+    if (trialEditors.size) update(data => data);
+  }
+  function checkpointWhenHidden() {
+    if (eventTarget?.document?.visibilityState === "hidden") checkpointTrial();
+  }
+
   function update(updater) {
     let latest = snapshot.data;
-    let reconciled = false;
+    let reconciled = pendingTrialWrite;
     try {
       if (!blockedRead && !snapshot.dirty) {
         const raw = storage.getItem(key);
@@ -364,7 +392,7 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
           if (raw === null && persistedRaw !== null) throw new Error("Training storage changed in another tab.");
           if (raw) {
             const saved = parseEnvelope(raw, ownerId).data;
-            latest = retainBehavioralData(saved, latest);
+            latest = keepEditedTrial(retainBehavioralData(saved, latest), latest);
             reconciled = latest !== saved;
           }
           persistedRaw = raw;
@@ -393,6 +421,7 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
       const raw = JSON.stringify(envelope);
       storage.setItem(key, raw);
       persistedRaw = raw;
+      pendingTrialWrite = false;
       emit({ data: next, dirty: false, conflict: false, error: "" });
       return { ok: true };
     } catch (error) {
@@ -415,12 +444,16 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
       persistedRaw = raw;
       blockedRead = false;
       const reconciled = retainBehavioralData(envelope.data, snapshot.data);
+      const next = keepEditedTrial(reconciled);
+      pendingTrialWrite ||= JSON.stringify(next) !== JSON.stringify(reconciled);
       if (reconciled !== envelope.data) {
         // Retaining a title, answer clear or deletion only in memory would
         // lose it on refresh. A failed repair remains visibly unsaved.
-        persist(validatePersonalData(reconciled), true);
-      } else {
-        emit({ data: envelope.data, dirty: false, conflict: false, error: "" });
+        persist(validatePersonalData(next), true);
+      } else if (JSON.stringify(next) !== JSON.stringify(snapshot.data) || snapshot.error) {
+        // Do not echo a protected draft back on every storage event: two open
+        // editors must not bounce the same storage key back and forth.
+        emit({ data: next, dirty: false, conflict: false, error: "" });
       }
     } catch (error) {
       blockedRead = true;
@@ -442,7 +475,27 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
       };
     },
     update,
-    mergeFromCloud: (data) => update((current) => mergePersonalData(current, data)),
+    applyExternal,
+    beginTrialEdit(id) {
+      const editor = { id };
+      if (!trialEditors.size) {
+        for (const event of ["pagehide", "beforeunload", "blur", "focus"]) eventTarget?.addEventListener?.(event, checkpointTrial);
+        eventTarget?.document?.addEventListener?.("visibilitychange", checkpointWhenHidden);
+      }
+      trialEditors.add(editor);
+      return () => {
+        if (!trialEditors.has(editor)) return;
+        // A foreign storage event never echoes another tab. A local action or
+        // leaving this editor checkpoints our draft once, including before reload.
+        checkpointTrial();
+        trialEditors.delete(editor);
+        if (!trialEditors.size) {
+          for (const event of ["pagehide", "beforeunload", "blur", "focus"]) eventTarget?.removeEventListener?.(event, checkpointTrial);
+          eventTarget?.document?.removeEventListener?.("visibilitychange", checkpointWhenHidden);
+        }
+      };
+    },
+    mergeFromCloud: (data) => applyExternal((current) => mergePersonalData(current, data)),
     retry: () => update((data) => ({ ...data })),
     exportBackup: () => JSON.stringify({ format: "quantgym-personal-prep", version: PERSONAL_VERSION, ownerId, exportedAt: now(), data: snapshot.data }, null, 2),
     restoreBackup(raw) {
@@ -450,7 +503,7 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
       if (backup.format !== "quantgym-personal-prep") throw new Error("Not a personal training backup.");
       const incoming = parseEnvelope(raw, ownerId).data;
       if (blockedRead || snapshot.conflict) throw new Error("Export your current work and resolve the storage conflict before restoring.");
-      return update((current) => mergePersonalData(current, incoming));
+      return applyExternal((current) => mergePersonalData(current, incoming));
     }
   };
 }

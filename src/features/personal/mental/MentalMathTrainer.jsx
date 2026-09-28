@@ -29,7 +29,7 @@ function outcomeLabel(outcome, en) {
     timeout: en ? 'Timed out' : '到期未完成', aborted: en ? 'Stopped' : '中止未完成' })[outcome] || '—';
 }
 
-export function MentalMathTrainer({ state, update, language = 'zh', dailySessionId = null, onComplete, durationSeconds, embedded = false }) {
+export function MentalMathTrainer({ state, update, beginTrialEdit, language = 'zh', dailySessionId = null, onComplete, durationSeconds, embedded = false }) {
   const en = language === 'en';
   const configId = useId();
   const settingsSignature = mentalSettingsKey(state.mentalSettings);
@@ -54,6 +54,9 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
   const bests = useMemo(() => getPersonalBests(trials, bestSettings), [trials, bestSettings]);
   const summary = useMemo(() => summarizeTrial(selected), [selected]);
   const remaining = remainingTrialMs(active, now);
+  // This page owns the live trial until it finishes or the user leaves.
+  // Background snapshots can still update history, but cannot change this question.
+  useLayoutEffect(() => active ? beginTrialEdit?.(active.id) : undefined, [active?.id, beginTrialEdit]);
   const selectTrial = useCallback((id) => {
     setSelectedId(id);
     setDetailsOpen(true);
@@ -231,7 +234,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
         <label className={`pm-equation${`${active.currentQuestion?.a}${active.currentQuestion?.b}`.length > 9 ? ' pm-equation-long' : ''}`} htmlFor={`${configId}-answer`}><span>{active.currentQuestion?.a}</span><span>{SYMBOLS[active.currentQuestion?.operator]}</span><span>{active.currentQuestion?.b}</span><span className="pm-equals">=</span>
           <MentalAnswerInput key={`${active.id}:${active.currentQuestion?.id}`} inputRef={inputRef} id={`${configId}-answer`}
             draftRef={answerDraftRef} questionId={active.currentQuestion?.id} expectedAnswer={active.currentQuestion?.answer}
-            aria-label={en ? 'Your answer' : '输入答案'} value={active.currentAnswer || ''}
+            aria-label={en ? 'Your answer' : '输入答案'} initialAnswer={active.currentAnswer || ''}
             onAnswer={value => applyAction({ type: 'input', value })} />
         </label>
         <p className="pm-visually-hidden" role="status" aria-atomic="true">{en ? 'Question' : '第'} {active.currentQuestion?.index} {en ? '' : '题'}: {active.currentQuestion?.a} {({ add: en ? 'plus' : '加', subtract: en ? 'minus' : '减', multiply: en ? 'times' : '乘', divide: en ? 'divided by' : '除以' })[active.currentQuestion?.operator]} {active.currentQuestion?.b}</p>

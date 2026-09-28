@@ -81,9 +81,9 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       if (next !== local || store.getSnapshot().data !== local) {
         applyingRemote = true;
         try {
-          store.update(latest => {
+          store.applyExternal(latest => {
             const candidate = latest === local ? next : mergePersonalData(latest, next);
-            return JSON.stringify(candidate) === JSON.stringify(latest) ? latest : candidate;
+            return candidate;
           });
         } finally { applyingRemote = false; }
       }
@@ -104,11 +104,11 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
         const confirmedHash = await personalFingerprint(saved.data);
         applyingRemote = true;
         try {
-          store.update(latest => {
+          store.applyExternal(latest => {
             const candidate = latest === outgoing
               ? retainBehavioralData({ ...saved.data, careerTrackerOperations: mergeTrackerOperations(outgoing.careerTrackerOperations, saved.data.careerTrackerOperations) }, outgoing)
               : mergePersonalData(latest, saved.data);
-            return JSON.stringify(candidate) === JSON.stringify(latest) ? latest : candidate;
+            return candidate;
           });
         } finally { applyingRemote = false; }
         remember(confirmedHash, saved);
