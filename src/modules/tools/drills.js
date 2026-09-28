@@ -1,8 +1,8 @@
 import { formatNumber } from "../../lib/number.js";
 import { randomChoice, randomInt } from "../../lib/random.js";
 
-export function makeDrill(mode) {
-  if (mode === "mixed") return makeDrill(randomChoice(["add", "sub", "mul", "div"]));
+function makeDrillCandidate(mode) {
+  if (mode === "mixed") return makeDrillCandidate(randomChoice(["add", "sub", "mul", "div"]));
   if (mode === "add") {
     const a = randomInt(12, 89);
     const b = randomInt(12, 89);
@@ -44,6 +44,47 @@ export function makeDrill(mode) {
   const answer = direction === "increase" ? base * (1 + pct / 100) : base * (1 - pct / 100);
   const word = direction === "increase" ? "up" : "down";
   return makeChoiceDrill(`${base} ${word} ${pct}% = ?`, answer, `${base} x ${formatNumber(direction === "increase" ? 1 + pct / 100 : 1 - pct / 100)}`, { spread: Math.max(5, base * 0.08), tolerance: 0.1 });
+}
+
+function firstUnusedArithmeticDrill(mode, excluded) {
+  const modes = mode === "mixed" ? ["add", "sub", "mul", "div"] : [mode];
+  for (const kind of modes) {
+    if (kind === "add") {
+      for (let a = 12; a <= 89; a += 1) for (let b = 12; b <= 89; b += 1) {
+        const question = `${a} + ${b} = ?`;
+        if (!excluded.has(question)) return makeChoiceDrill(question, a + b, `${a} + ${b} = ${a + b}`, { spread: 9, integer: true });
+      }
+    } else if (kind === "sub") {
+      for (let a = 30; a <= 99; a += 1) for (let b = 10; b <= a; b += 1) {
+        const question = `${a} − ${b} = ?`;
+        if (!excluded.has(question)) return makeChoiceDrill(question, a - b, `${a} − ${b} = ${a - b}`, { spread: 8, integer: true });
+      }
+    } else if (kind === "mul") {
+      for (let a = 6; a <= 19; a += 1) for (let b = 3; b <= 14; b += 1) {
+        const question = `${a} × ${b} = ?`;
+        if (!excluded.has(question)) return makeChoiceDrill(question, a * b, `${a} × ${b} = ${a * b}`, { spread: 14, integer: true });
+      }
+    } else if (kind === "div") {
+      for (let divisor = 3; divisor <= 12; divisor += 1) for (let answer = 3; answer <= 12; answer += 1) {
+        const dividend = divisor * answer;
+        const question = `${dividend} ÷ ${divisor} = ?`;
+        if (!excluded.has(question)) return makeChoiceDrill(question, answer, `${divisor} × ${answer} = ${dividend}`, { spread: 4, integer: true });
+      }
+    }
+  }
+  return null;
+}
+
+export function makeDrill(mode, { excludeQuestions } = {}) {
+  let drill = makeDrillCandidate(mode);
+  if (!excludeQuestions?.has(drill.question)) return drill;
+  for (let attempt = 0; attempt < 64; attempt += 1) {
+    drill = makeDrillCandidate(mode);
+    if (!excludeQuestions.has(drill.question)) return drill;
+  }
+  // All configured sessions fit inside each arithmetic mode's question pool.
+  // A deterministic search also handles a temporarily stuck random source.
+  return firstUnusedArithmeticDrill(mode, excludeQuestions) || drill;
 }
 
 function makeNumberLogicDrill() {

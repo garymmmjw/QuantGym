@@ -23,8 +23,16 @@ export function useToolsPageModel() {
   const [donePhase, setDonePhase] = useState(false);
   const [doneStats, setDoneStats] = useState(null);
   const prevDrillRef = useRef({ running: false, completed: false });
+  const pendingAdvanceRef = useRef(null);
   const [marketRound, setMarketRound] = useState(1);
   const [marketLog, setMarketLog] = useState([]);
+
+  const cancelPendingAdvance = useCallback(() => {
+    if (pendingAdvanceRef.current != null) window.clearTimeout(pendingAdvanceRef.current);
+    pendingAdvanceRef.current = null;
+  }, []);
+
+  useEffect(() => cancelPendingAdvance, [cancelPendingAdvance]);
 
   const refreshView = useCallback((nextView) => {
     const view = nextView || api?.getViewModel?.() || { drill: {}, records: {}, leaderboard: [], market: {} };
@@ -45,6 +53,14 @@ export function useToolsPageModel() {
     prevDrillRef.current = { running: Boolean(drill.running), completed: Boolean(drill.completed) };
     setViewState(view);
   }, [api]);
+
+  const scheduleAdvance = useCallback((token, delay) => {
+    cancelPendingAdvance();
+    pendingAdvanceRef.current = window.setTimeout(() => {
+      pendingAdvanceRef.current = null;
+      refreshView(api?.advanceDrillQuestion?.({ expectedToken: token, countSkip: false }));
+    }, delay);
+  }, [api, cancelPendingAdvance, refreshView]);
 
   useEffect(() => {
     refreshView();
@@ -67,6 +83,7 @@ export function useToolsPageModel() {
   }, [api, refreshView, viewState.drill?.running]);
 
   const startSession = useCallback(() => {
+    cancelPendingAdvance();
     streakRef.current = 0;
     bestStreakRef.current = 0;
     setStreak(0);
@@ -75,42 +92,38 @@ export function useToolsPageModel() {
     api?.setDrillCount?.(drillCount);
     api?.setDrillDuration?.(drillDuration);
     refreshView(api?.startDrillSession?.({ count: drillCount, durationSeconds: drillDuration }));
-  }, [api, drillCount, drillDuration, refreshView]);
+  }, [api, cancelPendingAdvance, drillCount, drillDuration, refreshView]);
 
   const setMode = useCallback((mode) => {
+    cancelPendingAdvance();
     refreshView(api?.setDrillMode?.(mode));
-  }, [api, refreshView]);
+  }, [api, cancelPendingAdvance, refreshView]);
 
-  const checkAnswer = useCallback(async (value) => {
+  const checkAnswer = useCallback((value) => {
     const result = api?.checkDrill?.(value);
     const picked = (result?.view?.drill?.options || []).find((option) => option.selected);
-    if (picked) {
+    if (result?.changed && picked) {
       const nextStreak = picked.correct ? streakRef.current + 1 : 0;
       streakRef.current = nextStreak;
       bestStreakRef.current = Math.max(bestStreakRef.current, nextStreak);
       setStreak(nextStreak);
     }
     refreshView(result?.view);
-    if (result?.advance) {
-      await new Promise((resolve) => window.setTimeout(resolve, 520));
-      refreshView(api?.advanceDrillQuestion?.({ countSkip: false }));
-    }
-  }, [api, refreshView]);
+    if (result?.advance) scheduleAdvance(result.advanceToken, 520);
+  }, [api, refreshView, scheduleAdvance]);
 
-  const skip = useCallback(async () => {
+  const skip = useCallback(() => {
     const result = api?.skipDrill?.();
     streakRef.current = 0;
     setStreak(0);
     refreshView(result?.view);
-    if (result?.advance) {
-      await new Promise((resolve) => window.setTimeout(resolve, 420));
-      refreshView(api?.advanceDrillQuestion?.({ countSkip: false }));
-    }
-  }, [api, refreshView]);
+    if (result?.advance) scheduleAdvance(result.advanceToken, 420);
+  }, [api, refreshView, scheduleAdvance]);
 
   const advance = useCallback(() => {
-    refreshView(api?.advanceDrillQuestion?.({ countSkip: false }));
-  }, [api, refreshView]);
+    cancelPendingAdvance();
+    refreshView(api?.advanceDrillQuestion?.());
+  }, [api, cancelPendingAdvance, refreshView]);
 
   const submitMarket = useCallback(() => {
     const before = api?.getViewModel?.()?.market || {};

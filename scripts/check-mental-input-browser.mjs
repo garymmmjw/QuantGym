@@ -21,7 +21,7 @@ async function check(name, answer, run, options = {}) {
   const seed = createPersonalState();
   const operator = answer < 0 ? 'subtract' : 'add';
   seed.activeTrial = createTrial({ durationSeconds: 120, operations: [operator],
-    ranges: { [operator]: { minA: 0, maxA: 0, minB: Math.abs(answer), maxB: Math.abs(answer) } },
+    ranges: { [operator]: options.customRange || { minA: 0, maxA: 0, minB: Math.abs(answer), maxB: Math.abs(answer) } },
   }, { now: Date.now(), id: name });
   for (let index = 0; index < (options.historyTrials || 0); index++) {
     const now = Date.now() - (index + 1) * 86400000;
@@ -414,6 +414,19 @@ try {
       assert.equal(await input.inputValue(), '');
     }
   });
+  await check('correct input advances to a visibly different question when the range allows it', 12,
+    async ({ page, input, read }) => {
+      const first = (await read()).activeTrial.currentQuestion;
+      await input.pressSequentially(String(first.answer));
+      const state = await read();
+      const next = state.activeTrial.currentQuestion;
+      assert.equal(state.activeTrial.correct, 1);
+      assert.notEqual(`${first.operator}:${first.a}:${first.b}`, `${next.operator}:${next.a}:${next.b}`);
+      assert.equal(await input.inputValue(), '');
+      assert.match(await page.locator('.pm-focus .pm-equation').innerText(), new RegExp(String(next.a)));
+      await input.pressSequentially(String(next.answer));
+      assert.equal((await read()).activeTrial.correct, 2);
+    }, { customRange: { minA: 0, maxA: 1, minB: 12, maxB: 12 } });
   await check('Enter preserves partial digits for correction', 12, async ({ input, read }) => {
     await input.pressSequentially('1');
     await input.press('Enter');

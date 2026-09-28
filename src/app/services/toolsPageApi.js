@@ -20,6 +20,8 @@ export function createToolsPageApi(deps = {}) {
   let drillMode = "add";
   let drillSession = null;
   let currentDrill = null;
+  let seenDrillQuestions = new Set();
+  let drillQuestionToken = 0;
   let currentMarketGame = makeMarketGameRound({ makeId: deps.makeId });
   let marketBid = String(Math.round(currentMarketGame.fairValue - currentMarketGame.volatility));
   let marketAsk = String(Math.round(currentMarketGame.fairValue + currentMarketGame.volatility));
@@ -40,6 +42,12 @@ export function createToolsPageApi(deps = {}) {
     return labels[mode] || labels.add;
   }
 
+  function generateNextDrill() {
+    currentDrill = makeDrill(drillSession.mode, { excludeQuestions: seenDrillQuestions });
+    seenDrillQuestions.add(currentDrill.question);
+    drillQuestionToken += 1;
+  }
+
   function ensureDrillSession() {
     if (drillSession && currentDrill) return;
     drillSession = createDrillSession({
@@ -49,7 +57,8 @@ export function createToolsPageApi(deps = {}) {
       durationSeconds: 1500,
       running: false
     });
-    currentDrill = makeDrill(drillSession.mode);
+    seenDrillQuestions = new Set();
+    generateNextDrill();
   }
 
   function getDrillStatus() {
@@ -206,7 +215,8 @@ export function createToolsPageApi(deps = {}) {
         durationSeconds: drillSession?.durationSeconds || 1500,
         running: true
       });
-      currentDrill = makeDrill(drillMode);
+      seenDrillQuestions = new Set();
+      generateNextDrill();
       return getViewModel();
     },
 
@@ -232,7 +242,8 @@ export function createToolsPageApi(deps = {}) {
         durationSeconds: options.durationSeconds || drillSession?.durationSeconds || 1500,
         running: true
       });
-      currentDrill = makeDrill(drillSession.mode);
+      seenDrillQuestions = new Set();
+      generateNextDrill();
       return getViewModel();
     },
 
@@ -245,25 +256,26 @@ export function createToolsPageApi(deps = {}) {
 
     checkDrill(rawAnswer) {
       const result = applyDrillAnswer(drillSession, currentDrill, rawAnswer, { formatNumber: deps.formatNumber });
-      if (!result.changed) return { view: getViewModel(), advance: false };
+      if (!result.changed) return { view: getViewModel(), advance: false, changed: false };
       const advance = Boolean(drillSession?.running);
-      return { view: getViewModel(), advance };
+      return { view: getViewModel(), advance, advanceToken: drillQuestionToken, changed: true };
     },
 
     skipDrill() {
       if (!currentDrill || !drillSession?.running || drillSession.completed) return { view: getViewModel(), advance: false };
-      if (currentDrill.answered) return { view: getViewModel(), advance: true };
+      if (currentDrill.answered) return { view: getViewModel(), advance: true, advanceToken: drillQuestionToken };
       applyDrillSkip(drillSession, currentDrill, { formatNumber: deps.formatNumber });
-      return { view: getViewModel(), advance: Boolean(drillSession?.running) };
+      return { view: getViewModel(), advance: Boolean(drillSession?.running), advanceToken: drillQuestionToken };
     },
 
     advanceDrillQuestion(options = {}) {
+      if (options.expectedToken != null && options.expectedToken !== drillQuestionToken) return getViewModel();
       if (!drillSession || drillSession.completed || !drillSession.running) return getViewModel();
       if (!currentDrill?.answered && options.countSkip !== false) drillSession.skipped += 1;
       if (drillSession.index + 1 >= drillSession.total) return finishDrillSession("complete");
       drillSession.index += 1;
       drillSession.answered = false;
-      currentDrill = makeDrill(drillSession.mode);
+      generateNextDrill();
       return getViewModel();
     },
 

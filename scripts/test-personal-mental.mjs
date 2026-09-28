@@ -49,6 +49,36 @@ test('division permits zero integer quotient and never zero divisor', () => {
   assert.equal(q.answer, 0);
 });
 
+test('a repeated random sample does not show the same arithmetic twice while alternatives remain', () => {
+  const settings = { durationSeconds: 10, operations: ['add'],
+    ranges: { add: { minA: 2, maxA: 2, minB: 3, maxB: 5 } } };
+  let trial = createTrial(settings, { now: start, id: 'no-repeat', rng: () => 0 });
+  const expressions = [];
+  for (let index = 0; index < 8; index += 1) {
+    const question = trial.currentQuestion;
+    expressions.push(`${question.a}+${question.b}`);
+    trial = transitionTrial(trial, { type: 'input', value: String(question.answer), questionId: question.id },
+      start + 100 * (index + 1), () => 0);
+    assert.equal(trial.correct, index + 1);
+    assert.equal(trial.questions.length, index + 1);
+  }
+  assert.equal(new Set(expressions.slice(0, 3)).size, 3);
+  assert.ok(expressions.every((expression, index) => index === 0 || expression !== expressions[index - 1]));
+});
+
+test('skipping also avoids the same next question, and a single-expression range stays playable', () => {
+  const settings = { durationSeconds: 10, operations: ['multiply'],
+    ranges: { multiply: { minA: 2, maxA: 2, minB: 3, maxB: 4 } } };
+  const trial = createTrial(settings, { now: start, rng: () => 0 });
+  const next = transitionTrial(trial, { type: 'skip', questionId: trial.currentQuestion.id }, start + 100, () => 0);
+  assert.notEqual(`${next.currentQuestion.a}×${next.currentQuestion.b}`,
+    `${trial.currentQuestion.a}×${trial.currentQuestion.b}`);
+  const fixed = make();
+  const answered = transitionTrial(fixed, { type: 'input', value: '5' }, start + 100, () => 0);
+  assert.equal(answered.currentQuestion.answer, 5);
+  assert.equal(answered.currentQuestion.index, 2);
+});
+
 test('subtraction can yield a negative integer without changing operand ranges', () => {
   const trial = createTrial({ operations: ['subtract'], ranges: { subtract: { minA: 2, maxA: 2, minB: 5, maxB: 5 } } }, { now: start, id: 'negative' });
   let next = transitionTrial(trial, { type: 'input', value: '-' }, start + 10);
