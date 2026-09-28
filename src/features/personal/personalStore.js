@@ -187,7 +187,26 @@ function mergeDailySession(current, incoming) {
 function preferTrialProgress(current, incoming) {
   requireData(trainerOf(current) === trainerOf(incoming), "conflicting trial modules");
   // Pick one coherent snapshot; never splice independently generated question paths.
-  // Correct answers and resolved questions only grow as a real trial progresses.
+  // A math trial can skip questions without increasing its score. Compare the
+  // resolved question path first so an older, higher-scoring device cannot
+  // rewind the visible question and erase an answer being typed locally.
+  const math = trainerOf(current) === "math";
+  if (math && current.questions.length !== incoming.questions.length) {
+    return current.questions.length > incoming.questions.length ? current : incoming;
+  }
+  if (math && current.status === "active" && incoming.status === "active") {
+    const left = current.currentQuestion;
+    const right = incoming.currentQuestion;
+    if (left?.id === right?.id && left?.operator === right?.operator && left?.a === right?.a && left?.b === right?.b) {
+      const leftMistakes = left.mistakes || [];
+      const rightMistakes = right.mistakes || [];
+      if (leftMistakes.length !== rightMistakes.length) return leftMistakes.length > rightMistakes.length ? current : incoming;
+      const leftMistakeAt = Date.parse(leftMistakes.at(-1)?.submittedAt) || 0;
+      const rightMistakeAt = Date.parse(rightMistakes.at(-1)?.submittedAt) || 0;
+      if (leftMistakeAt !== rightMistakeAt) return leftMistakeAt > rightMistakeAt ? current : incoming;
+      if (Boolean(current.currentAnswer) !== Boolean(incoming.currentAnswer)) return current.currentAnswer ? current : incoming;
+    }
+  }
   const progress = (trial) => [trial.correct,
     trial.questions.filter((question) => ["correct", "wrong", "skipped"].includes(question.outcome)).length,
     trial.status === "completed" ? 2 : trial.status === "aborted" ? 1 : 0,

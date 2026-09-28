@@ -339,6 +339,50 @@ test("same-id active trial merges retain the most progressed complete snapshot i
   assert.deepEqual(mergePersonalData(stale, { ...newer, activeTrial: skipped }).activeTrial, skipped);
 });
 
+test("a higher score on fewer math questions cannot rewind another device's current question or answer", () => {
+  const now = Date.parse("2026-09-09T12:00:00Z");
+  const original = createTrial({ durationSeconds: 30 }, { id: "diverged-math", now, rng: () => 0 });
+  const remote = transitionTrial(original, { type: "input", value: String(original.currentQuestion.answer) }, now + 1000, () => 0.3);
+  let local = transitionTrial(original, { type: "skip" }, now + 1000, () => 0.1);
+  local = transitionTrial(local, { type: "skip" }, now + 2000, () => 0.2);
+  local = transitionTrial(local, { type: "input", value: "999999" }, now + 3000);
+  assert.equal(local.correct, 0);
+  assert.equal(local.currentQuestion.index, 3);
+  assert.equal(remote.correct, 1);
+  assert.equal(remote.currentQuestion.index, 2);
+  for (const merged of [mergePersonalData({ ...createPersonalState(), activeTrial: local }, { ...createPersonalState(), activeTrial: remote }),
+    mergePersonalData({ ...createPersonalState(), activeTrial: remote }, { ...createPersonalState(), activeTrial: local })]) {
+    assert.deepEqual(merged.activeTrial, local);
+    assert.equal(merged.activeTrial.currentAnswer, "999999");
+  }
+});
+
+test("same-question math drafts and wrong submissions survive a cloud merge", () => {
+  const now = Date.parse("2026-09-09T12:00:00Z");
+  const original = createTrial({ durationSeconds: 30 }, { id: "math-draft", now, rng: () => 0 });
+  const draft = transitionTrial(original, { type: "input", value: "999999" }, now + 1000);
+  const mistaken = transitionTrial(draft, { type: "submit" }, now + 2000);
+  for (const [older, newer] of [[original, draft], [draft, mistaken]]) {
+    for (const merged of [mergePersonalData({ ...createPersonalState(), activeTrial: older }, { ...createPersonalState(), activeTrial: newer }),
+      mergePersonalData({ ...createPersonalState(), activeTrial: newer }, { ...createPersonalState(), activeTrial: older })]) {
+      assert.deepEqual(merged.activeTrial, newer);
+    }
+  }
+  assert.equal(mistaken.currentQuestion.mistakes.length, 1);
+
+  const scored = transitionTrial(original, { type: "input", value: String(original.currentQuestion.answer) }, now + 1000, () => 0);
+  let skipped = transitionTrial(original, { type: "skip" }, now + 1000, () => 0);
+  skipped = transitionTrial(skipped, { type: "input", value: "999999" }, now + 1500);
+  skipped = transitionTrial(skipped, { type: "submit" }, now + 2000);
+  assert.equal(scored.correct, 1);
+  assert.equal(skipped.correct, 0);
+  assert.equal(scored.currentQuestion.index, skipped.currentQuestion.index);
+  for (const merged of [mergePersonalData({ ...createPersonalState(), activeTrial: scored }, { ...createPersonalState(), activeTrial: skipped }),
+    mergePersonalData({ ...createPersonalState(), activeTrial: skipped }, { ...createPersonalState(), activeTrial: scored })]) {
+    assert.deepEqual(merged.activeTrial, skipped);
+  }
+});
+
 const reasoningStart = Date.parse("2026-09-10T12:00:00Z");
 function reasoningFixture(trainer = "sequence", trialId = `saved-${trainer}`, preparationSeconds = 0) {
   return createReasoningTrial({ trainer, durationSeconds: 30, difficulty: "medium", ...(trainer === "sequence" ? { sequenceType: "mixed" } : {}) },

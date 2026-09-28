@@ -52,12 +52,11 @@ function randomInt(min, max, rng) {
   return min + Math.floor(sample * (max - min + 1));
 }
 
-export function generateMentalQuestion(input, index = 1, now = Date.now(), rng = Math.random) {
-  const settings = normalizeMentalSettings(input);
-  const operator = settings.operations[randomInt(0, settings.operations.length - 1, rng)];
-  const range = settings.ranges[operator];
-  const first = randomInt(range.minA, range.maxA, rng);
-  const second = randomInt(range.minB, range.maxB, rng);
+function questionKey(question) {
+  return `${question.operator}:${question.a}:${question.b}`;
+}
+
+function makeQuestion(operator, first, second, index, now) {
   const a = operator === 'divide' ? first * second : first;
   const b = operator === 'divide' ? first : second;
   const answer = operator === 'add' ? a + b : operator === 'subtract' ? a - b : operator === 'multiply' ? a * b : second;
@@ -65,6 +64,47 @@ export function generateMentalQuestion(input, index = 1, now = Date.now(), rng =
     startedAt: new Date(now).toISOString(), completedAt: null, elapsedMs: null,
     outcome: null, submittedAnswer: null, mistakes: [],
   };
+}
+
+export function generateMentalQuestion(input, index = 1, now = Date.now(), rng = Math.random, previousQuestions = []) {
+  const settings = normalizeMentalSettings(input);
+  const pools = settings.operations.map((operator) => {
+    const range = settings.ranges[operator];
+    return { operator, range, widthB: range.maxB - range.minB + 1,
+      size: (range.maxA - range.minA + 1) * (range.maxB - range.minB + 1) };
+  });
+  const total = pools.reduce((count, pool) => count + pool.size, 0);
+  const seen = new Set(previousQuestions.map(questionKey));
+  // Once a small configured pool is exhausted, a repeat is unavoidable. Still
+  // keep the next question different from the one the user just answered.
+  const excluded = seen.size >= total
+    ? new Set(total > 1 && previousQuestions.length ? [questionKey(previousQuestions.at(-1))] : []) : seen;
+  const sample = () => {
+    const pool = pools[randomInt(0, pools.length - 1, rng)];
+    return makeQuestion(pool.operator,
+      randomInt(pool.range.minA, pool.range.maxA, rng),
+      randomInt(pool.range.minB, pool.range.maxB, rng), index, now);
+  };
+  for (let attempt = 0; attempt < 16; attempt += 1) {
+    const question = sample();
+    if (!excluded.has(questionKey(question))) return question;
+  }
+  // A deterministic walk guarantees an unused expression even with a fixed RNG
+  // or a nearly exhausted range, without enumerating a potentially huge pool.
+  const start = randomInt(0, total - 1, rng);
+  for (let offset = 0; offset <= Math.min(excluded.size, total - 1); offset += 1) {
+    let slot = (start + offset) % total;
+    for (const pool of pools) {
+      if (slot >= pool.size) { slot -= pool.size; continue; }
+      const first = pool.range.minA + Math.floor(slot / pool.widthB);
+      const second = pool.range.minB + slot % pool.widthB;
+      const question = makeQuestion(pool.operator, first, second, index, now);
+      if (!excluded.has(questionKey(question))) return question;
+      break;
+    }
+  }
+  // The one-expression range is intentionally playable for repeated practice.
+  return sample();
 }
 
 export function createTrial(settings, { now = Date.now(), id, dailySessionId = null, rng = Math.random, preparationSeconds = 0 } = {}) {
@@ -128,7 +168,7 @@ export function transitionTrial(trial, action, now = Date.now(), rng = Math.rand
     if (completeValue && Number(value) === current.answer) {
       return { ...trial, correct: trial.correct + 1,
         questions: [...trial.questions, closeQuestion(current, 'correct', value, eventAt)],
-        currentQuestion: generateMentalQuestion(trial.settings, current.index + 1, eventAt, rng), currentAnswer: '',
+        currentQuestion: generateMentalQuestion(trial.settings, current.index + 1, eventAt, rng, [...trial.questions, current]), currentAnswer: '',
       };
     }
     if (action.type === 'submit' && completeValue) {
@@ -140,7 +180,7 @@ export function transitionTrial(trial, action, now = Date.now(), rng = Math.rand
   }
   if (action.type === 'skip') {
     return { ...trial, questions: [...trial.questions, closeQuestion(current, 'skipped', trial.currentAnswer, eventAt)],
-      currentQuestion: generateMentalQuestion(trial.settings, current.index + 1, eventAt, rng), currentAnswer: '',
+      currentQuestion: generateMentalQuestion(trial.settings, current.index + 1, eventAt, rng, [...trial.questions, current]), currentAnswer: '',
     };
   }
   return trial;
