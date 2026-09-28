@@ -7,6 +7,7 @@ const baseUrl = process.env.MENTAL_QA_URL || 'http://127.0.0.1:5176';
 const ownerId = 'local:mental-input-qa';
 const storageKey = personalStorageKey(ownerId);
 const endpoint = 'https://mental-input-fixture.invalid/api';
+const syncMetaKey = `quantgym.personal-sync.v1:${encodeURIComponent(ownerId)}:${encodeURIComponent(endpoint)}`;
 const account = { id: ownerId, provider: 'local', cloudLinked: true, emailVerified: true,
   name: 'Mental Input QA', email: 'mental-input-qa@example.invalid', country: 'china',
   region: '上海', graduationTerm: '2027-09', createdAt: '2026-06-17T00:00:00.000Z' };
@@ -19,7 +20,7 @@ async function check(name, answer, run, options = {}) {
   if (process.env.MENTAL_QA_FILTER && !name.includes(process.env.MENTAL_QA_FILTER)) return;
   const context = await browser.newContext({ serviceWorkers: 'block' });
   const seed = createPersonalState();
-  const operator = answer < 0 ? 'subtract' : 'add';
+  const operator = options.operator || (answer < 0 ? 'subtract' : 'add');
   seed.activeTrial = createTrial({ durationSeconds: 120, operations: [operator],
     ranges: { [operator]: options.customRange || { minA: 0, maxA: 0, minB: Math.abs(answer), maxB: Math.abs(answer) } },
   }, { now: Date.now(), id: name });
@@ -44,6 +45,14 @@ async function check(name, answer, run, options = {}) {
   // Test the real UI with an isolated account and intercepted API requests,
   // including when baseUrl points to the deployed static assets.
   let remote = { version: 1, revision: 1, data: seed, updatedAt: new Date().toISOString() };
+  let nextPutData = null;
+  const requestCounts = { GET: 0, PUT: 0 };
+  const fixture = {
+    requestCounts,
+    revision: () => remote.revision,
+    setRemote(data) { remote = { ...remote, revision: remote.revision + 1, data: structuredClone(data), updatedAt: new Date().toISOString() }; },
+    replyToNextPut(data) { nextPutData = structuredClone(data); },
+  };
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url()), method = request.method();
     const json = body => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -53,7 +62,11 @@ async function check(name, answer, run, options = {}) {
     if (url.origin === new URL(endpoint).origin || url.pathname.startsWith('/api/')) {
       if (method === 'OPTIONS') return json({});
       if (url.pathname === '/api/personal-prep') {
-        if (method === 'PUT') remote = { ...remote, revision: remote.revision + 1, data: request.postDataJSON().data, updatedAt: new Date().toISOString() };
+        if (method in requestCounts) requestCounts[method]++;
+        if (method === 'PUT') {
+          remote = { ...remote, revision: remote.revision + 1, data: nextPutData || request.postDataJSON().data, updatedAt: new Date().toISOString() };
+          nextPutData = null;
+        }
         return json(remote);
       }
       if (url.pathname === '/api/account') return json({ account });
@@ -103,7 +116,7 @@ async function check(name, answer, run, options = {}) {
       await session.send('Emulation.setCPUThrottlingRate', { rate: options.cpuRate });
     }
     const read = () => page.evaluate(key => JSON.parse(localStorage.getItem(key)).data, storageKey);
-    await run({ page, input, read });
+    await run({ page, input, read, fixture, ownerId, storageKey, syncMetaKey });
     assert.deepEqual(errors, []);
     console.log(`PASS ${name}`);
   } catch (error) {
@@ -116,6 +129,78 @@ async function check(name, answer, run, options = {}) {
 }
 
 try {
+  await check('external storage snapshots cannot withdraw a saved first digit on the same question', 560,
+    async ({ page, input, read, storageKey, ownerId }) => {
+      const stale = await read();
+      await page.keyboard.type('5', { delay: 0 });
+      await page.clock.runFor(200);
+      const saved = await read();
+      assert.equal(saved.activeTrial.correct, 0);
+      assert.equal(saved.activeTrial.currentQuestion.id, stale.activeTrial.currentQuestion.id);
+      assert.equal(saved.activeTrial.currentAnswer, '5');
+      await page.evaluate(({ storageKey, ownerId, stale }) => {
+        const oldValue = localStorage.getItem(storageKey);
+        const newValue = JSON.stringify({ version: 1, ownerId, updatedAt: new Date().toISOString(), data: stale });
+        localStorage.setItem(storageKey, newValue);
+        window.dispatchEvent(new StorageEvent('storage', { key: storageKey, oldValue, newValue, storageArea: localStorage, url: `${location.origin}/other-training-tab` }));
+      }, { storageKey, ownerId, stale });
+      await page.clock.runFor(200);
+      assert.equal(await input.inputValue(), '5', 'An older empty draft must not remove the first digit from the live input');
+      // External storage events do not echo writes between tabs. Leaving the
+      // editor must checkpoint its retained answer before the browser reloads.
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.clock.resume();
+      await input.waitFor();
+      assert.equal(await input.inputValue(), '5', 'Reload must restore the protected draft, not the other tab\'s empty snapshot');
+      const retained = await read();
+      assert.equal(retained.activeTrial.currentQuestion.id, saved.activeTrial.currentQuestion.id);
+      assert.equal(retained.activeTrial.correct, 0);
+      assert.equal(retained.activeTrial.currentAnswer, '5');
+    }, { operator: 'multiply', customRange: { minA: 70, maxA: 70, minB: 8, maxB: 8 } });
+  await check('external cloud GET and PUT snapshots cannot withdraw an acknowledged first digit on the same question', 560,
+    async ({ page, input, read, fixture, syncMetaKey }) => {
+      const waitForAck = async revision => {
+        for (let attempt = 0; attempt < 150; attempt++) {
+          const acknowledged = await page.evaluate(key => JSON.parse(localStorage.getItem(key) || 'null')?.revision, syncMetaKey);
+          if (acknowledged >= revision) return;
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        assert.fail(`The fixture did not acknowledge cloud revision ${revision}`);
+      };
+      await waitForAck(1);
+      const stale = await read();
+      const sync = async method => {
+        const before = fixture.requestCounts[method];
+        const response = page.waitForResponse(result => new URL(result.url()).pathname === '/api/personal-prep'
+          && result.request().method() === method);
+        await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+        await response;
+        await waitForAck(fixture.revision());
+        assert.ok(fixture.requestCounts[method] > before, `The fixture must exercise a ${method} sync`);
+      };
+      await page.keyboard.type('5', { delay: 0 });
+      await page.clock.runFor(200);
+      assert.equal((await read()).activeTrial.currentAnswer, '5');
+      fixture.replyToNextPut(stale);
+      await sync('PUT');
+      const afterPut = await input.inputValue();
+
+      // Establish a known fingerprint for the saved draft before simulating an
+      // older device's accepted cloud snapshot with a newer server revision.
+      await input.fill('5');
+      await page.clock.runFor(200);
+      fixture.setRemote(stale);
+      await sync('PUT');
+      fixture.setRemote(stale);
+      await sync('GET');
+      const afterGet = await input.inputValue();
+      assert.deepEqual({ afterPut, afterGet }, { afterPut: '5', afterGet: '5' },
+        'Neither a stale PUT acknowledgement nor a known-baseline GET may replace the live answer');
+      const retained = await read();
+      assert.equal(retained.activeTrial.currentAnswer, '5');
+      assert.equal(retained.activeTrial.currentQuestion.id, stale.activeTrial.currentQuestion.id);
+      assert.equal(retained.activeTrial.correct, 0);
+    }, { operator: 'multiply', customRange: { minA: 70, maxA: 70, minB: 8, maxB: 8 } });
   await check('draft persistence batches rapid edits without resetting the local input on timer ticks', 1234, async ({ page, input, read }) => {
     await page.evaluate(() => { window.__mentalInputQa.writes = 0; });
     await page.keyboard.type('987654321', { delay: 0 });

@@ -5,14 +5,15 @@ const SAVE_DELAY_MS = 150;
 
 // The browser owns the live editing buffer. Saving the whole training history
 // must not sit between a native insert/delete and the next keyboard event.
-// Each question still gets its own element, isolating trailing IME events.
-export function MentalAnswerInput({ inputRef, draftRef, questionId, expectedAnswer, value, onAnswer, ...props }) {
-  const initialValue = useRef(value);
-  const draft = useRef({ value, pending: false, awaitingAck: false, composing: false, timer: null });
+// Each question starts from its saved answer once. Store/cloud acknowledgements
+// never write back into an editor that the user is already typing in.
+export function MentalAnswerInput({ inputRef, draftRef, questionId, expectedAnswer, initialAnswer, onAnswer, ...props }) {
+  const initialValue = useRef(initialAnswer);
+  const draft = useRef({ value: initialAnswer, pending: false, composing: false, timer: null });
   const callbacks = useRef({ onAnswer, expectedAnswer });
   callbacks.current = { onAnswer, expectedAnswer };
   const pressed = useRef(new Set());
-  const [longAnswer, setLongAnswer] = useState(value.length > 4);
+  const [longAnswer, setLongAnswer] = useState(initialAnswer.length > 4);
 
   function clearTimer() {
     window.clearTimeout(draft.current.timer);
@@ -24,7 +25,6 @@ export function MentalAnswerInput({ inputRef, draftRef, questionId, expectedAnsw
     if (!current.pending) return;
     // Clear before notifying: a correct answer can synchronously unmount us.
     current.pending = false;
-    current.awaitingAck = true;
     callbacks.current.onAnswer(current.value);
   }
   function display(next) {
@@ -57,21 +57,6 @@ export function MentalAnswerInput({ inputRef, draftRef, questionId, expectedAnsw
       inputRef.current?.focus({ preventScroll: true });
     },
   }), [questionId]);
-
-  // A timer tick or delayed store acknowledgement cannot restore a digit the
-  // user has just removed. Reconcile external values only after local work is saved.
-  useLayoutEffect(() => {
-    const current = draft.current;
-    if (value === current.value && !current.composing) {
-      current.awaitingAck = false;
-      current.pending = false;
-      clearTimer();
-    }
-    if (!current.pending && !current.awaitingAck && !current.composing) {
-      current.value = value;
-      display(value);
-    }
-  });
 
   useLayoutEffect(() => {
     const onHidden = () => { if (document.visibilityState === 'hidden') flush(); };
