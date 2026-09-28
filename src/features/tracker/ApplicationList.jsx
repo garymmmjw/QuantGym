@@ -63,17 +63,17 @@ export default function ApplicationList({ applications, stages, status, onStatus
         <thead><tr><th scope="col">公司</th><th scope="col">岗位</th>{progressColumns.map(index => <th scope="col" key={index}>{index === 0 ? '投递' : `阶段 ${index + 1}`}</th>)}<th scope="col">更新进展</th><th scope="col">DDL</th></tr></thead>
         {groups ? groups.map(({ stage, applications: rows }) => {
           if (!rows.length && (status !== 'all' || hasQuery)) return null;
+          const filteredCount = (status !== 'all' || hasQuery) && Number.isSafeInteger(stage.applications);
           return <tbody key={stage.id}>
             <tr className="qt-phase-row"><th colSpan={columnCount} scope="rowgroup">
               <button type="button" aria-expanded={!collapsed[stage.id]} onClick={() => setCollapsed(value => ({ ...value, [stage.id]: !value[stage.id] }))}>
                 <Icon name={collapsed[stage.id] ? 'ChevronRight' : 'ChevronDown'} size={16}/>
                 <span className="qt-phase-badge">{stage.label}</span>
-                <span className="qt-phase-description">{stage.description}</span>
-                <span className="qt-phase-count">{rows.length} 份申请</span>
-                <span className="qt-phase-caption" title={stage.countSourceNote}>{stage.id ? <>{formatStagePeriod(stage)} · {stage.countStatus === 'partial' && stage.questionCount !== null ? '已确认刷题' : '阶段刷题'} <strong>{stage.questionCount ?? '—'}</strong> 题</> : '投递时的准备阶段'}</span>
+                <span className="qt-phase-count" title={filteredCount ? `筛选匹配 ${rows.length} 份，共 ${stage.applications} 份申请` : undefined}>{rows.length}{filteredCount && ` / ${stage.applications}`} 份申请</span>
+                <span className="qt-phase-caption">{stage.id ? formatStagePeriod(stage) : '投递日期或阶段待补充'}</span>
               </button>
             </th></tr>
-            {!collapsed[stage.id] && (rows.length ? rows.map(renderRow) : <tr className="qt-empty-phase-row"><td colSpan={columnCount}>这个阶段还没有投递，添加申请时可选择此 Stage。</td></tr>)}
+            {!collapsed[stage.id] && (rows.length ? rows.map(renderRow) : <tr className="qt-empty-phase-row"><td colSpan={columnCount}>这个阶段的时间范围内还没有投递。</td></tr>)}
           </tbody>;
         }) : <tbody>{visible.map(renderRow)}</tbody>}
       </table>

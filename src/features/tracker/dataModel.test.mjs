@@ -1,18 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deadlineDateTime, filterApplications, formatDeadline, getApplicationView, getCurrentDeadline, getCurrentDeadlineEvent, getProgressColumnCount, getSummary, groupApplications, sortApplications } from './dataModel.js';
+import { buildOverviewActivity } from '../overview/activityMetrics.js';
 
 const stages = [
-  { id: 's1', label: 'Stage 1' },
-  { id: 's2', label: 'Stage 2', importedIds: ['old-s2'] },
-  { id: 's3', label: 'Stage 3' },
+  { id: 's1', label: 'Stage 1', recordedDate: '2026-08-21' },
+  { id: 's2', label: 'Stage 2', recordedDate: '2026-09-12', importedIds: ['old-s2'] },
+  { id: 's3', label: 'Stage 3', recordedDate: '2026-09-19' },
 ];
 const app = (id, date, prepPhase = 's2', company = id) => ({
   id, company, role: 'Research Intern', prepPhase,
   events: [{ id: `${id}-submitted`, type: 'submitted', date, year: null }],
 });
 const ids = rows => rows.map(row => row.id);
-const display = (rows, order) => groupApplications(sortApplications(rows, order), stages);
+const stageOptions = { today: '2026-09-28', now: '2026-09-28T23:59:00Z', timeZone: 'UTC' };
+const display = (rows, order) => groupApplications(sortApplications(rows, order), stages, stageOptions);
 
 test('company and role search intersects every view without changing totals or ordering', () => {
   const research = app('research', '2026-09-16', 's2', 'BlackRock');
@@ -143,7 +145,7 @@ test('company view sorts globally without Stages and preserves separate roles at
   assert.equal(company.applications[1].role, 'Trading Intern');
   const all = getApplicationView(rows, stages);
   assert.deepEqual(ids(all.applications), ['zulu', 'alpha-qt', 'alpha-qr']);
-  assert.deepEqual(all.groups.filter(group => group.applications.length).map(group => group.stage.id), ['s1', 's2']);
+  assert.deepEqual(all.groups.filter(group => group.applications.length).map(group => group.stage.id), ['s2']);
   assert.deepEqual(rows, original);
 });
 
@@ -171,18 +173,70 @@ test('sort choices change both group order and rows, and switching back restores
   assert.deepEqual(ids(display(rows, 'recent')[0].applications), ['app-003', 'app-002']);
 });
 
-test('newest application in an earlier numbered Stage can move that group above later Stages', () => {
+test('stored Stage assignments cannot override the submission timeline', () => {
   const result = display([app('a', '2026-09-20', 's1'), app('b', '2026-09-19', 's2')]);
-  assert.deepEqual(result.map(group => group.stage.id), ['s1', 's2', 's3']);
+  assert.deepEqual(result.map(group => group.stage.id), ['s3', 's2', 's1']);
+  assert.deepEqual(ids(result[0].applications), ['a']);
+  assert.deepEqual(ids(result[1].applications), ['b']);
 });
 
 test('filters, aliases and unassigned applications keep the selected ordering', () => {
-  const rows = [app('a', '2026-09-15', 's1'), app('b', '2026-09-17', 'old-s2'), app('c', '2026-09-18', '')];
+  const rows = [app('a', '2026-09-10', 's1'), app('b', '', 'old-s2'), app('c', '', '')];
   rows[0].events.push({ id: 'oa-a', type: 'oa_received', date: '2026-09-19' });
   rows[2].events.push({ id: 'oa-c', type: 'oa_received', date: '2026-09-19' });
   const result = groupApplications(filterApplications(sortApplications(rows), { status: 'oa' }), stages);
-  assert.deepEqual(result.filter(group => group.applications.length).map(group => group.stage.id), ['', 's1']);
+  assert.deepEqual(result.filter(group => group.applications.length).map(group => group.stage.id), ['s1', '']);
   assert.deepEqual(ids(display(rows)[1].applications), ['b']);
+});
+
+test('tracker group counts match overview counts for all 102 imported applications without rewriting their Stage links', () => {
+  const timeline = stages.map(stage => ({ ...stage, recordedDate: stage.id === 's2' ? '2026-09-13' : stage.recordedDate }));
+  const rows = [
+    ...Array.from({ length: 10 }, (_, index) => app(`early-${index}`, '9/13', index < 3 ? 's1' : 's2')),
+    ...Array.from({ length: 41 }, (_, index) => app(`middle-${index}`, '9/19', index < 40 ? 's2' : 's3')),
+    ...Array.from({ length: 51 }, (_, index) => app(`current-${index}`, '2026-09-20', 's3')),
+  ];
+  const before = structuredClone(rows);
+  const model = buildOverviewActivity({ stages: timeline, applications: rows }, stageOptions);
+  const view = getApplicationView(rows, model.stageRows, 'all', '', stageOptions);
+  assert.deepEqual(model.stageRows.map(stage => stage.applications), [10, 41, 51]);
+  assert.equal(view.applications.length, 102);
+  assert.equal(view.groups.reduce((total, group) => total + group.applications.length, 0), 102);
+  for (const stage of model.stageRows) {
+    assert.equal(view.groups.find(group => group.stage.id === stage.id).applications.length, stage.applications);
+  }
+  assert.deepEqual(rows, before);
+});
+
+test('editing submission or Stage dates updates overview and table together and filtered views keep the same attribution', () => {
+  const rows = [app('moving', '2026-09-12', 's3', 'Moving Company'), app('other', '2026-09-15', 's1')];
+  rows[0].events.push({ id: 'oa', type: 'oa_received', date: '2026-09-20' });
+  const verify = (timeline, expected) => {
+    const overview = buildOverviewActivity({ stages: timeline, applications: rows }, stageOptions);
+    const view = getApplicationView(rows, overview.stageRows, 'oa', 'Moving', stageOptions);
+    const group = view.groups.find(group => group.applications.length);
+    assert.equal(group.stage.id, expected);
+    assert.equal(overview.stageRows.find(stage => stage.id === expected).applications, group.stage.applications);
+    assert.deepEqual(ids(group.applications), ['moving']);
+    assert.equal(view.applications.length, 1);
+  };
+  verify(stages, 's1');
+  rows[0].events[0].date = '2026-09-20';
+  verify(stages, 's3');
+  verify(stages.map(stage => stage.id === 's3' ? { ...stage, recordedDate: '2026-09-21' } : stage), 's2');
+});
+
+test('invalid, future and ambiguous submissions remain visible as unassigned instead of disagreeing with the overview', () => {
+  const unknownStages = [{ id: 's1', label: 'Stage 1', recordedDate: null }, stages[1]];
+  const rows = [app('unknown', '2026-09-14', 's1'), app('invalid', '2026-02-30', 's2'), app('future', '2027-01-01', 's2')];
+  const before = structuredClone(rows);
+  const overview = buildOverviewActivity({ stages: unknownStages, applications: rows }, stageOptions);
+  const view = getApplicationView(rows, overview.stageRows, 'all', '', stageOptions);
+  assert.deepEqual(overview.stageRows.map(stage => stage.applications), [null, 1]);
+  assert.deepEqual(ids(view.groups.find(group => group.stage.id === 's2').applications), ['unknown']);
+  assert.deepEqual(ids(view.groups.find(group => group.stage.id === '').applications), ['future', 'invalid']);
+  assert.equal(view.groups.flatMap(group => group.applications).length, rows.length);
+  assert.deepEqual(rows, before);
 });
 
 test('mixed yearless and complete dates have one consistent order without changing source dates', () => {

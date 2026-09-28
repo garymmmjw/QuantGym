@@ -2,7 +2,7 @@ import { addLocalDays, collectCalendarActivities, localDayKey, parseLocalDay } f
 import { leetcodeSubmissionDay } from '../personal/calendar/leetcodeCalendar.js';
 import { summarizeLeetCodeProgress, summarizeLeetCodeRange } from '../leetcode/leetcodeProgress.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../../modules/problems/completion.js';
-import { sortCareerStages } from '../careerStages/stageStore.js';
+import { applicationStageRecord, getStageApplicationAssignments } from '../careerStages/applicationStages.js';
 
 const list = value => Array.isArray(value) ? value : [];
 const identity = value => typeof value === 'string' && value.trim() ? value : '';
@@ -10,24 +10,6 @@ const count = value => Number.isSafeInteger(value) && value >= 0;
 const ASSESSMENTS = new Set(['independent', 'with-help', 'review']);
 export const ACTIVITY_WEIGHTS = Object.freeze({ applications: 2, leetcode: 5, technical: 10, behavioral: 10, mentalMath: 5 });
 const DAILY_KINDS = Object.keys(ACTIVITY_WEIGHTS);
-
-function applicationDay(application, dayOf) {
-  const event = list(application.events).find(item => item?.type === 'submitted');
-  if (!event) return '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(event.date || '')) return localDayKey(event.date);
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(event.date || '')) return dayOf(event.date);
-  const partial = /^(\d{1,2})\/(\d{1,2})$/.exec(event.date || '');
-  if (!partial || !Number.isInteger(event.year) || event.year < 1 || event.year > 9999) return '';
-  return localDayKey(`${String(event.year).padStart(4, '0')}-${partial[1].padStart(2, '0')}-${partial[2].padStart(2, '0')}`);
-}
-
-function applicationStageContext(application) {
-  const event = list(application.events).find(item => item?.type === 'submitted');
-  const partial = event?.year == null && /^(\d{1,2})\/(\d{1,2})$/.exec(event?.date || '');
-  return { applicationStageId: identity(application.prepPhase),
-    applicationDateIsExplicit: Boolean(event?.date && !partial),
-    applicationMonthDay: partial ? `${partial[1].padStart(2, '0')}-${partial[2].padStart(2, '0')}` : '' };
-}
 
 /** Collect qualifying work; saved Behavioral answers count as preparation. */
 export function collectOverviewRecords({ applications = [], personalState = {}, legacyState = {}, leetcodeSnapshot = {}, availability = {} } = {}, { now = Date.now(), timeZone } = {}) {
@@ -53,7 +35,8 @@ export function collectOverviewRecords({ applications = [], personalState = {}, 
     list(applications).forEach(application => {
       if (!application || seen.has(application.id)) return;
       seen.add(application.id);
-      add('applications', application.id, applicationDay(application, dayOf), applicationStageContext(application), true);
+      const { key, day, ...context } = applicationStageRecord(application, { dayOf });
+      add('applications', key, day, context, true);
     });
   }
   if (sources.personal) {
@@ -149,40 +132,14 @@ function scoreActivity(counts) {
 
 /** Training excludes its Stage date; the first Stage also owns earlier applications. */
 export function summarizeOverviewStages(stages = [], bundle, { today = localDayKey() } = {}) {
-  const ordered = sortCareerStages(stages);
   const endToday = localDayKey(today);
-  const periods = ordered.map((stage, index) => {
-    const periodStart = localDayKey(stage.recordedDate);
-    const periodEnd = ordered[index + 1] ? localDayKey(ordered[index + 1].recordedDate) : endToday;
-    return { periodStart, periodEnd, known: Boolean(periodStart && periodEnd && periodStart <= periodEnd) };
-  });
-  // Old spreadsheet imports deliberately retain M/D without a stored year.
-  // A single-year Stage timeline supplies context for grouping only; it must
-  // never manufacture dated calendar activity or rewrite the original record.
-  // Use recorded Stage dates, not the moving clock: New Year's Day must not
-  // move old applications. An explicit closed Stage also anchors later cycles.
-  const years = new Set(periods.map(period => period.periodStart).filter(Boolean).map(day => day.slice(0, 4)));
-  const applicationYear = periods.every(period => period.known) && years.size === 1 ? [...years][0] : '';
+  const applicationRecords = bundle.records.filter(record => record.kind === 'applications');
+  const { ordered, periods, assignments } = getStageApplicationAssignments(stages, applicationRecords, { today: endToday });
   const applicationGroups = ordered.map(() => []);
-  bundle.records.filter(record => record.kind === 'applications').forEach(record => {
-    const assignedIndex = ordered.findIndex(stage => record.applicationStageId && [stage.id, ...list(stage.importedIds)].includes(record.applicationStageId));
-    const assignedPeriod = periods[assignedIndex];
-    const assignedYear = assignedIndex >= 0 && assignedIndex < ordered.length - 1 && assignedPeriod.known
-      && assignedPeriod.periodStart.slice(0, 4) === assignedPeriod.periodEnd.slice(0, 4) ? assignedPeriod.periodStart.slice(0, 4) : '';
-    const year = assignedYear || applicationYear;
-    const candidates = !year && record.applicationMonthDay && periods.every(period => period.known)
-      ? [...years].map(value => localDayKey(`${value}-${record.applicationMonthDay}`)).filter(day => day && day <= endToday) : [];
-    const day = record.day || (year && record.applicationMonthDay
-      ? localDayKey(`${year}-${record.applicationMonthDay}`) : candidates.length === 1 ? candidates[0] : '');
-    const matches = periods.flatMap((period, index) => {
-      if (!period.known) return [];
-      if (day) return day <= endToday && day <= period.periodEnd && (index === 0 || day > period.periodStart) ? [index] : [];
-      if (record.applicationDateIsExplicit) return [];
-      // Truly undated records can still have an explicit, imported Stage.
-      const stage = ordered[index];
-      return record.applicationStageId && [stage.id, ...list(stage.importedIds)].includes(record.applicationStageId) ? [index] : [];
-    });
-    if (matches.length === 1) applicationGroups[matches[0]].push(record);
+  const groupIndexes = new Map(ordered.map((stage, index) => [stage.id, index]));
+  applicationRecords.forEach(record => {
+    const index = groupIndexes.get(assignments.get(record.key));
+    if (index !== undefined) applicationGroups[index].push(record);
   });
   return ordered.map((stage, index) => {
     const next = ordered[index + 1];
