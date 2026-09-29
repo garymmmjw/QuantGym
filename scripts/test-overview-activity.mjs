@@ -6,6 +6,7 @@ import { completeBehavioralPractice, markExperienceRead, saveBehavioralAnswer } 
 import { collectStagePractice, summarizeStagePractice } from '../src/features/careerStages/stagePractice.js';
 import { collectLeetCodeActivities } from '../src/features/personal/calendar/leetcodeCalendar.js';
 import { buildActivityChart } from '../src/features/overview/activityChartModel.js';
+import { applicationStageRecord, getStageApplicationAssignments } from '../src/features/careerStages/applicationStages.js';
 
 const stamp = (day, time = '12:00') => `${day}T${time}:00Z`;
 const options = { today: '2026-09-19', now: stamp('2026-09-19', '23:59'), timeZone: 'UTC' };
@@ -328,6 +329,103 @@ test('Stage application totals include pre-Stage history and yearless imports ex
   assert.equal(model.stageRows[0].technical, 0, 'earlier history changes application attribution only');
   assert.equal(model.stageRows[0].leetcode, 0);
   assert.deepEqual(input, before, 'imports retain their original unknown years');
+});
+
+test('shared Stage assignments reconcile imported phase labels with submission dates and overview counts', () => {
+  const timeline = stages.map(stage => stage.id === 's2' ? { ...stage, importedIds: ['legacy-s2'] } : stage);
+  const applications = [
+    { ...submitted('older-year', '2025-12-01'), prepPhase: 's3' },
+    { ...submitted('first-start', '2026-08-21'), prepPhase: 's3' },
+    { ...submitted('first-end', '9/13'), prepPhase: 's2' },
+    { ...submitted('second-start', '9/14'), prepPhase: 's1' },
+    { ...submitted('second-end', '2026-09-19'), prepPhase: 's3' },
+    { ...submitted('current', '2026-09-20'), prepPhase: 's1' },
+    { ...submitted('undated', ''), prepPhase: 'legacy-s2' },
+    { ...submitted('invalid', '2026-02-30'), prepPhase: 's2' },
+    { ...submitted('future', '2026-09-21'), prepPhase: 's2' },
+    { ...submitted('unmapped', ''), prepPhase: 'deleted-stage' },
+  ];
+  applications[3].events.push({ id: 'later-progress', type: 'interview', date: '2026-09-20' });
+  const dateOptions = { ...options, today: '2026-09-20', now: stamp('2026-09-20', '23:59') };
+  const before = structuredClone({ timeline, applications });
+  const records = applications.map(application => applicationStageRecord(application, dateOptions));
+  const { assignments, ordered, periods } = getStageApplicationAssignments(timeline, records, dateOptions);
+  assert.deepEqual([...assignments], [
+    ['older-year', 's1'], ['first-start', 's1'], ['first-end', 's1'],
+    ['second-start', 's2'], ['second-end', 's2'], ['current', 's3'], ['undated', 's2'],
+  ]);
+  assert.deepEqual(ordered.map(stage => stage.id), ['s1', 's2', 's3']);
+  assert.deepEqual(periods.map(period => [period.periodStart, period.periodEnd]), [
+    ['2026-08-21', '2026-09-13'], ['2026-09-13', '2026-09-19'], ['2026-09-19', '2026-09-20'],
+  ]);
+  const overview = buildOverviewActivity({ stages: timeline, applications }, dateOptions);
+  assert.deepEqual(overview.stageRows.map(row => row.applications), [3, 3, 1]);
+  assert.deepEqual(overview.recordBundle.records.filter(record => record.kind === 'applications'), records.map(record => ({ kind: 'applications', ...record })));
+  assert.equal(overview.totals.applications, 10, 'unassigned records remain in the account total');
+  assert.deepEqual({ timeline, applications }, before, 'reconciliation never rewrites imported phase or year');
+});
+
+test('shared application timestamp conversion agrees with overview viewer days and rejects future instants', () => {
+  const applications = [
+    { ...submitted('viewer-boundary', '2026-09-20T01:00:00Z'), prepPhase: 's3' },
+    { ...submitted('future-instant', '2026-09-20T05:00:00Z'), prepPhase: 's2' },
+  ];
+  const dateOptions = { today: '2026-09-19', now: '2026-09-20T03:00:00Z', timeZone: 'America/Chicago' };
+  const records = applications.map(application => applicationStageRecord(application, dateOptions));
+  assert.deepEqual(records.map(record => record.day), ['2026-09-19', '']);
+  assert.deepEqual([...getStageApplicationAssignments(stages, records, dateOptions).assignments], [['viewer-boundary', 's2']]);
+  const overview = buildOverviewActivity({ stages, applications }, dateOptions);
+  assert.deepEqual(overview.stageRows.map(row => row.applications), [0, 1, 0]);
+  assert.equal(overview.today.counts.applications, 1);
+  assert.deepEqual(overview.recordBundle.records.filter(record => record.kind === 'applications'), records.map(record => ({ kind: 'applications', ...record })));
+});
+
+test('shared Stage assignment keeps same-day boundaries unique and unknown intervals unassigned', () => {
+  const timeline = [
+    { id: 'first', label: 'Stage 1', recordedDate: '2026-08-21' },
+    { id: 'empty', label: 'Stage 2', recordedDate: '2026-09-13' },
+    { id: 'current', label: 'Stage 3', recordedDate: '2026-09-13' },
+  ];
+  const applications = [{ ...submitted('boundary', '2026-09-13'), prepPhase: 'empty' }, submitted('after', '2026-09-14')];
+  const records = applications.map(application => applicationStageRecord(application, options));
+  assert.deepEqual([...getStageApplicationAssignments(timeline, records, options).assignments], [['boundary', 'first'], ['after', 'current']]);
+  assert.deepEqual(buildOverviewActivity({ stages: timeline, applications }, options).stageRows.map(row => row.applications), [1, 0, 1]);
+  const unknown = timeline.map(stage => ({ ...stage, recordedDate: null }));
+  const undated = applicationStageRecord({ ...submitted('unknown', ''), prepPhase: 'first' }, options);
+  assert.equal(getStageApplicationAssignments(unknown, [...records, undated], options).assignments.size, 0);
+  assert.deepEqual(buildOverviewActivity({ stages: unknown, applications }, options).stageRows.map(row => row.applications), [null, null, null]);
+});
+
+test('invalid yearless calendar dates never fall back to saved Stage aliases, while leap dates use the inferred year', () => {
+  const timeline = [
+    { id: 'first', label: 'Stage 1', recordedDate: '2026-01-01', importedIds: ['legacy-first'] },
+    { id: 'second', label: 'Stage 2', recordedDate: '2026-03-01' },
+  ];
+  const applications = ['2/30', '13/40', '0/0', '2/29'].map((date, index) => ({
+    ...submitted(`invalid-${index}`, date), prepPhase: 'legacy-first',
+  }));
+  applications.push({ ...submitted('missing', ''), prepPhase: 'legacy-first' });
+  const records = applications.map(application => applicationStageRecord(application, options));
+  assert.deepEqual([...getStageApplicationAssignments(timeline, records, options).assignments], [['missing', 'first']]);
+  const overview = buildOverviewActivity({ stages: timeline, applications }, options);
+  assert.deepEqual(overview.stageRows.map(row => row.applications), [1, 0]);
+  assert.equal(overview.totals.applications, 5, 'invalid dates remain visible in the account total');
+
+  const leapTimeline = timeline.map(stage => ({ ...stage, recordedDate: stage.recordedDate.replace('2026', '2024') }));
+  const leapOptions = { ...options, today: '2024-03-02', now: stamp('2024-03-02') };
+  const leapApplication = { ...submitted('leap-day', '2/29'), prepPhase: 'second' };
+  const leapRecord = applicationStageRecord(leapApplication, leapOptions);
+  assert.deepEqual([...getStageApplicationAssignments(leapTimeline, [leapRecord], leapOptions).assignments], [['leap-day', 'first']]);
+  const leapOverview = buildOverviewActivity({ stages: leapTimeline, applications: [leapApplication] }, leapOptions);
+  assert.deepEqual(leapOverview.stageRows.map(row => row.applications), [1, 0]);
+  assert.equal(leapOverview.recordBundle.records[0].day, '', 'inferred grouping never writes an event year');
+
+  const crossYearTimeline = [
+    { ...timeline[0], recordedDate: '2025-12-01' },
+    { ...timeline[1], recordedDate: '2026-03-01' },
+  ];
+  assert.equal(getStageApplicationAssignments(crossYearTimeline, [records[3]], options).assignments.size, 0,
+    'a leap date invalid in every candidate timeline year cannot use the alias fallback');
 });
 
 test('first-Stage applications include its own date and older years, even on the day it was created', () => {

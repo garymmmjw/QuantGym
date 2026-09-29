@@ -140,7 +140,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
         <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} summaryRows={activity.stageRows} summaryNote={activity.leetcodeStageNote} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList
           applications={resolvedApplications}
-          stages={stageDefinitions}
+          stages={activity.stageRows}
           status={status}
           onStatusChange={setStatus}
           saveError={saveError}

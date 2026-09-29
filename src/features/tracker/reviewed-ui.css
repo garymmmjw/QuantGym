@@ -61,10 +61,8 @@
 .quantgym-tracker .qt-phase-row button { padding: 8px 18px; min-height: 40px; gap: 12px; }
 .quantgym-tracker .qt-phase-row .qt-icon { color: #797083; }
 .quantgym-tracker .qt-phase-badge { font-family: inherit; color: var(--qt-accent); background: var(--qt-accent-soft); border-color: transparent; border-radius: 4px; font-size: 14px; font-weight: 600; padding: 3px 8px; white-space: nowrap; }
-.quantgym-tracker .qt-phase-description { font-size: 13px; font-weight: 400; color: #7d7189; letter-spacing: 0; }
 .quantgym-tracker .qt-phase-count { font-size: 12px; color: #8d8099; white-space: nowrap; }
 .quantgym-tracker .qt-phase-caption { font-size: 12px; color: #87788f; white-space: nowrap; }
-.quantgym-tracker .qt-phase-caption strong { color: var(--qt-accent); font-size: 13px; }
 .quantgym-tracker .qt-application-row td { height: 47px; padding: 7px 10px; border-bottom: 1px solid #eeebf2; vertical-align: middle; }
 .quantgym-tracker .qt-application-row td + td { border-left: 1px solid #efedf3; }
 .quantgym-tracker .qt-application-row td.qt-company-cell { padding-left: 20px; }

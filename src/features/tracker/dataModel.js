@@ -1,3 +1,5 @@
+import { applicationStageRecord, getStageApplicationAssignments } from '../careerStages/applicationStages.js';
+
 export const STATUS_META = Object.freeze({
   submitted: { label: '已投递', tone: 'neutral' },
   oa_received: { label: '收到 OA', tone: 'blue' },
@@ -143,15 +145,14 @@ export function sortApplications(applications, order = 'recent') {
 
 // Keep Stage groups together while letting the selected sort determine both
 // their first visible application and the order of the groups themselves.
-export function groupApplications(sortedApplications, stages) {
-  const groups = stages.map(stage => ({ stage, applications: [], rank: Infinity }));
-  const byStage = new Map();
-  for (const group of groups) {
-    for (const id of [group.stage.id, ...(group.stage.importedIds || [])]) byStage.set(id, group);
-  }
+export function groupApplications(sortedApplications, stages, options = {}) {
+  const { ordered, assignments } = getStageApplicationAssignments(stages,
+    sortedApplications.map(application => applicationStageRecord(application, options)), options);
+  const groups = ordered.map(stage => ({ stage, applications: [], rank: Infinity }));
+  const byStage = new Map(groups.map(group => [group.stage.id, group]));
   const ungrouped = { stage: { id: '', label: '未分组', description: '' }, applications: [], rank: Infinity };
   sortedApplications.forEach((application, rank) => {
-    const group = byStage.get(application.prepPhase) || ungrouped;
+    const group = byStage.get(assignments.get(application.id)) || ungrouped;
     group.rank = Math.min(group.rank, rank);
     group.applications.push(application);
   });
@@ -159,7 +160,7 @@ export function groupApplications(sortedApplications, stages) {
   return groups.sort((a, b) => a.rank - b.rank);
 }
 
-export function getApplicationView(applications, stages, mode = 'all', query = '') {
+export function getApplicationView(applications, stages, mode = 'all', query = '', options = {}) {
   const rows = filterApplications(sortApplications(applications, mode === 'company' ? 'company' : 'recent'), {
     status: mode === 'company' ? 'all' : mode,
     query,
@@ -173,6 +174,6 @@ export function getApplicationView(applications, stages, mode = 'all', query = '
   return {
     applications: rows,
     // These views always expose every matching row, regardless of collapsed Stages.
-    groups: mode === 'company' || mode === 'ddl' ? null : groupApplications(rows, stages),
+    groups: mode === 'company' || mode === 'ddl' ? null : groupApplications(rows, stages, options),
   };
 }
