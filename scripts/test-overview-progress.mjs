@@ -5,7 +5,7 @@ import { mergeProblems, normalizeCategory, normalizeProblem } from '../src/modul
 
 const PAST = '2020-01-01T12:00:00.000Z';
 const FUTURE = '2999-01-01T12:00:00.000Z';
-const problem = (id, category = 'probability', extra = {}) => ({ id, category, ...extra });
+const problem = (id, category = 'probability', extra = {}) => ({ id, category, source: 'quantguide', ...extra });
 const completed = problemId => ({ problemId, completed: true, completedAt: PAST });
 const attempt = (id, recordedAt = PAST, outcome = 'correct') => ({
   id, startedAt: recordedAt, recordedAt, updatedAt: recordedAt,
@@ -68,6 +68,97 @@ test('duplicate catalog entries do not inflate either the numerator or denominat
   }
 });
 
+test('overview includes all five question-page banks and excludes other library sources and their practice', () => {
+  const bankSources = ['quantguide', 'interview-xiaohongshu', 'interview-onepoint3acres', 'interview-glassdoor', 'question-bank'];
+  const librarySources = ['green-book', 'yellow-book', 'red-book', 'hull-derivatives', 'stefanica-fe-math',
+    'quantitative-primer', 'dudeney-puzzles', 'linalg-primer', 'probability-stochastic-10',
+    'stat110-strategic-practice', 'stanford-msande214-hw3', 'probabilitycourse-solved-samples',
+    'boyd-cvxbook-additional-exercises', 'etheridge-finmath-problem-sheets'];
+  const bankProblems = bankSources.map(source => problem(`bank-${source}`, 'probability', { source }));
+  const libraryProblems = librarySources.map(source => problem(`library-${source}`, 'option', { source }));
+  const records = [completed(bankProblems[0].id),
+    { problemId: bankProblems[1].id, freePracticeAttempts: [attempt('bank-attempt')] },
+    ...libraryProblems.map((item, index) => index % 2 ? completed(item.id)
+      : { problemId: item.id, freePracticeAttempts: [attempt(`library-attempt-${index}`)] })];
+  const rows = withState([...bankProblems, ...libraryProblems], records).getProblemProgress();
+  assert.deepEqual(rows.map(({ key, done, total }) => ({ key, done, total })), [
+    { key: 'all', done: 2, total: 5 }, { key: 'probability', done: 2, total: 5 }
+  ]);
+  assert.equal(rows[0].percent, 40);
+});
+
+test('a bank-looking book slug or missing source cannot admit an unrelated question', () => {
+  const problems = [problem('bank'),
+    problem('missing-source', 'probability', { source: undefined, bookSlug: 'quantguide' }),
+    problem('empty-source', 'probability', { source: '', bookSlug: 'question-bank' }),
+    problem('library-source', 'probability', { source: 'green-book', bookSlug: 'interview-glassdoor' }),
+    problem('unknown-source', 'probability', { source: 'new-library-source' })];
+  const [all] = withState(problems, problems.map(item => completed(item.id))).getProblemProgress();
+  assert.equal(all.done, 1);
+  assert.equal(all.total, 1);
+});
+
+test('a duplicate outside the five banks cannot replace an included question', () => {
+  const problems = [problem('same-id', 'probability'),
+    problem('same-id', 'option', { source: 'hull-derivatives' })];
+  const rows = withState(problems, [completed('same-id')]).getProblemProgress();
+  assert.deepEqual(rows.map(({ key, done, total }) => ({ key, done, total })), [
+    { key: 'all', done: 1, total: 1 }, { key: 'probability', done: 1, total: 1 }
+  ]);
+});
+
+test('category ranking uses only the five banks, independent of library navigation and list filters', () => {
+  const problems = [problem('p1'), problem('p2'), problem('p3'),
+    problem('b1', 'behavioral'), problem('b2', 'behavioral'), problem('o1', 'option'),
+    ...Array.from({ length: 10 }, (_, index) => problem(`library-${index}`, 'option', { source: 'hull-derivatives' }))];
+  let filters = { source: 'all', theme: 'all', viewMode: 'all' };
+  const api = withState(problems, [completed('b1'), completed('library-0')], {
+    getProblemFilterState: () => filters
+  });
+  const expected = [['all', 1, 6], ['probability', 0, 3], ['behavioral', 1, 2]];
+  const progress = () => api.getProblemProgress().map(({ key, done, total }) => [key, done, total]);
+  assert.deepEqual(progress(), expected);
+  filters = { source: 'hull-derivatives', theme: 'option', viewMode: 'favorites' };
+  assert.deepEqual(progress(), expected);
+  filters = { source: 'interview-xiaohongshu', theme: 'behavioral', viewMode: 'all' };
+  assert.deepEqual(progress(), expected);
+});
+
+test('state fallback applies bank scope after catalog eligibility and reflects incremental loading', () => {
+  let state = { problems: [], problemStates: [completed('bank')] };
+  const api = createOverviewPageApi({
+    getState: () => state,
+    getCatalogProblems: () => [],
+    isCatalogProblem: item => item.visibility !== 'user'
+  });
+  assert.deepEqual(api.getProblemProgress(), []);
+  state = { ...state, problems: [problem('library', 'option', { source: 'hull-derivatives' })] };
+  assert.deepEqual(api.getProblemProgress(), []);
+  state = { ...state, problems: [...state.problems, problem('bank'), problem('user', 'probability', { visibility: 'user' })] };
+  assert.deepEqual(api.getProblemProgress().map(({ key, done, total }) => [key, done, total]), [
+    ['all', 1, 1], ['probability', 1, 1]
+  ]);
+  state = { problems: [], problemStates: [] };
+  assert.deepEqual(api.getProblemProgress(), []);
+});
+
+test('catalog accessor takes precedence and recomputes the bank scope as catalog data changes', () => {
+  let catalog = [problem('library', 'option', { source: 'hull-derivatives' })];
+  const api = withState([problem('state-only')], [completed('bank'), completed('state-only')], {
+    getCatalogProblems: () => catalog
+  });
+  assert.deepEqual(api.getProblemProgress(), []);
+  catalog = [...catalog, problem('bank')];
+  assert.equal(api.getProblemProgress()[0].total, 1);
+  assert.equal(api.getProblemProgress()[0].done, 1);
+  catalog = [...catalog, problem('new-bank', 'probability', { source: 'interview-onepoint3acres' })];
+  assert.equal(api.getProblemProgress()[0].total, 2);
+  assert.equal(api.getProblemProgress()[0].done, 1);
+  catalog = [];
+  assert.equal(api.getProblemProgress()[0].total, 1);
+  assert.equal(api.getProblemProgress()[0].done, 1);
+});
+
 test('LeetCode questions are excluded by metadata from totals and category rows', () => {
   const problems = [
     problem('regular'), problem('lc-category', 'leetcode'),
@@ -81,7 +172,7 @@ test('LeetCode questions are excluded by metadata from totals and category rows'
   assert.deepEqual(rows.map(row => row.key), ['all', 'probability']);
 });
 
-test('overview always shows all questions followed by the two largest categories', () => {
+test('overview always shows all included bank questions followed by the two largest categories', () => {
   const problems = [problem('c', 'coding'), problem('d1', 'derivatives'), problem('d2', 'derivatives'),
     problem('p1'), problem('p2'), problem('p3')];
   const api = withState(problems, [completed('d1'), completed('p1')], {
@@ -98,8 +189,8 @@ test('overview always shows all questions followed by the two largest categories
 
 test('zero, small, fractional and full completion retain accurate bar widths and labels', () => {
   for (const { done, total, label } of [
-    { done: 0, total: 4580, label: '0' },
-    { done: 1, total: 4580, label: '<0.1' },
+    { done: 0, total: 2940, label: '0' },
+    { done: 1, total: 2940, label: '<0.1' },
     { done: 1, total: 3, label: '33.3' },
     { done: 1, total: 1, label: '100' },
     { done: 9999, total: 10000, label: '99.9' }
@@ -125,8 +216,9 @@ test('replacing the account state recomputes progress without keeping a stale co
   assert.equal(api.getProblemProgress()[0].done, 0);
 });
 
-test('empty and LeetCode-only catalogs expose no misleading progress row', () => {
+test('empty, library-only and LeetCode-only catalogs expose no misleading progress row', () => {
   assert.deepEqual(withState([]).getProblemProgress(), []);
+  assert.deepEqual(withState([problem('library', 'probability', { source: 'green-book' })], [completed('library')]).getProblemProgress(), []);
   assert.deepEqual(withState([problem('leetcode-one', 'leetcode')], [completed('leetcode-one')]).getProblemProgress(), []);
 });
 
@@ -153,7 +245,12 @@ test('behavioral aliases remain stable through repeated normalization and catalo
   assert.deepEqual(mergeProblems(first, first), first);
 });
 
-test('audited catalog metadata yields 4580 total, 1628 probability and 723 option questions', () => {
+test('behavioral progress has an English label without a supplied category formatter', () => {
+  const rows = withState([problem('behavioral', 'behavioral')], [], { getLanguage: () => 'en' }).getProblemProgress();
+  assert.equal(rows.find(row => row.key === 'behavioral').label, 'Behavioral / Fit');
+});
+
+test('audited catalog metadata yields 2940 bank questions, 1212 probability and 298 behavioral questions', () => {
   // Source/category aggregates verified on 2026-10-02. Generated rows contain
   // no real question IDs, titles, prompts, answers, URLs, or private content.
   const sourceCategoryCounts = {
@@ -189,8 +286,9 @@ test('audited catalog metadata yields 4580 total, 1628 probability and 723 optio
   const catalog = mergeProblems([], metadata);
   const rows = withState(catalog, [], { normalizeCategory }).getProblemProgress();
   assert.deepEqual(rows.map(({ key, total }) => ({ key, total })), [
-    { key: 'all', total: 4580 },
-    { key: 'probabilityExpectation', total: 1628 },
-    { key: 'option', total: 723 }
+    { key: 'all', total: 2940 },
+    { key: 'probabilityExpectation', total: 1212 },
+    { key: 'behavioral', total: 298 }
   ]);
+  assert.equal(rows.find(row => row.key === 'behavioral').label, '行为面');
 });
