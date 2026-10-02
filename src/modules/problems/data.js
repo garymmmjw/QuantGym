@@ -106,7 +106,7 @@ export function inferProblemCategory(raw = {}) {
   return "probabilityExpectation";
 }
 
-const REVIEWED_EXTRA_CATEGORIES = new Set(["systemDesign", "dataEngineering", "systemsNetworking", "aiEngineering", "enterpriseTools", "assessment"]);
+const REVIEWED_EXTRA_CATEGORIES = new Set(["systemDesign", "dataEngineering", "systemsNetworking", "aiEngineering", "enterpriseTools", "assessment", "behavioral"]);
 
 export function normalizeCategory(category, defs = skillDefs) {
   const key = String(category || "").trim();

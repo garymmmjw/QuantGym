@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createOverviewPageApi } from '../src/app/services/overviewPageApi.js';
+import { mergeProblems, normalizeCategory, normalizeProblem } from '../src/modules/problems/data.js';
 
 const PAST = '2020-01-01T12:00:00.000Z';
 const FUTURE = '2999-01-01T12:00:00.000Z';
@@ -127,4 +128,69 @@ test('replacing the account state recomputes progress without keeping a stale co
 test('empty and LeetCode-only catalogs expose no misleading progress row', () => {
   assert.deepEqual(withState([]).getProblemProgress(), []);
   assert.deepEqual(withState([problem('leetcode-one', 'leetcode')], [completed('leetcode-one')]).getProblemProgress(), []);
+});
+
+test('explicit and inferred behavioral questions retain their category during catalog normalization', () => {
+  const explicit = normalizeProblem({
+    id: 'explicit-behavioral', category: 'behavioral', prompt: 'Explain your approach to a probability project.', createdAt: PAST
+  });
+  const inferred = normalizeProblem({
+    id: 'inferred-behavioral', prompt: 'Tell me about a time you resolved a conflict.', createdAt: PAST
+  });
+  assert.deepEqual([explicit.category, inferred.category], ['behavioral', 'behavioral']);
+  assert.equal(normalizeCategory('behavioral'), 'behavioral');
+});
+
+test('behavioral aliases remain stable through repeated normalization and catalog merges', () => {
+  const raw = ['behavioral', 'behavior', 'behavioral_fit', 'fit'].map((category, index) => ({
+    id: `behavioral-alias-${index}`, category, source: 'interview-glassdoor',
+    visibility: 'private', createdAt: PAST
+  }));
+  const first = mergeProblems([], raw);
+  assert.deepEqual(first.map(item => item.category), raw.map(() => 'behavioral'));
+  assert.deepEqual(first.map(item => normalizeProblem(item)), first);
+  assert.deepEqual(mergeProblems(first, raw), first);
+  assert.deepEqual(mergeProblems(first, first), first);
+});
+
+test('audited catalog metadata yields 4580 total, 1628 probability and 723 option questions', () => {
+  // Source/category aggregates verified on 2026-10-02. Generated rows contain
+  // no real question IDs, titles, prompts, answers, URLs, or private content.
+  const sourceCategoryCounts = {
+    'question-bank': { probabilityExpectation: 94, statistics: 14, optimization: 7, algebra: 14, linearAlgebra: 3, calculus: 4, leetcode: 4 },
+    'green-book': { mentalMath: 34, probabilityExpectation: 70, market: 6, calculus: 10, complexNumbers: 1, algebra: 1, statistics: 11, linearAlgebra: 1, leetcode: 24, option: 25 },
+    'yellow-book': { option: 29, mentalMath: 17, probabilityExpectation: 44, statistics: 15, cppProgramming: 4, complexNumbers: 1, algebra: 3, calculus: 7, linearAlgebra: 4, market: 1, leetcode: 28 },
+    'red-book': { option: 93, probabilityExpectation: 38, statistics: 16, leetcode: 44, calculus: 9, algebra: 2, linearAlgebra: 1, cppProgramming: 6, mentalMath: 11, market: 22 },
+    'hull-derivatives': { option: 430, market: 272, statistics: 30, probabilityExpectation: 31 },
+    'stefanica-fe-math': { statistics: 22, option: 7, market: 4, probabilityExpectation: 2 },
+    'quantitative-primer': { probabilityExpectation: 11, statistics: 15, pandasNumpy: 4, leetcode: 7, mentalMath: 2, machineLearning: 2 },
+    'dudeney-puzzles': { mentalMath: 65, probabilityExpectation: 8, leetcode: 50 },
+    'linalg-primer': { statistics: 13, market: 5 },
+    'probability-stochastic-10': { probabilityExpectation: 10 },
+    quantguide: { optimization: 47, probabilityExpectation: 713, mentalMath: 91, algebra: 111, option: 77, statistics: 101, linearAlgebra: 15, calculus: 22, market: 22, complexNumbers: 2 },
+    'stat110-strategic-practice': { probabilityExpectation: 184 },
+    'stanford-msande214-hw3': { optimization: 4, market: 1 },
+    'probabilitycourse-solved-samples': { probabilityExpectation: 13, statistics: 3 },
+    'boyd-cvxbook-additional-exercises': { optimization: 10 },
+    'etheridge-finmath-problem-sheets': { option: 5, probabilityExpectation: 5 },
+    'interview-glassdoor': { leetcode: 26, behavioral: 144, statistics: 22, cppProgramming: 15, mentalMath: 16, option: 12, systemsNetworking: 4, machineLearning: 9, probabilityExpectation: 14, systemDesign: 2, optimization: 2, market: 40, pandasNumpy: 2, calculus: 2, enterpriseTools: 1, linearAlgebra: 3, algebra: 1, dataEngineering: 1 },
+    'interview-onepoint3acres': { mentalMath: 25, probabilityExpectation: 194, optimization: 13, leetcode: 108, statistics: 56, market: 30, linearAlgebra: 17, machineLearning: 48, behavioral: 76, algebra: 14, option: 12, deepLearning: 4, calculus: 3, cppProgramming: 11, systemDesign: 2, dataEngineering: 2, systemsNetworking: 1, pandasNumpy: 2 },
+    'interview-xiaohongshu': { market: 129, algebra: 15, probabilityExpectation: 197, statistics: 84, behavioral: 78, optimization: 10, mentalMath: 57, option: 33, cppProgramming: 13, linearAlgebra: 10, leetcode: 75, machineLearning: 83, deepLearning: 77, pandasNumpy: 10, dataEngineering: 3, calculus: 1, assessment: 1, aiEngineering: 2 }
+  };
+  const metadata = Object.entries(sourceCategoryCounts).flatMap(([source, categories]) => (
+    Object.entries(categories).flatMap(([category, count]) => Array.from({ length: count }, (_, index) => ({
+      id: `synthetic-${source}-${category}-${index}`, source, category, createdAt: PAST
+    })))
+  ));
+  assert.equal(metadata.length, 4946);
+  assert.equal(new Set(metadata.map(item => item.id)).size, 4946);
+  assert.equal(metadata.filter(item => item.category === 'behavioral').length, 298);
+  assert.equal(metadata.filter(item => item.category === 'leetcode').length, 366);
+  const catalog = mergeProblems([], metadata);
+  const rows = withState(catalog, [], { normalizeCategory }).getProblemProgress();
+  assert.deepEqual(rows.map(({ key, total }) => ({ key, total })), [
+    { key: 'all', total: 4580 },
+    { key: 'probabilityExpectation', total: 1628 },
+    { key: 'option', total: 723 }
+  ]);
 });
