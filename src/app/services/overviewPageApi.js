@@ -1,5 +1,6 @@
 import { getLeaderboardScopeSummaryViewModel } from "../../modules/overview/leaderboard.js";
 import { countsTowardProblemTotal } from "../../modules/problems/completion.js";
+import { getProblemCompletionCount } from "../../modules/problems/progress.js";
 import {
   buildRecentContributionHeatmap as buildRecentContributionHeatmapFallback,
   getDailyXpSeries as getDailyXpSeriesFallback
@@ -28,10 +29,16 @@ function getOverviewCatalogProblems(deps) {
   });
 }
 
-function getFallbackProblemProgressItems(deps, problems) {
-  problems = problems.filter(countsTowardProblemTotal);
+function getOverviewProblemProgressItems(deps, problems) {
+  problems = [...new Map(problems.filter(countsTowardProblemTotal).map(problem => [problem.id, problem])).values()];
   const isEnglish = deps.getLanguage?.() === "en";
-  const getCompletionCount = deps.getProblemCompletionCount || (() => 0);
+  // Runtime slices do not always export their bound counting helper. Read
+  // personal records explicitly so missing wiring cannot turn saved work into 0.
+  const personalStates = new Map(getStateList(deps, "problemStates").map(record => [record.problemId, record]));
+  const getPersonalState = typeof deps.getProblemPersonalState === "function"
+    ? problemId => deps.getProblemPersonalState(problemId)
+    : problemId => personalStates.get(problemId);
+  const getCompletionCount = items => getProblemCompletionCount(items, getPersonalState);
   const normalizeCategory = deps.normalizeCategory || ((category) => category || "uncategorized");
   const formatCategory = deps.formatCategoryLabel || ((category) => category || "Other");
   const themeLabels = new Map(
@@ -116,15 +123,13 @@ export function createOverviewPageApi(deps = {}) {
 
   function getProblemProgress() {
     const problems = getOverviewCatalogProblems(deps);
-    let items = safeArray(deps.buildProblemProgressItems?.(problems));
-    if (!items.length && problems.length) {
-      items = getFallbackProblemProgressItems(deps, problems);
-    }
-    return items.slice(0, 4).map((item, index) => ({
-      ...item,
-      percent: Math.round((Number(item.done || 0) / Math.max(Number(item.total || 0), 1)) * 100),
-      accentIndex: index
-    }));
+    // Overview always covers the whole catalog, independent of list filters.
+    return getOverviewProblemProgressItems(deps, problems).map((item, index) => {
+      const percent = item.done / item.total * 100;
+      const percentLabel = percent === 0 ? "0" : percent === 100 ? "100"
+        : percent < 0.1 ? "<0.1" : String(Math.min(99.9, Math.round(percent * 10) / 10));
+      return { ...item, percent, percentLabel, accentIndex: index };
+    });
   }
 
   function getDailyXpBars() {
