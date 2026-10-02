@@ -1,4 +1,5 @@
 import { getLeaderboardScopeSummaryViewModel } from "../../modules/overview/leaderboard.js";
+import { getPracticeBank } from "../../features/problems/practiceBanks.js";
 import { countsTowardProblemTotal } from "../../modules/problems/completion.js";
 import { getProblemCompletionCount } from "../../modules/problems/progress.js";
 import {
@@ -48,6 +49,7 @@ function getOverviewProblemProgressItems(deps, problems) {
   const labelForCategory = (key) => (
     themeLabels.get(key)
     || deps.skillDefs?.[key]?.name
+    || (key === "behavioral" ? (isEnglish ? "Behavioral / Fit" : "行为面") : "")
     || formatCategory(key)
     || key
   );
@@ -122,8 +124,9 @@ export function createOverviewPageApi(deps = {}) {
   }
 
   function getProblemProgress() {
-    const problems = getOverviewCatalogProblems(deps);
-    // Overview always covers the whole catalog, independent of list filters.
+    // Share the five banks shown on the Problems home, independent of list
+    // filters or other Library sources that are available in the catalog.
+    const problems = getOverviewCatalogProblems(deps).filter(problem => getPracticeBank(problem));
     return getOverviewProblemProgressItems(deps, problems).map((item, index) => {
       const percent = item.done / item.total * 100;
       const percentLabel = percent === 0 ? "0" : percent === 100 ? "100"
