@@ -28,7 +28,7 @@ export function OverviewPageContent() {
   const model = useOverviewPageModel();
   const activity = useOverviewActivity();
   const questsDone = TASKS.filter(task => activity.today.counts[task.key] > 0).length;
-  const totalSolved = model.problemProgress.reduce((max, item) => Math.max(max, item.done || 0), 0);
+  const totalSolved = model.problemProgress.find(item => item.key === "all")?.done || 0;
 
   return (
     <div className="overview-route-page qg-growth-page qg-overview-page overview-dashboard">
@@ -91,7 +91,7 @@ export function OverviewPageContent() {
           <div className="effect-panel-heading">
             <h2>刷题进度</h2>
             <div className="effect-head-side">
-              <span className="effect-head-stat">已解 {number(totalSolved)} 题</span>
+              <span className="effect-head-stat">已练习 {number(totalSolved)} 题</span>
               <Link className="icon-button ghost" to="/problems" title="打开题库" aria-label="打开题库"><ArrowUpRight size={18} /></Link>
             </div>
           </div>
@@ -100,7 +100,7 @@ export function OverviewPageContent() {
               <div className="effect-progress-row" key={item.key} style={{ "--value": String(item.percent), "--accent-index": String(item.accentIndex) }}>
                 <div>
                   <span className="progress-row-name"><span className="progress-dot" aria-hidden="true" /><strong>{item.label}</strong></span>
-                  <span className="progress-row-nums"><span>{item.done} / {item.total}</span><b>{item.percent}%</b></span>
+                  <span className="progress-row-nums"><span>{item.done} / {item.total}</span><b>{item.percentLabel}%</b></span>
                 </div>
                 <i aria-hidden="true"><span /></i>
               </div>
