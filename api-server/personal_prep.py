@@ -400,6 +400,20 @@ def restore_practice_activities(data):
     data["activities"] = list(activities.values())
 
 
+def get_personal_prep_metadata(conn, user_id: str) -> dict:
+    """Read the conditional-request validator without fetching the JSON state."""
+    row = conn.execute(
+        "SELECT revision, updated_at FROM user_personal_prep WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+    if row is None:
+        return {"revision": 0, "updatedAt": None}
+    updated_at = row["updated_at"]
+    if isinstance(updated_at, datetime):
+        updated_at = updated_at.isoformat().replace("+00:00", "Z")
+    return {"revision": int(row["revision"]), "updatedAt": updated_at}
+
+
 def get_personal_prep(conn, user_id: str) -> dict:
     row = conn.execute(
         "SELECT data_json, revision, updated_at FROM user_personal_prep WHERE user_id = ?",

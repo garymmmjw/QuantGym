@@ -16,6 +16,7 @@ import math
 import os
 import re
 import secrets
+import shutil
 import smtplib
 import sqlite3
 import sys
@@ -23,14 +24,17 @@ import time
 import struct
 import threading
 from email.message import EmailMessage
+from contextlib import ExitStack
 from datetime import date, datetime, timedelta, timezone
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, unquote, urlparse
 from urllib.request import Request, urlopen
 
 import leetcode_sync
+from json_response import spool_json_response
+from runtime_limits import BoundedThreadingHTTPServer as ThreadingHTTPServer, RuntimeLimitsHandlerMixin
 from technical_practice import load_technical_questions
 from technical_reading_list import load_technical_supplements
 
@@ -38,6 +42,7 @@ from personal_prep import (
     MAX_PERSONAL_PREP_BYTES,
     PersonalPrepValidationError,
     get_personal_prep,
+    get_personal_prep_metadata,
     save_personal_prep,
     validate_personal_prep_request,
 )
@@ -474,6 +479,18 @@ def send_smtp_email(email: str, subject: str, body: str, notification_id: str | 
 
 def compact_json(value) -> str:
     return json.dumps(value or {}, ensure_ascii=False, separators=(",", ":"), default=api_timestamp)
+
+
+def personal_prep_etag(user_id: str, envelope: dict) -> str:
+    # Include the owner and timestamp, so another account or a recreated row
+    # cannot accidentally validate an old revision. No private content is hashed.
+    validator = json.dumps([user_id, envelope["revision"], envelope["updatedAt"]], default=api_timestamp)
+    return 'W/"personal-prep-v1-' + hashlib.sha256(validator.encode("utf-8")).hexdigest() + '"'
+
+
+def etag_matches(header: str, current: str) -> bool:
+    return any(value.strip() == "*" or value.strip().removeprefix("W/") == current.removeprefix("W/")
+               for value in header.split(","))
 
 
 def sanitize_alert_message(status: int, path: str, message: str) -> str:
@@ -1578,6 +1595,15 @@ class PostgresConnection:
             )
         )
 
+    def iterate(self, sql: str, params=None):
+        # A server-side cursor bounds both libpq's result buffer and decoded
+        # Python objects. Consume it within the surrounding transaction.
+        with self.raw_conn.cursor(name="quantgym_" + secrets.token_hex(8)) as cursor:
+            cursor.itersize = 128
+            cursor.execute(translate_postgres_placeholders(sql), adapt_postgres_params(sql, params))
+            for row in cursor:
+                yield CompatRow(row) if isinstance(row, dict) else row
+
     def executemany(self, sql: str, params_seq):
         return self.raw_conn.executemany(
             translate_postgres_placeholders(sql),
@@ -1607,11 +1633,13 @@ class PostgresConnection:
         return self
 
     def __exit__(self, exc_type, exc, tb):
-        if exc_type:
-            self.rollback()
-        else:
-            self.commit()
-        self.close()
+        try:
+            if exc_type:
+                self.rollback()
+            else:
+                self.commit()
+        finally:
+            self.close()
 
 
 class Database:
@@ -2286,9 +2314,13 @@ class Database:
         return next_community
 
     def get_problems(self, conn: sqlite3.Connection, owner_user_id: str | None = None) -> list[dict]:
+        return list(self.iter_problems(conn, owner_user_id))
+
+    def iter_problems(self, conn: sqlite3.Connection, owner_user_id: str | None = None):
         member = self.user_is_member(conn, owner_user_id)
+        iterate = conn.iterate if isinstance(conn, PostgresConnection) else conn.execute
         if owner_user_id:
-            rows = conn.execute(
+            rows = iterate(
                 """
                 SELECT problem_json
                 FROM problems
@@ -2296,19 +2328,23 @@ class Database:
                 ORDER BY source, id
                 """,
                 (owner_user_id,),
-            ).fetchall()
+            )
         else:
-            rows = conn.execute(
+            rows = iterate(
                 """
                 SELECT problem_json
                 FROM problems
                 WHERE visibility = 'public'
                 ORDER BY source, id
                 """
-            ).fetchall()
-        problems = [parse_json(row["problem_json"], {}) for row in rows]
-        return [problem for problem in problems if not is_retired_private_problem(problem)
-                and (member or problem.get("source") != "question-bank")]
+            )
+        try:
+            for row in rows:
+                problem = parse_json(row["problem_json"], {})
+                if not is_retired_private_problem(problem) and (member or problem.get("source") != "question-bank"):
+                    yield problem
+        finally:
+            rows.close()
 
     def user_is_member(self, conn, user_id):
         user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone() if user_id else None
@@ -3036,7 +3072,7 @@ def read_ws_frame(stream) -> tuple[int, bytes] | None:
     return opcode, payload
 
 
-class QuantGymHandler(BaseHTTPRequestHandler):
+class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
     server_version = "QuantGymAPI/0.1"
     protocol_version = "HTTP/1.1"
 
@@ -3058,8 +3094,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         elif origin and origin in ALLOWED_ORIGINS:
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Range")
-        self.send_header("Access-Control-Expose-Headers", "Accept-Ranges, Content-Range, Content-Length")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Range, If-None-Match")
+        self.send_header("Access-Control-Expose-Headers", "Accept-Ranges, Content-Range, Content-Length, ETag")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
         self.send_header("Access-Control-Max-Age", "86400")
         super().end_headers()
@@ -3091,7 +3127,13 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                     or path == "/api/community" and self.command != "GET"):
                 raise HttpError(403, "Sharing is disabled. Personal data is private to its account.")
             if path in {"/health", "/api/health"} and self.command == "GET":
-                return self.send_json(200, {"ok": True, "database": db.health(), "capabilities": {"careerTrackerSync": 1}})
+                database_health = db.health()
+                ready = bool(database_health["writable"] and database_health["foreignKeys"] and database_health["schemaTables"] > 0)
+                return self.send_json(200 if ready else 503, {
+                    "ok": ready, "database": database_health,
+                    "capabilities": {"careerTrackerSync": 1, "personalPrepConditionalRead": 1, "boundedResponses": 1},
+                    "build": {"commit": os.environ.get("RENDER_GIT_COMMIT", "")},
+                })
             if path.startswith("/api/guardian/"):
                 return guardian.handle(self, path)
             if path == "/api/auth/config" and self.command == "GET":
@@ -3217,22 +3259,31 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         except (HttpError, InvitationError, MembershipError) as error:
             self.record_http_error(error.status, error.message)
             return self.send_json(error.status, {"error": error.message})
+        except (BrokenPipeError, ConnectionResetError, TimeoutError):
+            self.close_connection = True
+            raise
         except Exception as error:  # pragma: no cover - defensive server boundary
             self.log_message("Unhandled error: %s", error)
             self.record_http_error(500, "Internal server error", error=error)
             return self.send_json(500, {"error": "Internal server error"})
 
     def read_json(self) -> dict:
+        if self.headers.get("Transfer-Encoding"):
+            raise HttpError(400, "Transfer-Encoding is not supported; send Content-Length")
         try:
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
             raise HttpError(400, "Invalid Content-Length")
+        if length < 0:
+            raise HttpError(400, "Invalid Content-Length")
         if length > MAX_BODY_BYTES:
             raise HttpError(413, "Request body is too large")
-        raw = self.rfile.read(length).decode("utf-8") if length else "{}"
+        raw = self.rfile.read(length) if length else b"{}"
+        if length and len(raw) != length:
+            raise HttpError(400, "Incomplete request body")
         try:
-            data = json.loads(raw or "{}")
-        except json.JSONDecodeError:
+            data = json.loads(raw.decode("utf-8") or "{}")
+        except (json.JSONDecodeError, UnicodeDecodeError):
             raise HttpError(400, "Invalid JSON")
         if not isinstance(data, dict):
             raise HttpError(400, "JSON body must be an object")
@@ -3325,19 +3376,23 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 payload["errorClass"] = metadata["errorClass"]
             threading.Thread(target=send_alert_webhook, args=(payload,), daemon=True).start()
 
-    def send_json(self, status: int, payload: dict, headers: dict | None = None):
-        body = json.dumps(payload, ensure_ascii=False, default=api_json_default).encode("utf-8")
+    def send_json(self, status: int, payload: dict, headers: dict | None = None, *, array_field: str | None = None):
+        body, length = spool_json_response(payload, default=api_json_default, array_field=array_field)
+        with body:
+            self.send_json_body(status, body, length, headers)
+
+    def send_json_body(self, status, body, length, headers=None):
         if status >= 400:
             self.close_connection = True
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Content-Length", str(length))
         for name, value in (headers or {}).items():
             self.send_header(str(name), str(value))
         if self.close_connection:
             self.send_header("Connection", "close")
         self.end_headers()
-        self.wfile.write(body)
+        shutil.copyfileobj(body, self.wfile, length=64 * 1024)
 
     def require_user(self) -> dict:
         header = self.headers.get("Authorization", "")
@@ -4205,8 +4260,17 @@ class QuantGymHandler(BaseHTTPRequestHandler):
     def get_personal_preparation(self):
         user = self.require_user()
         with db.connect() as conn:
+            condition = self.headers.get("If-None-Match", "")
+            if condition:
+                metadata = get_personal_prep_metadata(conn, user["id"])
+                etag = personal_prep_etag(user["id"], metadata)
+                if etag_matches(condition, etag):
+                    self.send_response(304)
+                    self.send_header("ETag", etag)
+                    self.end_headers()
+                    return
             envelope = get_personal_prep(conn, user["id"])
-        self.send_json(200, envelope)
+        self.send_json(200, envelope, headers={"ETag": personal_prep_etag(user["id"], envelope)})
 
     def put_personal_preparation(self):
         # The owner is always the authenticated session, never body/query data.
@@ -4237,7 +4301,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         if not saved:
             return self.send_json(409, {**envelope, "error": "Personal preparation changed. Reload the current revision before retrying."})
         guardian.wake()
-        self.send_json(200, envelope)
+        self.send_json(200, envelope, headers={"ETag": personal_prep_etag(user["id"], envelope)})
 
     def put_state(self):
         user = self.require_user()
@@ -4252,8 +4316,18 @@ class QuantGymHandler(BaseHTTPRequestHandler):
 
     def get_problems(self):
         user = self.optional_user()
-        with db.connect() as conn:
-            self.send_json(200, {"problems": db.get_problems(conn, user["id"] if user else None)})
+        # Finish and close the database transaction before waiting on a slow
+        # client. Neither a decoded full catalog nor a complete response string
+        # needs to remain in memory while transmitting this snapshot.
+        with ExitStack() as cleanup:
+            with db.connect() as conn:
+                problems = db.iter_problems(conn, user["id"] if user else None)
+                try:
+                    body, length = spool_json_response({"problems": problems}, array_field="problems", default=api_json_default)
+                    cleanup.enter_context(body)
+                finally:
+                    problems.close()
+            self.send_json_body(200, body, length)
 
     def put_problems(self):
         user = self.require_user()
@@ -4543,6 +4617,7 @@ def main():
     server = ThreadingHTTPServer((HOST, PORT), QuantGymHandler)
     guardian.start()
     print(f"QuantGym API listening on http://{HOST}:{PORT}")
+    print(f"HTTP runtime limits: {server.runtime_limits}", flush=True)
     if db.backend == "postgres":
         print("Database backend: postgres")
     else:

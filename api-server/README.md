@@ -234,6 +234,55 @@ export QUANTGYM_SMTP_FROM="QuantGym <no-reply@quantgym.app>"
 
 For local development, CORS defaults to `*` and `QUANTGYM_HOST` defaults to `127.0.0.1`. For deployment, set `QUANTGYM_ALLOWED_ORIGINS` to the production web origin and set `QUANTGYM_HOST=0.0.0.0` only when the platform or reverse proxy needs a non-loopback listener.
 
+### Memory bounds and conditional reads
+
+The HTTP server admits at most 2 ordinary requests at once, with a 2-second
+bounded wait before returning `503` and `Retry-After: 2`. Waiting happens before
+reading request bodies. Health checks have 2 independent slots, WebSockets have
+16 (allowing a full 10-player table and reconnects), and all connections share a
+limit of 32. Idle connections expire after 15
+seconds; active socket I/O has a 60-second timeout. Successful Poker upgrades
+retain their long-lived behavior within the separate WebSocket limit. Configure
+these defaults with the `QUANTGYM_HTTP_*` variables in `.env.example`; increasing
+concurrency should follow a memory measurement on the target instance.
+
+JSON responses retain at most a 1 MiB spool in memory before using an anonymous
+temporary file, then send 64 KiB chunks with an exact Content-Length. The catalog
+endpoint reads and encodes one problem at a time; Postgres uses a server cursor
+with batches of 128 rows. It closes the database transaction before sending the
+spooled body. Sorting, visibility and membership filtering remain unchanged.
+
+Authenticated `GET /api/personal-prep` supports `If-None-Match`. An unchanged
+revision returns `304` with no body and only reads revision/timestamp metadata;
+ETags are scoped to the owner. Full GETs and successful PUTs return ETag. Existing
+clients remain compatible, and responses retain private/no-store policy. The
+frontend keeps its confirmed validator only in memory, pauses background-tab
+polling, deduplicates simultaneous reads and retries failures after 30–300 seconds.
+Pending edits and conflict reconciliation retain the full state protocol.
+
+Slow (at least 1 second), large (at least 1 MiB), failed and interrupted requests
+emit `http.runtime` JSON logs with route category, status, bytes, elapsed time and
+RSS. These metrics exclude account IDs, query strings, tokens and request bodies.
+`GET /api/health` includes the Render commit when available and the supported
+conditional-read/bounded-response capabilities. Set Render's Health Check Path
+to `/api/health` so deploy health checks include database readiness. It returns
+503 if the database check reports unavailable, read-only or an empty schema.
+
+Local, synthetic-only regression checks:
+
+```bash
+python3 scripts/test-json-response.py
+python3 scripts/test-api-runtime-limits.py
+python3 scripts/test-api-health.py
+python3 scripts/test-personal-prep-api.py
+python3 scripts/test-personal-prep-api.py --postgres
+python3 scripts/check-api-memory-regression.py --postgres
+```
+
+The Postgres checks create and remove their own temporary local cluster and
+never use a production DATABASE_URL. Memory measurements are regression
+evidence, not proof that every cause of long-running RSS growth is eliminated.
+
 ### Render private technical question bundle
 
 The five free-practice catalogs are imported into the API database through an

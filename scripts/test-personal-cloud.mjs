@@ -135,7 +135,7 @@ function deferred() {
   const promise = new Promise(done => { resolve = done; });
   return { promise, resolve };
 }
-const response = (status, payload) => new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json' } });
+const response = (status, payload, headers = {}) => new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 
 /** A revision-checked API, with controllable request boundaries and no real network. */
 function memoryServer(initial = null, initialRevision = 0) {
@@ -149,6 +149,8 @@ function memoryServer(initial = null, initialRevision = 0) {
     beforePut: null,
     afterPut: null,
     transformPut: null,
+    etags: false,
+    notModified: 0,
     change(next) { data = clone(next); revision += 1; },
     replace(next, nextRevision) { data = clone(next); revision = nextRevision; },
     async fetch(url, options) {
@@ -157,7 +159,12 @@ function memoryServer(initial = null, initialRevision = 0) {
       const envelope = () => ({ version: 1, revision, data: clone(data), updatedAt: data === null ? null : iso });
       if (options.method === 'GET') {
         await api.beforeGet?.(request);
-        return response(200, envelope());
+        const etag = `"personal-prep-fixture-${revision}"`;
+        if (api.etags && options.headers['If-None-Match'] === etag) {
+          api.notModified += 1;
+          return new Response(null, { status: 304, headers: { ETag: etag } });
+        }
+        return response(200, envelope(), api.etags ? { ETag: etag } : {});
       }
       await api.beforePut?.(request);
       if (request.body.baseRevision !== revision) return response(409, { ...envelope(), error: 'Training changed on another device.' });
@@ -166,17 +173,17 @@ function memoryServer(initial = null, initialRevision = 0) {
       revision += 1;
       const saved = envelope();
       await api.afterPut?.(request);
-      return response(200, saved);
+      return response(200, saved, api.etags ? { ETag: `"personal-prep-fixture-${saved.revision}"` } : {});
     },
   };
   return api;
 }
 
-function device(server, { ownerId = 'alice', storage = memoryStorage(), token = 'test-only-token', userId = ownerId, fetchImpl, debounceMs = 60000 } = {}) {
-  const store = createPersonalStore({ ownerId, storage });
+function device(server, { ownerId = 'alice', storage = memoryStorage(), token = 'test-only-token', userId = ownerId, fetchImpl, debounceMs = 60000, eventTarget } = {}) {
+  const store = createPersonalStore({ ownerId, storage, eventTarget });
   const statuses = [];
   const cloud = createPersonalCloudSync({ store, ownerId, storage, config: { endpoint: 'https://api.example.test/api', token, userId },
-    fetchImpl: fetchImpl || server.fetch.bind(server), onStatus: state => statuses.push(state), debounceMs });
+    fetchImpl: fetchImpl || server.fetch.bind(server), onStatus: state => statuses.push(state), debounceMs, eventTarget });
   controllers.add(cloud);
   return { store, cloud, storage, statuses };
 }
@@ -771,4 +778,217 @@ test('server-retained questions are immediately adopted without an unnecessary r
   assert.equal(getBehavioralQuestions(first.store.getSnapshot().data).length, 2);
   await first.cloud.sync();
   assert.equal(server.calls.filter(call => call.method === 'PUT').length, 1);
+});
+
+function tab(visibilityState = 'visible') {
+  const target = new EventTarget();
+  target.document = new EventTarget();
+  target.document.visibilityState = visibilityState;
+  target.setVisibility = value => {
+    target.document.visibilityState = value;
+    target.document.dispatchEvent(new Event('visibilitychange'));
+  };
+  return target;
+}
+const settle = () => new Promise(resolve => setImmediate(resolve));
+
+test('overlapping startup, manual, focus and online reads share one request without an extra pass', async () => {
+  const server = memoryServer(), eventTarget = tab();
+  const first = device(server, { eventTarget });
+  const entered = deferred(), release = deferred();
+  server.beforeGet = async () => { entered.resolve(); await release.promise; };
+  const starting = first.cloud.start();
+  await entered.promise;
+  for (let count = 0; count < 4; count += 1) {
+    assert.equal(first.cloud.sync(), starting);
+    eventTarget.dispatchEvent(new Event('focus'));
+    eventTarget.dispatchEvent(new Event('online'));
+  }
+  release.resolve();
+  await starting;
+  assert.deepEqual(server.calls.map(call => call.method), ['GET', 'PUT']);
+  assert.equal(first.statuses.at(-1).phase, 'synced');
+});
+
+test('ETag reads reuse only an acknowledged local snapshot and never persisted metadata alone', async () => {
+  const server = memoryServer();
+  server.etags = true;
+  const first = device(server);
+  first.store.update(add('confirmed'));
+  await first.cloud.sync();
+  const snapshot = first.store.getSnapshot().data;
+  await first.cloud.sync();
+  assert.equal(server.notModified, 1);
+  assert.equal(server.calls.at(-1).headers['If-None-Match'], '"personal-prep-fixture-1"');
+  assert.equal(first.store.getSnapshot().data, snapshot);
+  assert.equal(first.statuses.at(-1).phase, 'synced');
+  const restarted = device(server, { storage: first.storage });
+  await restarted.cloud.sync();
+  assert.equal(server.calls.at(-1).headers['If-None-Match'], undefined);
+  assert.deepEqual(ids(restarted.store.getSnapshot().data), ['confirmed']);
+  first.store.update(add('local-edit'));
+  server.change(add('remote-edit')(server.data));
+  const before = server.calls.length;
+  await first.cloud.sync();
+  assert.equal(server.calls[before].headers['If-None-Match'], undefined);
+  assert.deepEqual(ids(server.data), ['confirmed', 'local-edit', 'remote-edit']);
+});
+
+test('an edit during a 304 causes a full read and drains once before reporting success', async () => {
+  const server = memoryServer();
+  server.etags = true;
+  const first = device(server);
+  await first.cloud.start();
+  const entered = deferred(), release = deferred();
+  server.beforeGet = async request => {
+    if (request.headers['If-None-Match']) { entered.resolve(); await release.promise; }
+  };
+  const before = server.calls.length;
+  const syncing = first.cloud.sync();
+  await entered.promise;
+  first.store.update(add('typed-during-304'));
+  release.resolve();
+  await syncing;
+  assert.equal(server.notModified, 1);
+  assert.deepEqual(server.calls.slice(before).map(call => call.method), ['GET', 'GET', 'PUT']);
+  assert.equal(server.calls[before + 1].headers['If-None-Match'], undefined);
+  assert.deepEqual(ids(server.data), ['typed-during-304']);
+  assert.equal(first.statuses.at(-1).phase, 'synced');
+});
+
+test('a lost upload acknowledgement cannot use an earlier ETag to skip pending work', async () => {
+  const server = memoryServer();
+  server.etags = true;
+  const first = device(server);
+  await first.cloud.start();
+  first.store.update(add('one-upload'));
+  server.afterPut = async () => { server.afterPut = null; throw new TypeError('Connection lost after commit'); };
+  await first.cloud.sync();
+  assert.equal(first.statuses.at(-1).phase, 'error');
+  const puts = server.calls.filter(call => call.method === 'PUT').length;
+  await first.cloud.sync();
+  assert.equal(server.calls.at(-1).headers['If-None-Match'], undefined);
+  assert.equal(server.calls.filter(call => call.method === 'PUT').length, puts);
+  assert.deepEqual(ids(server.data), ['one-upload']);
+  assert.equal(first.statuses.at(-1).phase, 'synced');
+});
+
+test('hidden tabs pause idle reads and resume with durable pending edits on visibility', async t => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] });
+  const server = memoryServer(), eventTarget = tab('hidden');
+  server.etags = true;
+  const first = device(server, { eventTarget, debounceMs: 1200 });
+  await first.cloud.start();
+  t.mock.timers.tick(300000);
+  eventTarget.dispatchEvent(new Event('focus'));
+  eventTarget.dispatchEvent(new Event('online'));
+  assert.equal(server.calls.length, 0);
+  eventTarget.setVisibility('visible');
+  assert.equal(server.calls.length, 1);
+  await first.cloud.sync();
+  eventTarget.setVisibility('hidden');
+  const calls = server.calls.length;
+  first.store.update(add('hidden-local-draft'));
+  t.mock.timers.tick(300000);
+  await settle();
+  assert.equal(server.calls.length, calls);
+  assert.deepEqual(ids(createPersonalStore({ ownerId: 'alice', storage: first.storage }).getSnapshot().data), ['hidden-local-draft']);
+  eventTarget.setVisibility('visible');
+  await first.cloud.sync();
+  assert.deepEqual(ids(server.data), ['hidden-local-draft']);
+  t.mock.timers.tick(30000);
+  await first.cloud.sync();
+  assert.equal(server.notModified, 1);
+  await first.cloud.stop();
+  const stoppedCalls = server.calls.length;
+  eventTarget.setVisibility('hidden');
+  eventTarget.setVisibility('visible');
+  t.mock.timers.tick(300000);
+  assert.equal(server.calls.length, stoppedCalls);
+});
+
+test('polling and autosave failures back off while explicit sync can recover immediately', async t => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] });
+  const server = memoryServer(), eventTarget = tab();
+  let calls = 0, unavailable = true;
+  const first = device(server, { eventTarget, debounceMs: 1200, fetchImpl: async (...args) => {
+    calls += 1;
+    return unavailable ? response(503, { error: 'Fixture unavailable' }) : server.fetch(...args);
+  } });
+  await first.cloud.start();
+  assert.equal(calls, 1);
+  for (let index = 0; index < 4; index += 1) eventTarget.dispatchEvent(new Event('focus'));
+  t.mock.timers.tick(29999);
+  await settle();
+  assert.equal(calls, 1);
+  t.mock.timers.tick(1);
+  await settle();
+  assert.equal(calls, 2);
+  first.store.update(add('offline-draft'));
+  t.mock.timers.tick(30000);
+  await settle();
+  assert.equal(calls, 2, 'a draft debounce does not bypass the second failure backoff');
+  t.mock.timers.tick(30000);
+  await settle();
+  assert.equal(calls, 3);
+  t.mock.timers.tick(119999);
+  await settle();
+  assert.equal(calls, 3);
+  unavailable = false;
+  await first.cloud.sync();
+  assert.deepEqual(ids(server.data), ['offline-draft']);
+  const recoveredCalls = calls;
+  t.mock.timers.tick(30000);
+  assert.equal(calls, recoveredCalls + 1, 'success resets polling to 30 seconds');
+  await first.cloud.sync();
+  await first.cloud.stop();
+});
+
+test('editing during a failed request does not cause an immediate retry loop', async () => {
+  const server = memoryServer(), entered = deferred(), release = deferred();
+  let calls = 0;
+  const first = device(server, { fetchImpl: async () => {
+    calls += 1;
+    entered.resolve();
+    await release.promise;
+    return response(503, { error: 'Fixture unavailable' });
+  } });
+  const starting = first.cloud.start();
+  await entered.promise;
+  first.store.update(add('draft-during-failure'));
+  release.resolve();
+  await starting;
+  assert.equal(calls, 1);
+  assert.deepEqual(ids(createPersonalStore({ ownerId: 'alice', storage: first.storage }).getSnapshot().data), ['draft-during-failure']);
+});
+
+test('a hidden second tab does not poll or echo storage updates and converges when visible', async t => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] });
+  const server = memoryServer(), storage = memoryStorage();
+  server.etags = true;
+  const firstTab = tab(), secondTab = tab('hidden');
+  const first = device(server, { storage, eventTarget: firstTab });
+  const second = device(server, { storage, eventTarget: secondTab });
+  await first.cloud.start();
+  const initial = server.calls.length;
+  await second.cloud.start();
+  assert.equal(server.calls.length, initial);
+  first.store.update(add('first-tab-edit'));
+  await first.cloud.sync();
+  secondTab.dispatchEvent(Object.assign(new Event('storage'), { key: 'quantgym.personal-prep.v1:alice' }));
+  const beforePoll = server.calls.length;
+  t.mock.timers.tick(30000);
+  await first.cloud.sync();
+  assert.equal(server.calls.length, beforePoll + 1, 'only the visible tab checks the revision');
+  assert.deepEqual(ids(second.store.getSnapshot().data), ['first-tab-edit']);
+  secondTab.setVisibility('visible');
+  await second.cloud.sync();
+  assert.equal(server.revision, 2);
+  second.store.update(add('second-tab-edit'));
+  await second.cloud.sync();
+  await first.cloud.sync();
+  assert.deepEqual(ids(first.store.getSnapshot().data), ['first-tab-edit', 'second-tab-edit']);
+  assert.deepEqual(ids(second.store.getSnapshot().data), ids(server.data));
+  await first.cloud.stop();
+  await second.cloud.stop();
 });

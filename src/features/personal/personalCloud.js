@@ -23,36 +23,65 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
   const metaKey = `quantgym.personal-sync.v1:${encodeURIComponent(ownerId)}:${encodeURIComponent(base)}`;
   let meta = null;
   try { meta = JSON.parse(storage?.getItem(metaKey) || 'null'); } catch { /* Reconcile safely without metadata. */ }
-  let stopped = false, running = null, requested = false, timer = null, interval = null, unsubscribe = null;
+  let stopped = false, running = null, requested = false, timer = null, pollTimer = null, unsubscribe = null;
   let applyingRemote = false, flushOnStop = false;
   let authRejected = false;
+  let failures = 0, retryAt = 0, pendingWrite = false;
+  // Keep only the existing local object's identity, not a second full cloud copy.
+  // A new controller always reads the server before trusting persisted metadata.
+  let confirmed = null;
+  const page = eventTarget?.document || globalThis.document;
+  const visible = () => page?.visibilityState !== 'hidden';
   const status = (value) => { if (!stopped) onStatus(value); };
-  async function request(method, body) {
+  async function request(method, body, etag) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetchImpl(`${base}/personal-prep`, {
-        method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(etag ? { 'If-None-Match': etag } : {}) },
         body: body ? JSON.stringify(body) : undefined, cache: 'no-store', signal: controller.signal,
       });
-      const payload = await response.json().catch(() => ({}));
       reportCloudSessionResponse({ endpoint: base, token, userId: ownerId }, response.status);
+      if (response.status === 304) {
+        if (method !== 'GET' || !etag) throw new Error('Unexpected cloud cache response.');
+        // The private revision endpoint authenticates conditional reads too.
+        reportCloudSessionResponse({ endpoint: base, token, userId: ownerId }, 200);
+        return { notModified: true };
+      }
+      const payload = await response.json().catch(() => ({}));
       if (response.status === 401) authRejected = true;
       if (!response.ok) throw Object.assign(new Error(payload.error || `HTTP ${response.status}`), { status: response.status });
       if (payload.version !== 1 || !Number.isInteger(payload.revision) || payload.revision < 0) throw new Error('Invalid cloud revision.');
       if (payload.data !== null) payload.data = validatePersonalData(payload.data);
+      payload.etag = response.headers.get('ETag');
       return payload;
     } finally { clearTimeout(timeout); }
   }
-  function remember(fingerprint, envelope) {
+  function remember(fingerprint, envelope, localData) {
     meta = { fingerprint, revision: envelope.revision, syncedAt: envelope.updatedAt || new Date().toISOString() };
+    confirmed = envelope.etag && localData ? { data: localData, etag: envelope.etag } : null;
     try { storage?.setItem(metaKey, JSON.stringify(meta)); } catch { /* The next sync will conservatively merge. */ }
   }
   async function perform() {
     if (!enabled) { status({ phase: 'local' }); return; }
     status({ phase: 'syncing' });
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      const remote = await request('GET');
+      const snapshot = store.getSnapshot();
+      if (snapshot.conflict || snapshot.error?.startsWith('read:')) throw new Error('Resolve local storage recovery before syncing.');
+      if (confirmed?.data !== snapshot.data) confirmed = null;
+      const baseline = confirmed?.data === snapshot.data ? confirmed : null;
+      let remote = await request('GET', undefined, baseline?.etag);
+      if (remote.notModified) {
+        const latest = store.getSnapshot();
+        if (latest.conflict || latest.error?.startsWith('read:')) throw new Error('Resolve local storage recovery before syncing.');
+        if (latest.data === baseline.data) {
+          status({ phase: 'synced', syncedAt: meta.syncedAt });
+          return;
+        }
+        // A keystroke or another tab can change local data during the 304. Read
+        // the complete revision before merging/uploading that newly pending work.
+        remote = await request('GET');
+      }
       if (remote.data === null && meta?.revision > 0) throw new Error('Previously saved cloud records are unavailable.');
       if (meta?.revision > remote.revision) throw new Error('Cloud revision moved backwards. Local records were kept.');
       if (store.getSnapshot().conflict || store.getSnapshot().error?.startsWith('read:')) throw new Error('Resolve local storage recovery before syncing.');
@@ -90,8 +119,8 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       const outgoing = store.getSnapshot().data;
       const outgoingHash = await personalFingerprint(outgoing);
       if (remote.data !== null && outgoingHash === remoteHash) {
-        remember(outgoingHash, remote);
-        if (store.getSnapshot().data !== outgoing) requested = true;
+        remember(outgoingHash, remote, outgoing);
+        requested = store.getSnapshot().data !== outgoing;
         status(requested ? { phase: 'pending' } : { phase: 'synced', syncedAt: meta.syncedAt });
         return;
       }
@@ -111,9 +140,10 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
             return candidate;
           });
         } finally { applyingRemote = false; }
-        remember(confirmedHash, saved);
         const acknowledgedLocal = store.getSnapshot().data;
-        if (await personalFingerprint(acknowledgedLocal) !== confirmedHash || store.getSnapshot().data !== acknowledgedLocal) requested = true;
+        const matches = await personalFingerprint(acknowledgedLocal) === confirmedHash;
+        remember(confirmedHash, saved, matches ? acknowledgedLocal : null);
+        requested = !matches || store.getSnapshot().data !== acknowledgedLocal;
         status(requested ? { phase: 'pending' } : { phase: 'synced', syncedAt: meta.syncedAt });
         return;
       } catch (error) {
@@ -124,51 +154,84 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
   function sync() {
     if (authRejected) { status({ phase: 'auth' }); return Promise.resolve(); }
     if (stopped && !flushOnStop) return Promise.resolve();
-    if (running) { requested = true; return running; }
+    // Only store changes request another pass. Repeated focus/manual/poll reads
+    // join the current request without queuing another full reconciliation.
+    if (running) return running;
     clearTimeout(timer);
+    clearTimeout(pollTimer);
     timer = null;
+    pollTimer = null;
     running = (async () => {
       do {
         requested = false;
-        await perform().catch(error => {
+        try {
+          await perform();
+          failures = 0;
+          retryAt = 0;
+          pendingWrite = requested;
+        } catch (error) {
+          failures += 1;
+          retryAt = Date.now() + Math.min(300000, 30000 * 2 ** Math.min(failures - 1, 4));
           status({ phase: error.status === 401 ? 'auth' : 'error', message: error.message });
-        });
+          // Edits made during a failed request remain durable and retry later;
+          // they must not turn an outage into an immediate request loop.
+          break;
+        }
       } while (requested && !authRejected && (!stopped || flushOnStop));
     })().finally(() => {
       running = null;
       flushOnStop = false;
+      schedulePoll();
     });
     return running;
   }
   function schedule() {
     if (!enabled || stopped || applyingRemote) return;
     if (authRejected) { status({ phase: 'auth' }); return; }
+    if (confirmed?.data !== store.getSnapshot().data) confirmed = null;
+    pendingWrite = true;
     status({ phase: 'pending' });
     if (running) { requested = true; return; }
+    if (!visible()) return;
     clearTimeout(timer);
-    timer = setTimeout(sync, debounceMs);
+    timer = setTimeout(sync, Math.max(debounceMs, retryAt - Date.now()));
   }
-  const wake = () => { if (!stopped) sync(); };
+  function schedulePoll() {
+    clearTimeout(pollTimer);
+    pollTimer = null;
+    if (!enabled || stopped || !unsubscribe || authRejected || !visible()) return;
+    pollTimer = setTimeout(wake, retryAt ? Math.max(0, retryAt - Date.now()) : 30000);
+  }
+  const wake = () => {
+    if (stopped || !visible()) return Promise.resolve();
+    if (Date.now() < retryAt) { schedulePoll(); return Promise.resolve(); }
+    return sync();
+  };
+  const visibilityChanged = () => {
+    if (visible()) wake();
+    else { clearTimeout(pollTimer); pollTimer = null; }
+  };
   return {
     enabled, sync,
     start() {
       stopped = false;
       if (enabled && !unsubscribe) {
         unsubscribe = store.subscribe(schedule);
-        interval = setInterval(wake, 30000);
         eventTarget?.addEventListener('online', wake);
         eventTarget?.addEventListener('focus', wake);
+        page?.addEventListener('visibilitychange', visibilityChanged);
       }
-      return sync();
+      return wake();
     },
     stop() {
       // Route navigation flushes drafts; the local copy remains available offline.
-      const pending = Boolean(timer || running || requested);
+      const pending = Boolean(timer || running || requested || pendingWrite);
       stopped = true;
-      clearTimeout(timer); clearInterval(interval); unsubscribe?.();
-      timer = null; interval = null; unsubscribe = null;
+      clearTimeout(timer); clearTimeout(pollTimer); unsubscribe?.();
+      timer = null; pollTimer = null; unsubscribe = null;
       eventTarget?.removeEventListener('online', wake);
       eventTarget?.removeEventListener('focus', wake);
+      page?.removeEventListener('visibilitychange', visibilityChanged);
       if (enabled && pending) { flushOnStop = true; return sync(); }
       return Promise.resolve();
     },
