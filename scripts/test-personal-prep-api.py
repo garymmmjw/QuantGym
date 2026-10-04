@@ -258,7 +258,8 @@ class PersonalPrepApiTests(unittest.TestCase):
             connection.request(method, path, body=body, headers=actual_headers)
             response = connection.getresponse()
             result_headers = dict(response.getheaders())
-            result = json.loads(response.read())
+            raw_result = response.read()
+            result = json.loads(raw_result) if raw_result else None
             return response.status, result, result_headers
         finally:
             connection.close()
@@ -285,6 +286,37 @@ class PersonalPrepApiTests(unittest.TestCase):
         self.assertIn("no-store", headers.get("Cache-Control", ""))
         self.assertIn("private", headers.get("Cache-Control", ""))
 
+    def test_conditional_reads_are_private_owner_scoped_and_change_after_save(self):
+        token, _ = self.new_user()
+        other_token, _ = self.new_user()
+        status, initial, headers = self.request("GET", token=token)
+        self.assertEqual(status, 200)
+        empty_etag = headers["ETag"]
+        condition = {"If-None-Match": empty_etag, "Origin": "http://localhost:5176"}
+        status, unchanged, headers = self.request("GET", token=token, headers=condition)
+        self.assertEqual((status, unchanged), (304, None))
+        self.assert_private(headers)
+        self.assertEqual(headers["ETag"], empty_etag)
+        self.assertIn("ETag", headers["Access-Control-Expose-Headers"])
+        self.assertIn("If-None-Match", headers["Access-Control-Allow-Headers"])
+        self.assertEqual(self.request("GET", headers=condition)[0], 401)
+        self.assertEqual(self.request("GET", token=other_token, headers=condition)[0], 200)
+        status, saved, headers = self.put(token, empty_state("conditional-fixture"))
+        self.assertEqual(status, 200)
+        saved_etag = headers["ETag"]
+        self.assertNotEqual(empty_etag, saved_etag)
+        status, changed, headers = self.request("GET", token=token, headers=condition)
+        self.assertEqual(status, 200)
+        self.assertEqual(changed, saved)
+        self.assertEqual(headers["ETag"], saved_etag)
+        status, unchanged, _ = self.request("GET", token=token, headers={"If-None-Match": '"old", ' + saved_etag})
+        self.assertEqual((status, unchanged), (304, None))
+        self.assertEqual(self.put(token, empty_state("newer"), saved["revision"])[0], 200)
+        status, changed, _ = self.request("GET", token=token, headers={"If-None-Match": saved_etag})
+        self.assertEqual(status, 200)
+        self.assertEqual(changed["revision"], saved["revision"] + 1)
+        self.assertEqual(changed["data"]["dailySettings"]["marker"], "newer")
+
     def test_authentication_required_for_reads_and_writes(self):
         for method in ("GET", "PUT"):
             for token in (None, "invalid-fixture-token"):
@@ -292,6 +324,33 @@ class PersonalPrepApiTests(unittest.TestCase):
                 self.assertEqual(status, 401, data)
                 self.assertNotIn("data", data)
                 self.assert_private(headers)
+
+    def test_interrupted_upload_never_commits_a_short_but_valid_json_prefix(self):
+        token, _ = self.new_user()
+        body = json.dumps({"version": 1, "baseRevision": 0, "data": empty_state("interrupted")}).encode()
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=15)
+        try:
+            connection.request("PUT", "/api/personal-prep", body=body, headers={
+                "Authorization": f"Bearer {token}", "Content-Type": "application/json",
+                "Content-Length": str(len(body) + 64),
+            })
+            connection.sock.shutdown(socket.SHUT_WR)
+            response = connection.getresponse()
+            self.assertEqual(response.status, 400, response.read())
+        finally:
+            connection.close()
+        status, saved, _ = self.request("GET", token=token)
+        self.assertEqual(status, 200)
+        self.assertEqual(saved["revision"], 0)
+        self.assertIsNone(saved["data"])
+
+    def test_invalid_utf8_and_unsupported_transfer_encoding_do_not_save(self):
+        token, _ = self.new_user()
+        self.assertEqual(self.request("PUT", token=token, raw=b'{"bad":"\xff"}')[0], 400)
+        self.assertEqual(self.request("PUT", token=token, payload={
+            "version": 1, "baseRevision": 0, "data": empty_state("chunked"),
+        }, headers={"Transfer-Encoding": "chunked"})[0], 400)
+        self.assertEqual(self.request("GET", token=token)[1]["revision"], 0)
 
     def test_private_technical_source_requires_auth_and_stays_out_of_public_catalog(self):
         path = "/api/practice/technical/questions"
