@@ -19,8 +19,12 @@ Sign in as an existing cloud administrator, open **账户与设置 → 邀请码
 4. Review usage and expiry in the same page. **停用** prevents further signups
    without affecting accounts that have already registered.
 
-Administrator access uses the existing `QUANTGYM_ADMIN_EMAILS` or server-managed
-admin account tier. A client-supplied profile does not grant admin rights.
+Administrator access uses a server-managed grant on the existing account ID or
+a server-managed admin account tier. The first account-security migration binds
+legacy `QUANTGYM_ADMIN_EMAILS` matches to existing user IDs once; changing or
+registering an email later never grants admin rights. A client-supplied profile
+does not grant admin rights. See the [API account security and migration notes](../api-server/README.md)
+for explicit grant/revoke operations and deployment precautions.
 
 ## Registration flow
 

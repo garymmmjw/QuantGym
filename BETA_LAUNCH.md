@@ -54,7 +54,9 @@ export QUANTGYM_MEDIA_MAX_BYTES=5242880
 # export QUANTGYM_JOBS_SOURCE_TOKEN="<24+ character feed bearer token>"
 export QUANTGYM_ALLOWED_ORIGINS="https://beta.quantgym.app"
 export QUANTGYM_BETA_EMAIL_ALLOWLIST="tester1@example.com,tester2@example.com"
-export QUANTGYM_ADMIN_EMAILS="miaojiawei1108@gmail.com"
+# 仅在首次账号安全迁移时保留已存在的管理员；后续改邮箱/注册/修改此变量不会授予管理员。
+# 升级时沿用已经核对的旧管理员列表；新增或撤销管理员请按用户 ID 显式操作数据库。
+export QUANTGYM_ADMIN_EMAILS="existing-admin@example.com"
 export QUANTGYM_RATE_LIMIT_WINDOW_SECONDS=60
 export QUANTGYM_AUTH_RATE_LIMIT_MAX=30
 export QUANTGYM_AUTH_VERIFICATION_RATE_LIMIT_MAX=5
@@ -69,6 +71,7 @@ export QUANTGYM_ALERT_MIN_STATUS_CODE=500
 # export QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL="https://dash.cloudflare.com/account/rulesets/rule"
 export QUANTGYM_REQUIRE_EMAIL_VERIFICATION=1
 export QUANTGYM_EMAIL_DEV_CODE_RESPONSE=0
+export QUANTGYM_ACCOUNT_EMAIL_CHANGE_DEV_CODES=0
 export QUANTGYM_SMTP_HOST="smtp.resend.com"
 export QUANTGYM_SMTP_PORT=587
 export QUANTGYM_SMTP_USERNAME="resend"

@@ -23,11 +23,12 @@ class AccountApiTests(unittest.TestCase):
             cls.port = probe.getsockname()[1]
         catalog = directory / "catalog.json"
         catalog.write_text("[]")
-        env = {**os.environ, "QUANTGYM_HOST": "127.0.0.1", "PORT": str(cls.port),
+        env = {**{key: value for key, value in os.environ.items() if not key.startswith("QUANTGYM_") and key != "DATABASE_URL"}, "QUANTGYM_HOST": "127.0.0.1", "PORT": str(cls.port),
                "QUANTGYM_DB": str(directory / "test.sqlite"), "QUANTGYM_DB_BACKEND": "sqlite",
                "QUANTGYM_POSTGRES_DATABASE_URL": "", "QUANTGYM_DATABASE_URL": "", "DATABASE_URL": "",
                "QUANTGYM_PROBLEM_CATALOG": str(catalog), "QUANTGYM_MEDIA_ROOT": str(directory / "media"),
                "QUANTGYM_REQUIRE_EMAIL_VERIFICATION": "0", "QUANTGYM_REQUIRE_INVITE_CODE": "0", "QUANTGYM_BETA_EMAIL_ALLOWLIST": "",
+               "QUANTGYM_ACCOUNT_EMAIL_CHANGE_DEV_CODES": "1", "QUANTGYM_EMAIL_CODE_COOLDOWN_SECONDS": "0",
                "QUANTGYM_AUTH_REGISTER_RATE_LIMIT_MAX": "500", "QUANTGYM_AUTH_LOGIN_RATE_LIMIT_MAX": "500",
                "QUANTGYM_AUTH_PASSWORD_RESET_RATE_LIMIT_MAX": "500", "QUANTGYM_SMTP_HOST": "",
                "QUANTGYM_ALERT_WEBHOOK_URL": "", "QUANTGYM_ALERT_WEBHOOK_TOKEN": ""}
@@ -93,7 +94,10 @@ class AccountApiTests(unittest.TestCase):
     def test_email_change_rehashes_password_and_sync_cannot_override_identity(self):
         new_email = "changed@example.invalid"
         self.assertEqual(self.request("PATCH", "/api/account", {"updates": {"email": new_email}, "currentPassword": "wrong"}, self.token)[0], 403)
-        code, result = self.request("PATCH", "/api/account", {"updates": {"email": new_email}, "currentPassword": "Original1234"}, self.token)
+        self.assertEqual(self.request("PATCH", "/api/account", {"updates": {"email": new_email}, "currentPassword": "Original1234"}, self.token)[0], 400)
+        status, challenge = self.request("POST", "/api/account/email-verification-code", {"email": new_email, "currentPassword": "Original1234"}, self.token)
+        self.assertEqual(status, 200, challenge)
+        code, result = self.request("PATCH", "/api/account", {"updates": {"email": new_email}, "currentPassword": "Original1234", "verificationCode": challenge["devCode"]}, self.token)
         self.assertEqual(code, 200, result)
         self.assertEqual(self.request("POST", "/api/auth/login", {"email": self.email, "password": "Original1234"})[0], 401)
         self.assertEqual(self.request("POST", "/api/auth/login", {"email": new_email, "password": "Original1234"})[0], 200)

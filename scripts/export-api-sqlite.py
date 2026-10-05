@@ -25,6 +25,7 @@ DEFAULT_OUT_DIR = PROJECT_ROOT / "artifacts" / "db-export"
 REDACTED_VALUE_COLUMNS = {
     "password_salt",
     "password_hash",
+    "credential_fingerprint",
     "token_hash",
     "code_salt",
     "code_hash",

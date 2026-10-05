@@ -63,7 +63,7 @@ class InvitationApiTests(unittest.TestCase):
             probe.bind(("127.0.0.1", 0))
             cls.port = probe.getsockname()[1]
         cls.environment = {
-            **os.environ,
+            **{key: value for key, value in os.environ.items() if not key.startswith("QUANTGYM_") and key != "DATABASE_URL"},
             "PYTHONDONTWRITEBYTECODE": "1",
             "QUANTGYM_HOST": "127.0.0.1", "PORT": str(cls.port),
             "QUANTGYM_DB": str(cls.database), "QUANTGYM_DB_BACKEND": "sqlite",
@@ -84,6 +84,10 @@ class InvitationApiTests(unittest.TestCase):
                 cls.start_postgres()
             cls.start_server()
             cls.admin = cls.seed_local("admin@example.invalid")
+            # New registrations cannot receive admin privileges by mailbox.
+            # This explicit database grant exists only in disposable test storage.
+            with cls.connect_database() as conn:
+                conn.execute(cls.sql("UPDATE users SET admin_granted_at = ? WHERE id = ?"), ("2026-01-01T00:00:00Z", cls.admin["account"]["id"]))
             cls.existing = cls.seed_local("existing@example.invalid")
             cls.reset_existing = cls.seed_local("reset-existing@example.invalid")
             status, cls.google_existing = cls.google("existing-google@example.invalid", "existing-google")

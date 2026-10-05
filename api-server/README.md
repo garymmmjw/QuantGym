@@ -225,6 +225,7 @@ export QUANTGYM_REQUIRE_EMAIL_VERIFICATION=1
 export QUANTGYM_EMAIL_CODE_TTL_MINUTES=10
 export QUANTGYM_EMAIL_CODE_COOLDOWN_SECONDS=60
 export QUANTGYM_EMAIL_DEV_CODE_RESPONSE=0
+export QUANTGYM_ACCOUNT_EMAIL_CHANGE_DEV_CODES=0
 export QUANTGYM_SMTP_HOST="smtp.resend.com"
 export QUANTGYM_SMTP_PORT=587
 export QUANTGYM_SMTP_USERNAME="resend"
@@ -322,9 +323,20 @@ Do not commit the real bundle, its source captures, or private release backups. 
 
 New accounts require an invitation by default (`QUANTGYM_REQUIRE_INVITE_CODE=1`), including new Google accounts. Existing users retain access. The old beta allowlist applies only when this flag is explicitly disabled. Email signups still require verification. See [invitation registration](../docs/invitation-registration.md) for administrator management, migration and testing.
 
-Set `QUANTGYM_ADMIN_EMAILS` to a comma-separated list of admin emails that may read basic admin metrics and audit events. Accounts whose stored plan/subscription tier is `admin` also pass the admin check.
+Administrator privileges are tied to the existing user's immutable database ID through `users.admin_granted_at`. On the first startup of this version, an additive migration snapshots the existing users matching `QUANTGYM_ADMIN_EMAILS` and records `bind_legacy_admin_emails_to_user_ids_v1` in `schema_migrations`. The marker and grants commit together. This runs once, even when there are no matching users: later registrations, email changes, restarts and edits to `QUANTGYM_ADMIN_EMAILS` do not grant or revoke administrator access. The migration emits an `admin.legacy_grants_bound` audit event with the number of grants. Existing server-managed `subscriptionTier`/`plan` values of `admin` remain supported; client profiles cannot set them.
+
+Before deploying, back up the database and review the existing accounts matched by `QUANTGYM_ADMIN_EMAILS`; the migration preserves their existing authority and does not retroactively prove how an account acquired its old email. For a new administrator, first identify and review the existing account ID, then use an authorized database connection to set `admin_granted_at` to the current UTC timestamp on that specific row. For example, replace both placeholders in `UPDATE users SET admin_granted_at = '<current UTC timestamp>' WHERE id = '<verified existing user ID>';` and verify that exactly one row was updated. Revoke that grant with `UPDATE users SET admin_granted_at = NULL WHERE id = '<verified existing user ID>';`. To fully revoke an account with a legacy server-managed `admin` tier, remove that explicit tier as well. Do not delete the migration marker or restore the old email-based authorization code as a rollback; either would reopen automatic mailbox grants.
 
 Email verification is required for local-account cloud registration by default. If SMTP is not configured, the API uses local development mode: it prints the 6-digit code in the API terminal and, by default, returns `devCode` in the JSON response. Set `QUANTGYM_EMAIL_DEV_CODE_RESPONSE=0` outside local development. Configure the SMTP variables above to send real email.
+
+Account email changes always require the current local password and proof of ownership of the new mailbox, independently of `QUANTGYM_REQUIRE_EMAIL_VERIFICATION` and `QUANTGYM_REQUIRE_INVITE_CODE`. Google accounts and local accounts linked to Google must manage their mailbox with the sign-in provider.
+
+1. Send authenticated `POST /api/account/email-verification-code` with `{ "email": "new@example.com", "currentPassword": "..." }`. The response contains `ok`, normalized `email`, `delivery`, `expiresInSeconds` and `cooldownSeconds`; requesting a code does not change the account, login email or membership.
+2. Submit authenticated `PATCH /api/account` with `{ "updates": { "email": "new@example.com" }, "currentPassword": "...", "verificationCode": "123456" }`. A valid code activates the email in the same transaction that consumes the challenge, rehashes the existing password for the new email, and revokes the account's other sessions. The requesting session remains active. Refresh the account on a `409` conflict.
+
+The `account_email_change_codes` table stores only salted code hashes. Codes belong to one requesting user and exact target email, expire after `QUANTGYM_EMAIL_CODE_TTL_MINUTES`, are single use, and are replaced on resend. Attempts are capped by `QUANTGYM_EMAIL_CODE_MAX_ATTEMPTS`; the cooldown applies across target addresses for that user's current credentials. A password change/reset or completed email change invalidates outstanding challenges by changing their credential fingerprint. Failed confirmations leave profile data and privileges unchanged. Member access continues to follow the verified active mailbox; administrator grants remain attached to the account ID.
+
+SMTP is required for email changes by default. Without it, the request returns `503` and does not issue a challenge. Unlike legacy registration/reset development behavior, `QUANTGYM_EMAIL_DEV_CODE_RESPONSE` cannot enable email-change codes. Isolated local development may explicitly set `QUANTGYM_ACCOUNT_EMAIL_CHANGE_DEV_CODES=1`: only loopback listeners and direct loopback requests without forwarding headers or a remote Origin may then receive a `delivery: "dev"` response with `devCode`. Keep this flag off in deployed environments; never expose such a development server through a public proxy. SMTP responses never include the code. Code responses use `Cache-Control: no-store`.
 
 Basic in-process rate limiting is enabled for verification-code, register, login, password reset, and Google login endpoints. The limiter keys by client IP and, where available, normalized email. By default, the API ignores `CF-Connecting-IP`, `X-Real-IP`, and `X-Forwarded-For` so clients cannot spoof IPs to bypass auth limits. Set `QUANTGYM_TRUST_PROXY_HEADERS=1` only behind a trusted proxy, and set `QUANTGYM_TRUSTED_PROXY_CIDRS` to the proxy CIDR ranges that may supply forwarded client IP headers. Tune `QUANTGYM_RATE_LIMIT_WINDOW_SECONDS`, `QUANTGYM_AUTH_RATE_LIMIT_MAX`, and endpoint-specific overrides such as `QUANTGYM_AUTH_LOGIN_RATE_LIMIT_MAX` or `QUANTGYM_AUTH_PASSWORD_RESET_RATE_LIMIT_MAX`; set `QUANTGYM_RATE_LIMIT_DISABLED=1` only for controlled local testing.
 
@@ -433,6 +445,7 @@ npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/
 - `GET /api/media/:id`
 - `GET /api/account`
 - `PATCH /api/account`
+- `POST /api/account/email-verification-code`
 - `GET /api/leaderboard`
 - `GET /api/state`
 - `PUT /api/state`
