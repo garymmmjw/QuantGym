@@ -6,8 +6,10 @@
     "node": ">=20.19.0 <21 || >=22.12.0 <25"
   },
   "scripts": {
-    "test:account": "node --test scripts/test-cloud-session-status.mjs scripts/test-cloud-reauth-controller.mjs scripts/test-account-password-api.mjs scripts/test-auth-google-config.mjs scripts/test-device-record-recovery.mjs scripts/test-unified-account-runtime.mjs scripts/test-career-owner-migration.mjs",
+    "test:account": "node --test scripts/test-account-email-api.mjs scripts/test-cloud-session-status.mjs scripts/test-cloud-reauth-controller.mjs scripts/test-account-password-api.mjs scripts/test-auth-google-config.mjs scripts/test-device-record-recovery.mjs scripts/test-unified-account-runtime.mjs scripts/test-career-owner-migration.mjs",
     "test:account:api": "python3 scripts/test-account-password-api.py",
+    "test:account-email": "node --test scripts/test-account-email-api.mjs scripts/test-account-center.mjs && python3 scripts/test-account-email-security-api.py && python3 scripts/test-account-center-api.py",
+    "check:account-email-browser": "node scripts/check-account-email-browser.mjs",
     "test:cloud-session": "node --test scripts/test-cloud-session-status.mjs scripts/test-cloud-reauth-controller.mjs",
     "dev": "vite",
     "start": "node llm-proxy/server.mjs",
@@ -108,7 +110,7 @@
     "test:leetcode": "node --test scripts/test-leetcode-*.mjs",
     "test:leetcode:api": "python3 scripts/test-leetcode-api.py && python3 scripts/test-leetcode-backpack-api.py",
     "test:completion": "node --test scripts/test-problem-completion.mjs scripts/test-overview-completion.mjs scripts/test-overview-progress.mjs scripts/test-overview-activity.mjs scripts/test-personal-completion-activities.mjs scripts/test-personal-calendar.mjs scripts/test-personal-practice.mjs scripts/test-leetcode-calendar.mjs scripts/test-mental-math-history.mjs",
-    "test:account-center": "node --test scripts/test-account-center.mjs && python3 scripts/test-account-center-api.py",
+    "test:account-center": "node --test scripts/test-account-email-api.mjs scripts/test-account-center.mjs && python3 scripts/test-account-center-api.py",
     "test:free-practice": "node --test scripts/test-free-practice-attempts.mjs scripts/test-free-practice-state.mjs scripts/test-free-practice-page-api.mjs scripts/test-practice-banks.mjs scripts/test-free-practice-integration.mjs scripts/test-library-practice-navigation.mjs scripts/test-math-typeset-scheduler.mjs scripts/test-static-catalog-privacy.mjs scripts/test-authenticated-catalog-wiring.mjs scripts/test-problem-catalog-script-url.mjs scripts/test-legacy-quantguide-cache.mjs scripts/test-problem-catalog-session.mjs",
     "test:memberships": "node --test scripts/test-membership-client.mjs && python3 scripts/test-memberships-api.py",
     "check:practice-membership-browser": "node scripts/check-practice-membership-browser.mjs",

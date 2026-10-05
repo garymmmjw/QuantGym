@@ -232,6 +232,8 @@ EMAIL_CODE_TTL_MINUTES = int(os.environ.get("QUANTGYM_EMAIL_CODE_TTL_MINUTES", "
 EMAIL_CODE_COOLDOWN_SECONDS = int(os.environ.get("QUANTGYM_EMAIL_CODE_COOLDOWN_SECONDS", "60"))
 EMAIL_CODE_MAX_ATTEMPTS = int(os.environ.get("QUANTGYM_EMAIL_CODE_MAX_ATTEMPTS", "5"))
 EMAIL_DEV_CODE_RESPONSE = env_bool("QUANTGYM_EMAIL_DEV_CODE_RESPONSE", True)
+# Account email changes never inherit the legacy registration development bypass.
+ACCOUNT_EMAIL_CHANGE_DEV_CODES = env_bool("QUANTGYM_ACCOUNT_EMAIL_CHANGE_DEV_CODES", False)
 SMTP_HOST = os.environ.get("QUANTGYM_SMTP_HOST", "").strip()
 SMTP_USERNAME = os.environ.get("QUANTGYM_SMTP_USERNAME", "").strip()
 SMTP_PASSWORD = os.environ.get("QUANTGYM_SMTP_PASSWORD", "")
@@ -434,6 +436,13 @@ def make_email_code_hash(email: str, purpose: str, code: str, salt_hex: str | No
     value = f"{normalize_email(email)}:{purpose}:{str(code).strip()}".encode("utf-8")
     digest = hashlib.pbkdf2_hmac("sha256", value, salt, PBKDF2_ROUNDS)
     return salt.hex(), digest.hex()
+
+
+def account_credential_fingerprint(user: dict) -> str:
+    # Includes the salt/hash so changing a password or changing away and back
+    # invalidates every challenge issued against earlier sign-in credentials.
+    credentials = [user.get(key) for key in ("id", "provider", "email_norm", "password_salt", "password_hash")]
+    return hashlib.sha256(compact_json(credentials).encode("utf-8")).hexdigest()
 
 
 def generate_email_code() -> str:
@@ -1060,8 +1069,8 @@ def account_subscription_tier(user: dict) -> str:
 
 
 def account_is_admin(user: dict) -> bool:
-    email = normalize_email(user.get("email_norm") if isinstance(user, dict) else "")
-    return email in ADMIN_EMAILS or account_subscription_tier(user) == "admin"
+    # Grants belong to immutable account identities, never a mutable mailbox.
+    return bool(user.get("admin_granted_at")) or account_subscription_tier(user) == "admin"
 
 
 def account_is_member(conn, user: dict | None) -> bool:
@@ -1670,6 +1679,7 @@ class Database:
             schema_sql = POSTGRES_SCHEMA_PATH.read_text(encoding="utf-8")
             with self.connect() as conn:
                 conn.executescript(schema_sql)
+                self.bind_legacy_admin_grants(conn)
             return
         with self.connect() as conn:
             conn.executescript(
@@ -1680,6 +1690,7 @@ class Database:
                   email_norm TEXT UNIQUE,
                   password_salt TEXT,
                   password_hash TEXT,
+                  admin_granted_at TEXT,
                   account_json TEXT NOT NULL,
                   created_at TEXT NOT NULL,
                   updated_at TEXT NOT NULL
@@ -1752,6 +1763,26 @@ class Database:
 
                 CREATE INDEX IF NOT EXISTS idx_email_verification_expires
                 ON email_verification_codes (expires_at);
+
+                CREATE TABLE IF NOT EXISTS account_email_change_codes (
+                  user_id TEXT PRIMARY KEY,
+                  id TEXT NOT NULL UNIQUE,
+                  email_norm TEXT NOT NULL,
+                  credential_fingerprint TEXT NOT NULL,
+                  code_salt TEXT NOT NULL,
+                  code_hash TEXT NOT NULL,
+                  attempts INTEGER NOT NULL DEFAULT 0,
+                  created_at TEXT NOT NULL,
+                  sent_at TEXT NOT NULL,
+                  expires_at TEXT NOT NULL,
+                  consumed_at TEXT,
+                  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS schema_migrations (
+                  name TEXT PRIMARY KEY,
+                  applied_at TEXT NOT NULL
+                );
 
                 CREATE TABLE IF NOT EXISTS audit_events (
                   id TEXT PRIMARY KEY,
@@ -1855,6 +1886,39 @@ class Database:
             conn.executescript(INVITATION_SCHEMA)
             conn.executescript(MEMBERSHIP_SCHEMA)
             self.ensure_sqlite_private_problem_visibility(conn)
+            self.bind_legacy_admin_grants(conn)
+
+    def bind_legacy_admin_grants(self, conn) -> None:
+        # Serialize the legacy-column upgrade and grant snapshot across workers.
+        # The marker and grants commit together, including on an empty database.
+        if self.backend == "sqlite":
+            if not conn.in_transaction:
+                conn.execute("BEGIN IMMEDIATE")
+            columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+            if "admin_granted_at" not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN admin_granted_at TEXT")
+        else:
+            conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_granted_at timestamptz")
+        now = utc_now()
+        marker = conn.execute(
+            "INSERT INTO schema_migrations (name, applied_at) VALUES (?, ?) ON CONFLICT(name) DO NOTHING",
+            ("bind_legacy_admin_emails_to_user_ids_v1", now),
+        )
+        if marker.rowcount != 1:
+            return
+        granted = 0
+        for email in sorted(ADMIN_EMAILS):
+            granted += conn.execute(
+                "UPDATE users SET admin_granted_at = ? WHERE email_norm = ? AND admin_granted_at IS NULL",
+                (now, email),
+            ).rowcount
+        conn.execute(
+            """INSERT INTO audit_events
+               (id, event_type, actor_user_id, email_norm, ip, user_agent, status, metadata_json, created_at)
+               VALUES (?, ?, NULL, NULL, NULL, NULL, ?, ?, ?)""",
+            (secrets.token_urlsafe(16), "admin.legacy_grants_bound", "success",
+             compact_json({"grantedAccounts": granted}), now),
+        )
 
     def ensure_sqlite_private_problem_visibility(self, conn: sqlite3.Connection) -> None:
         row = conn.execute(
@@ -3152,6 +3216,8 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
                 return self.change_password()
             if path == "/api/auth/google" and self.command == "POST":
                 return self.google_login()
+            if path == "/api/account/email-verification-code" and self.command == "POST":
+                return self.send_account_email_verification_code()
             if path == "/api/account" and self.command == "GET":
                 return self.get_account()
             if path == "/api/account" and self.command == "PATCH":
@@ -3979,8 +4045,8 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
             if not user:
                 self.audit_event("auth.password_reset", email=email, status="fail", metadata={"reason": "not_found"})
                 raise HttpError(404, "No local account exists for this email")
+            user_dict = self.lock_account_identity_snapshot(conn, dict(user))
             self.consume_verification_code(conn, email, "password_reset", verification_code)
-            user_dict = dict(user)
             previous_account = parse_json(user_dict["account_json"], {})
             account = {**previous_account, **sanitize_account(previous_account, user_dict["id"])}
             account["email"] = email
@@ -3998,7 +4064,8 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
             token = db.create_session(conn, user_dict["id"])
             refreshed = conn.execute("SELECT * FROM users WHERE id = ?", (user_dict["id"],)).fetchone()
             self.audit_event("auth.password_reset", user=dict(refreshed), status="success", conn=conn)
-            self.send_json(200, self.auth_response(conn, dict(refreshed), token))
+            response = self.auth_response(conn, dict(refreshed), token)
+        self.send_json(200, response)
 
     def google_login(self):
         data = self.read_json()
@@ -4044,6 +4111,7 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
                 db.save_problem_states(conn, account["id"], data.get("problemStates"))
                 db.upsert_problems(conn, data.get("problems"), visibility="user", owner_user_id=account["id"])
             else:
+                existing = self.lock_account_identity_snapshot(conn, dict(existing))
                 previous = parse_json(existing["account_json"], {})
                 existing_id = existing["id"]
                 same_google_account = existing_id == account["id"]
@@ -4103,49 +4171,222 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
         user = self.require_user()
         self.send_json(200, {"account": account_response_payload(user)})
 
+    def account_email_dev_delivery_allowed(self) -> bool:
+        if not ACCOUNT_EMAIL_CHANGE_DEV_CODES:
+            return False
+        # Both the configured listener and direct peer must be local. Forwarded
+        # requests are never eligible for returning a mailbox verification code.
+        try:
+            local_host = HOST == "localhost" or ipaddress.ip_address(HOST).is_loopback
+            local_peer = ipaddress.ip_address(self.client_address[0]).is_loopback
+        except ValueError:
+            return False
+        if not local_host or not local_peer:
+            return False
+        if any(self.headers.get(name) for name in ("Forwarded", "X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP")):
+            return False
+        origin = self.headers.get("Origin")
+        if origin:
+            hostname = urlparse(origin).hostname or ""
+            try:
+                if hostname != "localhost" and not ipaddress.ip_address(hostname).is_loopback:
+                    return False
+            except ValueError:
+                return False
+        return True
+
+    def lock_account_identity_snapshot(self, conn, user: dict) -> dict:
+        # Credential writers share this account lock. An operation that read an
+        # earlier identity must not restore it after a newer writer commits.
+        locked = conn.execute(
+            """UPDATE users SET updated_at = updated_at
+               WHERE id = ? AND provider = ? AND email_norm = ?
+                 AND COALESCE(password_salt, '') = ? AND COALESCE(password_hash, '') = ?""",
+            (user["id"], user["provider"], user["email_norm"],
+             user.get("password_salt") or "", user.get("password_hash") or ""),
+        )
+        if locked.rowcount != 1:
+            raise HttpError(409, "Your sign-in details changed in another session. Sign in again.")
+        return dict(conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone())
+
+    def lock_email_change_credentials(self, conn, user: dict, current_password) -> None:
+        previous = parse_json(user["account_json"], {})
+        if previous.get("googleId"):
+            raise HttpError(400, "Email changes are unavailable while Google sign-in is linked")
+        if user["provider"] != "local":
+            raise HttpError(400, "Manage your email with your sign-in provider")
+        if (not isinstance(current_password, str) or not 1 <= len(current_password) <= 4096
+                or not user.get("password_salt") or not user.get("password_hash")
+                or not verify_password(user["email_norm"], current_password, user["password_salt"], user["password_hash"])):
+            raise HttpError(403, "Incorrect current password")
+        # Serialize issuance/consumption with all credential writers, then
+        # recheck a Google link or server-owned profile grant made while waiting.
+        latest = self.lock_account_identity_snapshot(conn, user)
+        latest_account = parse_json(latest["account_json"], {})
+        if latest_account.get("googleId"):
+            raise HttpError(400, "Email changes are unavailable while Google sign-in is linked")
+        if latest_account != previous:
+            raise HttpError(409, "Your account changed in another session. Refresh and try again.")
+        # The role column may have changed independently of the profile JSON.
+        user.update(latest)
+
+    def send_account_email_verification_code(self):
+        authenticated = self.require_user()
+        data = self.read_json()
+        email = normalize_email(data.get("email"))
+        ensure_valid_email(email)
+        ensure_email_allowed(email)
+        self.enforce_rate_limit("account:email-verification-code", AUTH_VERIFICATION_RATE_LIMIT_MAX, authenticated["id"])
+        with db.connect() as conn:
+            row = conn.execute("SELECT * FROM users WHERE id = ?", (authenticated["id"],)).fetchone()
+            if not row:
+                raise HttpError(401, "Sign in again")
+            user = dict(row)
+            self.lock_email_change_credentials(conn, user, data.get("currentPassword"))
+            if email == user["email_norm"]:
+                raise HttpError(400, "Enter a different email address")
+            owner = conn.execute("SELECT id FROM users WHERE email_norm = ? AND id != ?", (email, user["id"])).fetchone()
+            if owner:
+                raise HttpError(409, "Email already exists")
+            dev_delivery = self.account_email_dev_delivery_allowed()
+            if not SMTP_HOST and not dev_delivery:
+                raise HttpError(503, "Email delivery is not configured. Email changes are unavailable.")
+            fingerprint = account_credential_fingerprint(user)
+            previous = conn.execute("SELECT * FROM account_email_change_codes WHERE user_id = ?", (user["id"],)).fetchone()
+            now_dt = datetime.now(timezone.utc)
+            if previous and not previous["consumed_at"] and previous["credential_fingerprint"] == fingerprint:
+                wait_until = parse_utc(previous["sent_at"]) + timedelta(seconds=EMAIL_CODE_COOLDOWN_SECONDS)
+                if wait_until > now_dt:
+                    wait_seconds = max(1, math.ceil((wait_until - now_dt).total_seconds()))
+                    raise HttpError(429, f"Please wait {wait_seconds} seconds before requesting another code")
+            code = generate_email_code()
+            try:
+                delivery = send_email_verification_code(email, code, "account_email_change")
+            except (OSError, smtplib.SMTPException, RuntimeError):
+                raise HttpError(502, "Could not send email verification code")
+            if delivery != "smtp" and not (delivery == "dev" and dev_delivery and not SMTP_HOST):
+                raise HttpError(503, "Email delivery is not configured. Email changes are unavailable.")
+            salt, code_hash = make_email_code_hash(email, "account_email_change", code)
+            now = utc_now()
+            expires_at = (datetime.now(timezone.utc) + timedelta(minutes=EMAIL_CODE_TTL_MINUTES)).isoformat(timespec="seconds").replace("+00:00", "Z")
+            conn.execute(
+                """INSERT INTO account_email_change_codes
+                   (user_id, id, email_norm, credential_fingerprint, code_salt, code_hash,
+                    attempts, created_at, sent_at, expires_at, consumed_at)
+                   VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NULL)
+                   ON CONFLICT(user_id) DO UPDATE SET id = excluded.id, email_norm = excluded.email_norm,
+                     credential_fingerprint = excluded.credential_fingerprint,
+                     code_salt = excluded.code_salt, code_hash = excluded.code_hash, attempts = 0,
+                     created_at = excluded.created_at, sent_at = excluded.sent_at,
+                     expires_at = excluded.expires_at, consumed_at = NULL""",
+                (user["id"], secrets.token_urlsafe(16), email, fingerprint, salt, code_hash, now, now, expires_at),
+            )
+            self.audit_event("account.email_verification_code.sent", user=user,
+                             metadata={"delivery": delivery}, conn=conn)
+        payload = {"ok": True, "email": email, "delivery": delivery,
+                   "expiresInSeconds": EMAIL_CODE_TTL_MINUTES * 60,
+                   "cooldownSeconds": EMAIL_CODE_COOLDOWN_SECONDS}
+        if delivery == "dev":
+            payload["devCode"] = code
+        self.send_json(200, payload, headers={"Cache-Control": "no-store"})
+
+    def consume_account_email_verification_code(self, conn, user: dict, email: str, code) -> None:
+        code_value = str(code or "").strip()
+        if not re.fullmatch(r"[0-9]{6}", code_value):
+            raise HttpError(400, "A 6-digit email verification code is required")
+        fingerprint = account_credential_fingerprint(user)
+        row = conn.execute("SELECT * FROM account_email_change_codes WHERE user_id = ?", (user["id"],)).fetchone()
+        if (not row or row["email_norm"] != email or row["credential_fingerprint"] != fingerprint
+                or row["consumed_at"] or parse_utc(row["expires_at"]) <= datetime.now(timezone.utc)):
+            raise HttpError(400, "Invalid or expired email verification code")
+        if int(row["attempts"] or 0) >= EMAIL_CODE_MAX_ATTEMPTS:
+            raise HttpError(429, "Too many email verification attempts")
+        _, actual_hash = make_email_code_hash(email, "account_email_change", code_value, row["code_salt"])
+        if not hmac.compare_digest(actual_hash, row["code_hash"]):
+            conn.execute(
+                """UPDATE account_email_change_codes SET attempts = attempts + 1
+                   WHERE user_id = ? AND id = ? AND consumed_at IS NULL AND attempts < ?""",
+                (user["id"], row["id"], EMAIL_CODE_MAX_ATTEMPTS),
+            )
+            # Only the no-op account lock precedes this point. Persist the failed
+            # attempt without ever committing an account or credential mutation.
+            conn.commit()
+            raise HttpError(400, "Invalid or expired email verification code")
+        now = utc_now()
+        consumed = conn.execute(
+            """UPDATE account_email_change_codes SET consumed_at = ?
+               WHERE user_id = ? AND id = ? AND email_norm = ? AND credential_fingerprint = ?
+                 AND consumed_at IS NULL AND expires_at > ? AND attempts < ?""",
+            (now, user["id"], row["id"], email, fingerprint, now, EMAIL_CODE_MAX_ATTEMPTS),
+        )
+        if consumed.rowcount != 1:
+            raise HttpError(400, "Invalid or expired email verification code")
+
     def patch_account(self):
-        user = self.require_user()
+        authenticated = self.require_user()
         data = self.read_json()
         if not isinstance(data.get("updates"), dict):
             raise HttpError(400, "Account updates are required")
-        self.enforce_rate_limit("account:update", AUTH_LOGIN_RATE_LIMIT_MAX, user["id"])
-        with db.connect() as conn:
-            user = dict(conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone())
-            previous = parse_json(user["account_json"], {})
-            updates = sanitize_account({**previous, **data["updates"]}, user["id"])
-            updates.update(id=user["id"], provider=user["provider"], createdAt=previous.get("createdAt"), updatedAt=utc_now())
-            # Privileged, server-owned fields must never be lost or writable by clients.
-            for field in ("subscriptionTier", "plan", "googleId", "googleLinkedAt", "googlePicture"):
-                if field in previous:
-                    updates[field] = previous[field]
-            email = normalize_email(updates.get("email"))
-            ensure_valid_email(email)
-            ensure_email_allowed(email)
-            changed = email != user["email_norm"]
-            if changed:
-                if previous.get("googleId"):
-                    raise HttpError(400, "Email changes are unavailable while Google sign-in is linked")
-                if user["provider"] != "local":
-                    raise HttpError(400, "Manage your email with your sign-in provider")
-                current = str(data.get("currentPassword") or "")
-                if not current or not verify_password(user["email_norm"], current, user["password_salt"], user["password_hash"]):
-                    raise HttpError(403, "Incorrect current password")
-                owner = conn.execute("SELECT id FROM users WHERE email_norm = ? AND id != ?", (email, user["id"])).fetchone()
-                if owner:
-                    raise HttpError(409, "Email already exists")
-                salt, password_hash = make_password_hash(email, current)
-                changed_credentials = conn.execute("UPDATE users SET password_salt = ?, password_hash = ? WHERE id = ? AND email_norm = ? AND password_salt = ? AND password_hash = ?", (salt, password_hash, user["id"], user["email_norm"], user["password_salt"], user["password_hash"]))
-                if changed_credentials.rowcount != 1:
-                    raise HttpError(409, "Your sign-in details changed in another session. Sign in again.")
-                token = self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
-                conn.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?", (user["id"], token_hash(token)))
-            saved = conn.execute("UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ? AND email_norm = ?",
-                         (email, compact_json(updates), updates["updatedAt"], user["id"], user["email_norm"]))
-            if saved.rowcount != 1:
-                raise HttpError(409, "Your sign-in details changed in another session. Sign in again.")
-            user.update(email_norm=email, account_json=compact_json(updates))
-            self.audit_event("account.update", user=user, metadata={"emailChanged": changed}, conn=conn)
-            self.send_json(200, {"account": account_response_payload(user)})
+        self.enforce_rate_limit("account:update", AUTH_LOGIN_RATE_LIMIT_MAX, authenticated["id"])
+        try:
+            with db.connect() as conn:
+                row = conn.execute("SELECT * FROM users WHERE id = ?", (authenticated["id"],)).fetchone()
+                if not row:
+                    raise HttpError(401, "Sign in again")
+                user = dict(row)
+                previous = parse_json(user["account_json"], {})
+                updates = sanitize_account({**previous, **data["updates"]}, user["id"])
+                updates.update(id=user["id"], provider=user["provider"], createdAt=previous.get("createdAt"), updatedAt=utc_now())
+                # Privileged, server-owned fields must never be lost or writable by clients.
+                for field in ("subscriptionTier", "plan", "googleId", "googleLinkedAt", "googlePicture"):
+                    if field in previous:
+                        updates[field] = previous[field]
+                email = normalize_email(updates.get("email"))
+                ensure_valid_email(email)
+                ensure_email_allowed(email)
+                changed = email != user["email_norm"]
+                if not changed and str(data.get("verificationCode") or "").strip():
+                    raise HttpError(409, "This email is already current. Refresh your account before trying again.")
+                if changed:
+                    current = data.get("currentPassword")
+                    self.lock_email_change_credentials(conn, user, current)
+                    owner = conn.execute("SELECT id FROM users WHERE email_norm = ? AND id != ?", (email, user["id"])).fetchone()
+                    if owner:
+                        raise HttpError(409, "Email already exists")
+                    # This is unconditional: disabling signup verification never
+                    # disables proof of ownership for a replacement mailbox.
+                    self.consume_account_email_verification_code(conn, user, email, data.get("verificationCode"))
+                    salt, password_hash = make_password_hash(email, current)
+                    saved = conn.execute(
+                        """UPDATE users SET email_norm = ?, account_json = ?, updated_at = ?,
+                             password_salt = ?, password_hash = ?
+                           WHERE id = ? AND provider = 'local' AND email_norm = ?
+                             AND password_salt = ? AND password_hash = ?""",
+                        (email, compact_json(updates), updates["updatedAt"], salt, password_hash,
+                         user["id"], user["email_norm"], user["password_salt"], user["password_hash"]),
+                    )
+                    if saved.rowcount != 1:
+                        raise HttpError(409, "Your sign-in details changed in another session. Sign in again.")
+                    token = self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+                    conn.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?", (user["id"], token_hash(token)))
+                else:
+                    saved = conn.execute(
+                        "UPDATE users SET account_json = ?, updated_at = ? WHERE id = ? AND email_norm = ?",
+                        (compact_json(updates), updates["updatedAt"], user["id"], user["email_norm"]),
+                    )
+                    if saved.rowcount != 1:
+                        raise HttpError(409, "Your sign-in details changed in another session. Sign in again.")
+                user.update(email_norm=email, account_json=compact_json(updates))
+                self.audit_event("account.update", user=user, metadata={"emailChanged": changed}, conn=conn)
+                response = {"account": account_response_payload(user)}
+        except Exception as error:
+            # A different account can claim the target between the availability
+            # check and write. The transaction also rolls code consumption back.
+            if ((isinstance(error, sqlite3.IntegrityError) and "UNIQUE constraint failed" in str(error))
+                    or getattr(error, "sqlstate", None) == "23505"):
+                raise HttpError(409, "Email already exists") from error
+            raise
+        self.send_json(200, response)
 
     def get_state(self):
         user = self.require_user()

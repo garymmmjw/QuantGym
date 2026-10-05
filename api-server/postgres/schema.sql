@@ -10,6 +10,7 @@ CREATE TABLE users (
   email_norm text UNIQUE,
   password_salt text,
   password_hash text,
+  admin_granted_at timestamptz,
   account_json jsonb NOT NULL,
   created_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL
@@ -79,6 +80,26 @@ CREATE TABLE email_verification_codes (
 
 CREATE INDEX idx_email_verification_expires
 ON email_verification_codes (expires_at);
+
+-- Email changes use an authenticated, account-bound challenge, separate from signup/reset.
+CREATE TABLE account_email_change_codes (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  id text NOT NULL UNIQUE,
+  email_norm text NOT NULL,
+  credential_fingerprint text NOT NULL,
+  code_salt text NOT NULL,
+  code_hash text NOT NULL,
+  attempts integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL,
+  sent_at timestamptz NOT NULL,
+  expires_at timestamptz NOT NULL,
+  consumed_at timestamptz
+);
+
+CREATE TABLE schema_migrations (
+  name text PRIMARY KEY,
+  applied_at timestamptz NOT NULL
+);
 
 -- Membership grants are independent of registration invitations.
 CREATE TABLE memberships (

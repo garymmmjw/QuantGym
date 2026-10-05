@@ -27,7 +27,7 @@ test('saving independent sections preserves the other profile values and server 
   const { appState, api } = fixture({ cloudApi: async (path, options) => { calls.push({ path, ...options }); return { account: { id: 'owner', ...options.body.updates } }; } });
   assert.equal((await api.save({ preferences: { language: 'en', theme: 'dark' } })).ok, true);
   assert.equal(appState.currentUser.goal, 'Original');
-  assert.equal((await api.save({ email: 'changed@example.invalid', currentPassword: 'Original123' })).ok, true);
+  assert.equal((await api.save({ email: 'changed@example.invalid', currentPassword: 'Original123', verificationCode: '123456' })).ok, true);
   assert.equal(appState.currentUser.passwordHash, 'hash:changed@example.invalid:Original123');
   assert.equal(calls[1].body.currentPassword, 'Original123');
   assert.equal(calls[1].body.updates.passwordHash, undefined);

@@ -36,7 +36,7 @@ class MembershipApiTests(unittest.TestCase):
         bundle_file = cls.directory / "technical-bundle.json"
         bundle_file.write_text(json.dumps({"version": 1, "source": "question-bank", "problems": [cls.catalog[0]],
                                           "supplements": {}, "metadata": {"problemCount": 1}}))
-        cls.environment = {**os.environ, "QUANTGYM_HOST": "127.0.0.1", "PORT": str(cls.port),
+        cls.environment = {**{key: value for key, value in os.environ.items() if not key.startswith("QUANTGYM_") and key != "DATABASE_URL"}, "QUANTGYM_HOST": "127.0.0.1", "PORT": str(cls.port),
             "QUANTGYM_DB": str(cls.database), "QUANTGYM_DB_BACKEND": "sqlite",
             "QUANTGYM_POSTGRES_DATABASE_URL": "", "QUANTGYM_DATABASE_URL": "", "DATABASE_URL": "",
             "QUANTGYM_PROBLEM_CATALOG": str(catalog_file), "QUANTGYM_JOBS_CATALOG": str(catalog_file),
@@ -49,6 +49,10 @@ class MembershipApiTests(unittest.TestCase):
         cls.log = (cls.directory / "server.log").open("w+")
         cls.start_server()
         cls.admin = cls.register("admin@example.invalid")
+        # Grant the fixture's immutable account explicitly. An email address in
+        # ADMIN_EMAILS must no longer authorize a new registrant after startup.
+        with sqlite3.connect(cls.database) as conn:
+            conn.execute("UPDATE users SET admin_granted_at = ? WHERE id = ?", ("2026-01-01T00:00:00Z", cls.admin["account"]["id"]))
 
     @classmethod
     def start_server(cls):

@@ -7,12 +7,27 @@ import { migrateVerifiedCareerOwner } from '../../state/careerOwnerMigration.js'
 import { deviceRecordCandidates, deviceRecordStorage, deviceRecordStamp, markDeviceRecordsRecovered } from '../../state/deviceRecordRecovery.js';
 
 export function createAccountPageApi(deps = {}) {
-  const connected = () => Boolean(deps.appState?.cloudConfig?.token && deps.appState?.cloudConfig?.userId === deps.appState?.currentUser?.id);
+  const connected = () => Boolean(deps.appState?.currentUser?.id && deps.appState?.cloudConfig?.token && deps.appState?.cloudConfig?.userId === deps.appState?.currentUser?.id);
   const fail = error => ({ ok: false, code: error?.status === 401 ? "reauthenticate" : "saveFailed", message: error?.status === 401 ? "会话已失效或当前密码不正确，请重新登录或检查密码。 / Session expired or incorrect password." : error?.message || "保存失败，请重试。 / Could not save. Try again." });
   let passwordChangePending = false;
+  let emailCodePending = false;
   let recordRecoveryPending = false;
   const text = (zh, en) => deps.getLanguage?.() === "en" ? en : zh;
   const normalizeEmail = deps.normalizeEmail || ((value) => String(value || "").trim().toLowerCase());
+  const emailFailure = error => {
+    const message = String(error?.message || "");
+    if (error?.status === 429) {
+      if (/verification attempts/i.test(message)) return { ok: false, code: "verificationLocked", message: text("验证码尝试次数过多，请重新发送验证码。", "Too many verification attempts. Send a new code.") };
+      const wait = Number(error?.data?.retryAfter || message.match(/(\d+) seconds/)?.[1]);
+      const retryAfter = Number.isFinite(wait) && wait > 0 ? Math.ceil(wait) : 60;
+      return { ok: false, code: "rateLimited", retryAfter, message: text(`请求过于频繁，请在 ${retryAfter} 秒后重试。`, `Too many requests. Try again in ${retryAfter} seconds.`) };
+    }
+    if (error?.status === 403 && /current password/i.test(message)) return { ok: false, code: "wrongPassword", message: text("当前密码不正确，请检查后重试。", "Your current password is incorrect. Check it and try again.") };
+    if (error?.status === 400 && /verification code/i.test(message)) return { ok: false, code: "verificationFailed", message: text("验证码无效或已过期，请检查新邮箱中的最新验证码，或重新发送。", "The code is invalid or expired. Check the latest code in your new inbox, or send a new one.") };
+    if (error?.status === 409 && /email already exists/i.test(message)) return { ok: false, code: "duplicateEmail", message: text("这个邮箱已被另一个账户使用，请更换邮箱。", "This email is already used by another account. Choose a different email.") };
+    if ([502, 503].includes(error?.status) && /email delivery|send email/i.test(message)) return { ok: false, code: "emailUnavailable", message: text("验证码邮件暂时无法发送，请稍后重试。原邮箱保持不变。", "Verification email is unavailable. Try again later. Your original email is unchanged.") };
+    return fail(error);
+  };
 
   const sameSession = (userId, config) => deps.appState?.currentUser?.id === userId
     && deps.appState.cloudConfig?.userId === config.userId
@@ -152,12 +167,39 @@ export function createAccountPageApi(deps = {}) {
       return deps.logout?.({ cancelRecovery: true });
     },
 
+    async sendEmailChangeCode({ email = "", currentPassword = "" } = {}) {
+      if (!connected() || !deps.cloudApi) return signInRequired();
+      if (emailCodePending) return { ok: false, code: "busy" };
+      const currentUser = deps.appState.currentUser;
+      if (currentUser.provider !== "local" || currentUser.googleId) return { ok: false, code: "providerEmail", message: text("请在登录服务提供方管理邮箱。", "Manage your email with your sign-in provider.") };
+      const targetEmail = normalizeEmail(email);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail) || targetEmail === normalizeEmail(currentUser.email)) {
+        return { ok: false, code: "invalidEmail", message: text("请输入有效的新邮箱。", "Enter a valid new email address.") };
+      }
+      if (!currentPassword) return { ok: false, code: "passwordRequired", message: text("请输入当前密码。", "Enter your current password.") };
+      const config = { ...deps.appState.cloudConfig };
+      const originalEmail = normalizeEmail(currentUser.email);
+      const isCurrent = () => sameSession(currentUser.id, config) && normalizeEmail(deps.appState.currentUser?.email) === originalEmail;
+      const changed = () => ({ ok: false, code: "sessionChanged", message: text("账号或登录状态已变化，请重新操作。", "Your account or session changed. Try again.") });
+      emailCodePending = true;
+      try {
+        const payload = await deps.cloudApi("/account/email-verification-code", { method: "POST", body: { email: targetEmail, currentPassword } });
+        if (!isCurrent()) return changed();
+        if (payload?.ok !== true || normalizeEmail(payload.email) !== targetEmail) return { ok: false, code: "invalidResponse", message: text("无法确认验证码发送结果，请重试。", "Could not confirm the verification request. Try again.") };
+        return { ...payload, email: targetEmail };
+      } catch (error) { return isCurrent() ? emailFailure(error) : changed(); }
+      finally { emailCodePending = false; }
+    },
+
     async save(values = {}) {
       const currentUser = deps.appState?.currentUser;
       if (!currentUser) return { ok: false, code: "missingUser" };
       if (!connected() || !deps.cloudApi) return signInRequired();
       const config = { ...deps.appState.cloudConfig };
-      const isCurrentSession = () => sameSession(currentUser.id, config);
+      const originalEmail = normalizeEmail(currentUser.email);
+      const isCurrentSession = () => sameSession(currentUser.id, config) && normalizeEmail(deps.appState.currentUser?.email) === originalEmail;
+      const emailChanging = Object.hasOwn(values, "email") && normalizeEmail(values.email) !== originalEmail;
+      if (emailChanging && currentUser.googleId) return { ok: false, code: "providerEmail", message: text("此账户关联了 Google，请在登录服务提供方管理邮箱。", "This account is linked to Google. Manage your email with your sign-in provider.") };
 
       const mergedValues = {
         name: currentUser.name, email: currentUser.email, country: currentUser.country,
@@ -183,21 +225,24 @@ export function createAccountPageApi(deps = {}) {
       });
 
       if (!result.ok) return result;
-      if (!isCurrentSession()) return { ok: false, message: "账户已切换。 / Account changed." };
+      const verificationCode = String(values.verificationCode || "").trim();
+      if (emailChanging && !/^\d{6}$/.test(verificationCode)) return { ok: false, code: "verificationRequired", message: text("请输入发送到新邮箱的 6 位验证码。", "Enter the 6-digit verification code sent to your new email.") };
+      if (!isCurrentSession()) return { ok: false, code: "sessionChanged", message: "账户已切换。 / Account changed." };
 
       {
         try {
           const editable = ["name", "email", "country", "region", "graduationTerm", "goal", "preferences", "integrations"];
           const updates = Object.fromEntries(editable.filter(key => Object.hasOwn(values, key)).map(key => [key, result.updates[key]]));
           if (["avatarUrl", "avatarData", "avatarCleared"].some(key => Object.hasOwn(values, key))) updates.picture = result.updates.picture;
-          const payload = await deps.cloudApi("/account", { method: "PATCH", body: { updates, currentPassword: values.currentPassword || "" } });
+          const payload = await deps.cloudApi("/account", { method: "PATCH", body: { updates, currentPassword: values.currentPassword || "", ...(emailChanging ? { verificationCode } : {}) } });
           if (payload?.account?.id !== currentUser.id) throw new Error("无法确认账户资料，请重新登录。 / Account response could not be verified.");
+          if (emailChanging && normalizeEmail(payload.account.email) !== normalizeEmail(values.email)) throw new Error("服务器未确认新邮箱，账户资料未在此设备更新。 / The server did not confirm the new email. Local account details were preserved.");
           result.updates = { ...result.updates, ...payload.account, cloudLinked: true };
           result.country = result.updates.country;
           result.region = result.updates.region;
-        } catch (error) { return fail(error); }
+        } catch (error) { return emailChanging ? emailFailure(error) : fail(error); }
       }
-      if (!isCurrentSession()) return { ok: false, message: "账户已切换。 / Account changed." };
+      if (!isCurrentSession()) return { ok: false, code: "sessionChanged", message: "账户已切换。 / Account changed." };
       result.accounts = deps.appState.auth.accounts.map(account => account.id === currentUser.id ? { ...account, ...result.updates } : account);
       applyAccountSaveResult(deps.appState.auth, deps.userState?.value, result, {
         normalizeLeaderboardSettings: deps.normalizeLeaderboardSettings

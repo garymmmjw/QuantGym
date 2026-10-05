@@ -9,6 +9,7 @@ import { GuardianAccessPanel } from "../guardian/GuardianAccessPanel.jsx";
 import { AdminOverviewPanel } from "./AdminOverviewPanel.jsx";
 import { AdminInvitationsPanel } from "./AdminInvitationsPanel.jsx";
 import { AdminMembershipPanel } from "./AdminMembershipPanel.jsx";
+import { EmailChangeForm } from "./EmailChangeForm.jsx";
 import { AccountImage } from './AccountImage.jsx';
 import { locationDefs } from "../../prep-data.js";
 import { getCountryLabel, getRegionLabel, getDefaultRegion } from "../../modules/account/data.js";
@@ -88,13 +89,10 @@ function Profile({ model }) {
 }
 function Security({ model }) {
   const { user, copy } = model;
-  const [email, setEmail] = useState(user.email || "");
-  const [emailPassword, setEmailPassword] = useState("");
   const [password, setPassword] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [show, setShow] = useState(false);
   const passwordAccount = user.provider === "local";
   const canManageAccount = model.cloudSession.canManageAccount;
-  const emailEditable = passwordAccount && !user.googleId && canManageAccount;
   const update = (key, value) => setPassword(current => ({ ...current, [key]: value }));
   const mismatch = Boolean(password.confirmPassword && password.confirmPassword !== password.newPassword);
   const canSave = canManageAccount && password.currentPassword && validPassword(password.newPassword) && password.newPassword === password.confirmPassword && password.newPassword !== password.currentPassword;
@@ -102,11 +100,7 @@ function Security({ model }) {
     <SectionHead title={copy("登录与安全", "Login & security")}>{copy("在这里管理登录凭证，修改时验证当前密码。", "Manage your sign-in details and verify changes with your current password.")}</SectionHead>
     {!canManageAccount && <p className="ac-notice" role="status">{model.cloudSession.needsVerification ? copy("完成账号验证后，即可在线更改邮箱和密码。", "Complete account verification before changing your email or password online.") : model.cloudSession.phase === "expired" ? copy("登录已过期，请重新登录后更改邮箱或密码。", "Your session expired. Sign in again before changing your email or password.") : model.cloudSession.phase === "unknown" ? copy("正在确认账号连接，连接成功后可更改邮箱和密码。", "Checking your connection. Email and password changes will be available once connected.") : copy("邮箱和密码需要在线更改，请等待账号连接恢复。", "Email and password changes require an active connection. Please wait for your account to reconnect.")}</p>}
     <div className="ac-row"><div><h3>{copy("登录方式", "Sign-in method")}</h3><p>{passwordAccount ? (user.googleId ? copy("邮箱与密码 · 已关联 Google", "Email and password · Google linked") : copy("邮箱与密码", "Email and password")) : "Google"}</p></div><span className="ac-badge">{passwordAccount ? copy("邮箱登录", "Email sign-in") : copy("Google 登录", "Google sign-in")}</span></div>
-    <form className="ac-form ac-subsection" onSubmit={e => { e.preventDefault(); if (!emailEditable) return; model.run("email", async () => { const result = await model.api.save({ email, currentPassword: emailPassword }); if (result.ok) setEmailPassword(""); return result; }); }}>
-      <h3>{copy("登录邮箱", "Email address")}</h3><p className="ac-help">{passwordAccount && !user.googleId ? copy("更改邮箱后，使用新邮箱和原密码登录。其他设备需重新登录。", "Use your new email with your existing password. Other devices must sign in again.") : user.googleId ? copy("此账户同时关联了 Google 登录，当前保持登录邮箱一致。", "This account is linked to Google sign-in. Its login email is kept consistent.") : copy("该邮箱由 Google 管理，请前往 Google 账户更改。", "This email is managed by Google. Update it in your Google account.")}</p>
-      <div className="ac-fields"><label>{copy("邮箱", "Email")}<input id="accountEmailInput" type="email" required autoComplete="email" disabled={!emailEditable} value={email} onChange={e => setEmail(e.target.value)} /></label>{emailEditable && email.trim().toLowerCase() !== user.email && <label>{copy("当前密码", "Current password")}<input type="password" required autoComplete="current-password" value={emailPassword} onChange={e => setEmailPassword(e.target.value)} /></label>}</div>
-      {emailEditable && email.trim().toLowerCase() !== user.email && <button className="primary-button" disabled={Boolean(model.busy) || !emailPassword}>{copy("更新邮箱", "Update email")}</button>}<Feedback model={model} section="email" />
-    </form>
+    <EmailChangeForm model={model} />
     {passwordAccount ? <form className="ac-form ac-subsection" onSubmit={e => { e.preventDefault(); if (!canManageAccount) return; model.run("password", async () => { const result = await model.api.changePassword(password); if (result.ok) setPassword({ currentPassword: "", newPassword: "", confirmPassword: "" }); return result; }); }}>
       <div className="ac-row-heading"><h3>{copy("修改密码", "Change password")}</h3><button type="button" className="ac-text-button" aria-pressed={show} onClick={() => setShow(!show)}>{show ? copy("隐藏密码", "Hide passwords") : copy("显示密码", "Show passwords")}</button></div>
       <p className="ac-help">{copy("修改登录密码后，其他设备需要重新登录。", "Changing your password signs out other devices.")}</p>
