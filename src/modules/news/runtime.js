@@ -8,6 +8,7 @@ export function createNewsRuntime(deps = {}) {
       syncController = createNewsSyncController({
         getState: deps.getState,
         getCurrentUser: deps.getCurrentUser,
+        getSessionKey: deps.getSessionKey,
         autoRefreshMs: deps.autoRefreshMs,
         retryMs: deps.retryMs,
         requestNews: deps.requestNews,

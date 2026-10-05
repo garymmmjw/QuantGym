@@ -8,6 +8,10 @@ export function createNewsControllerBundle(deps = {}) {
     windowRef: deps.windowRef,
     getState: deps.getState,
     getEndpointBase: deps.getEndpointBase,
+    trustedEndpoint: deps.trustedEndpoint,
+    getHeaders: deps.getHeaders,
+    fetchImpl: deps.fetchImpl,
+    timeoutMs: deps.timeoutMs,
     getFilters: deps.getFilters,
     topicPacks: deps.topicPacks,
     normalizeTopic: deps.normalizeTopic,
@@ -26,6 +30,7 @@ export function createNewsControllerBundle(deps = {}) {
   const runtime = createNewsRuntime({
     getState: deps.getState,
     getCurrentUser: deps.getCurrentUser,
+    getSessionKey: deps.getSessionKey,
     autoRefreshMs: deps.autoRefreshMs,
     retryMs: deps.retryMs,
     requestNews: provider.requestFromApi,

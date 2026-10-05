@@ -100,6 +100,11 @@ export function createContentControllerBundles(deps = {}) {
     windowRef: window,
     getState: () => userState.value,
     getEndpointBase: () => getLlmConfig().endpoint || DEFAULT_LLM_ENDPOINT,
+    trustedEndpoint: DEFAULT_LLM_ENDPOINT,
+    getHeaders: () => appState.currentUser?.id && appState.cloudConfig?.userId === appState.currentUser.id
+      ? getLlmRequestHeaders?.() || {} : {},
+    getSessionKey: () => JSON.stringify([appState.currentUser?.id, appState.cloudConfig?.userId,
+      appState.cloudConfig?.endpoint, appState.cloudConfig?.token, getLlmConfig().endpoint]),
     getFilters: () => newsFilterState.getState(),
     topicPacks: NEWS_TOPIC_QUERY_PACKS,
     normalizeTopic: normalizeNewsTopicFilter,
@@ -123,7 +128,7 @@ export function createContentControllerBundles(deps = {}) {
     setStatusText: (text) => {
       if (els.newsUpdatedAt) els.newsUpdatedAt.textContent = text;
     },
-    getSyncingLabel: () => "新闻 API 同步中..."
+    getSyncingLabel: () => getLanguage() === 'en' ? 'Refreshing news…' : '正在刷新新闻…'
   });
 
   return {

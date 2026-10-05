@@ -1,5 +1,6 @@
 import {
   getNewsEndpoint,
+  getNewsRequestHeaders,
   isSocialNewsType,
   isLowQualityNews,
   normalizeNewsItem,
@@ -58,7 +59,7 @@ export function createNewsProvider(deps = {}) {
   }
 
   function getEndpoint() {
-    return getNewsEndpoint(deps.getEndpointBase?.() || deps.defaultEndpoint);
+    return getNewsEndpoint(deps.getEndpointBase?.() || deps.defaultEndpoint, "");
   }
 
   function getQueriesForTopic(topic) {
@@ -71,11 +72,14 @@ export function createNewsProvider(deps = {}) {
   async function requestFromApi() {
     const filters = deps.getFilters?.() || {};
     const topic = deps.normalizeTopic?.(filters.topic);
+    const endpoint = getEndpoint();
     return requestNewsFromApi({
-      endpoint: getEndpoint(),
+      endpoint,
+      headers: getNewsRequestHeaders(endpoint, deps.trustedEndpoint, deps.getHeaders?.()),
+      fetchImpl: deps.fetchImpl,
+      timeoutMs: deps.timeoutMs,
       normalizeItem,
-      topic,
-      queries: getQueriesForTopic(filters.topic)
+      topic: topic || 'all'
     });
   }
 
