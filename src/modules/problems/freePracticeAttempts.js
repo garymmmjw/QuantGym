@@ -35,8 +35,15 @@ function normalizeAttempt(value) {
 export function normalizeFreePracticeSession(value) {
   if (!isObject(value) || !validId(value.id) || !Number.isFinite(timestamp(value.startedAt))) return null;
   return { id: validId(value.id), startedAt: iso(timestamp(value.startedAt)),
+    // Older sessions only stored a wall-clock start. Their active time cannot
+    // be recovered, so never carry that potentially days-long gap forward.
+    elapsedMs: seconds(value.elapsedMs),
+    timerStartedAt: Number.isFinite(timestamp(value.timerStartedAt)) ? iso(timestamp(value.timerStartedAt)) : null,
     answerViewed: value.answerViewed === true, hintViewed: value.hintViewed === true };
 }
+
+const sessionElapsedMs = (session, now) => session.elapsedMs
+  + (session.timerStartedAt ? Math.max(0, now - timestamp(session.timerStartedAt)) : 0);
 
 function leafRecords(value) {
   const parent = normalizeAttempt(value);
@@ -117,8 +124,8 @@ export function getFreePracticeStatus(state = {}, nowMs) {
     selectedOutcome: canRevise ? latestAttempt.outcome : null,
     canRevise, windowExpiresAt: expires === null ? null : iso(expires), windowExpiresAtMs: expires,
     attemptCount: attempts.length, latestAttempt,
-    elapsedSeconds: canRevise ? latestAttempt.elapsedSeconds : session ? seconds((now - timestamp(session.startedAt)) / 1000) : 0,
-    isRunning: Boolean(session), sessionId: session?.id || null,
+    elapsedSeconds: canRevise ? latestAttempt.elapsedSeconds : session ? seconds(sessionElapsedMs(session, now) / 1000) : 0,
+    isRunning: Boolean(session?.timerStartedAt), sessionId: session?.id || null,
     answerViewed: canRevise ? latestAttempt.answerViewed : Boolean(session?.answerViewed),
     hintViewed: canRevise ? latestAttempt.hintViewed : Boolean(session?.hintViewed)
   };
@@ -132,15 +139,37 @@ function newSessionId(state, now, requested, attempts) {
   return result;
 }
 
-export function startFreePractice(state = {}, nowMs, id) {
+export function startFreePractice(state = {}, nowMs, id, { recover = false } = {}) {
   const now = nowValue(nowMs), attempts = normalizeFreePracticeAttempts(state?.freePracticeAttempts);
   const status = getFreePracticeStatus(state, now);
   if (status.canRevise) return { ...state, freePracticeAttempts: attempts, freePracticeSession: null };
   const existing = normalizeFreePracticeSession(state?.freePracticeSession);
-  const session = existing && !includesSession(attempts, existing) ? existing : {
-    id: newSessionId(state, now, id, attempts), startedAt: iso(now), answerViewed: false, hintViewed: false
+  const session = existing && !includesSession(attempts, existing) ? {
+    ...existing,
+    // A newly mounted page recovers only saved active time. This also handles
+    // browser termination where pagehide/visibilitychange never fired.
+    timerStartedAt: !existing.timerStartedAt || recover ? iso(now) : existing.timerStartedAt
+  } : {
+    id: newSessionId(state, now, id, attempts), startedAt: iso(now), elapsedMs: 0,
+    timerStartedAt: iso(now), answerViewed: false, hintViewed: false
   };
   return { ...state, freePracticeAttempts: attempts, freePracticeSession: session };
+}
+
+function savePracticeTime(state, nowMs, running) {
+  const now = nowValue(nowMs);
+  if (!getFreePracticeStatus(state, now).isRunning) return state;
+  const session = normalizeFreePracticeSession(state.freePracticeSession);
+  return { ...state, freePracticeSession: { ...session,
+    elapsedMs: sessionElapsedMs(session, now), timerStartedAt: running ? iso(now) : null } };
+}
+
+export function pauseFreePractice(state = {}, nowMs) {
+  return savePracticeTime(state, nowMs, false);
+}
+
+export function checkpointFreePractice(state = {}, nowMs) {
+  return savePracticeTime(state, nowMs, true);
 }
 
 function changeLatest(attempts, changes) {
@@ -162,7 +191,7 @@ export function recordFreePracticeOutcome(state = {}, outcome, nowMs, id) {
   const started = startFreePractice(state, now, id), session = started.freePracticeSession;
   const attempt = { id: session.id, startedAt: iso(Math.min(now, timestamp(session.startedAt))),
     recordedAt: iso(now), updatedAt: iso(now), outcome,
-    elapsedSeconds: seconds((now - timestamp(session.startedAt)) / 1000), answerViewed: session.answerViewed, hintViewed: session.hintViewed };
+    elapsedSeconds: seconds(sessionElapsedMs(session, now) / 1000), answerViewed: session.answerViewed, hintViewed: session.hintViewed };
   return { ...started, freePracticeAttempts: mergeFreePracticeAttempts([started.freePracticeAttempts, [attempt]]), freePracticeSession: null };
 }
 

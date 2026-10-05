@@ -14,7 +14,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "api-server"))
-from free_practice_attempts import merge_free_practice_attempts, merge_free_practice_state
+from free_practice_attempts import merge_free_practice_attempts, merge_free_practice_state, normalize_free_practice_session
 
 BASE = 1789905600000
 DAY = 86400000
@@ -33,11 +33,51 @@ def state(**fields):
     return {"problemId": "q", "updatedAt": iso(BASE), **fields}
 
 
-def session(identity="active"):
-    return {"id": identity, "startedAt": iso(BASE), "answerViewed": False, "hintViewed": False}
+def session(identity="active", **extra):
+    return {"id": identity, "startedAt": iso(BASE), "elapsedMs": 0, "timerStartedAt": None,
+            "answerViewed": False, "hintViewed": False, **extra}
 
 
 class FreePracticeMergeTests(unittest.TestCase):
+    def test_legacy_timer_is_paused_without_including_the_time_since_its_old_start(self):
+        legacy = {"id": "old", "startedAt": iso(BASE - 350 * 3600000), "answerViewed": True}
+        normalized = normalize_free_practice_session(legacy)
+        self.assertEqual(normalized, session("old", startedAt=legacy["startedAt"], answerViewed=True))
+        self.assertNotIn("elapsedMs", legacy)
+
+    def test_paused_and_running_timer_fields_survive_merge_and_json_round_trips(self):
+        for running_at in [None, iso(BASE + 10000)]:
+            saved = session(elapsedMs=12345, timerStartedAt=running_at, answerViewed=True, hintViewed=True)
+            original = state(freePracticeSession=saved)
+            merged = merge_free_practice_state({}, json.loads(json.dumps(original)))
+            self.assertEqual(merged["freePracticeSession"], saved)
+            missing_fields = state(updatedAt=iso(BASE + DAY), favorite=True)
+            merged = merge_free_practice_state(merged, missing_fields)
+            self.assertEqual(merged["freePracticeSession"], saved)
+
+    def test_newer_pause_replaces_a_stale_running_checkpoint_in_either_order(self):
+        running = state(freePracticeSession=session(elapsedMs=10000, timerStartedAt=iso(BASE)))
+        paused = state(updatedAt=iso(BASE + 5000), freePracticeSession=session(elapsedMs=15000))
+        for previous, incoming in [(running, paused), (paused, running)]:
+            self.assertEqual(merge_free_practice_state(previous, incoming)["freePracticeSession"], paused["freePracticeSession"])
+
+    def test_python_and_browser_timer_session_normalization_match(self):
+        cases = [
+            {"id": "legacy", "startedAt": iso(BASE - DAY)},
+            session(elapsedMs=12345.9, timerStartedAt=BASE + 1000),
+            session(elapsedMs="3456.7", timerStartedAt="2026-09-20T12:00:00+02:00"),
+            session(elapsedMs=-100, timerStartedAt="invalid"),
+            session(elapsedMs="Infinity", timerStartedAt=""),
+            session(elapsedMs=None, timerStartedAt=False),
+            session(elapsedMs="not-a-number"),
+            session(elapsedMs=0, timerStartedAt=0),
+            None, {}, session(startedAt="invalid"),
+        ]
+        script = "import fs from 'node:fs'; import { normalizeFreePracticeSession as normalize } from './src/modules/problems/freePracticeAttempts.js'; console.log(JSON.stringify(JSON.parse(fs.readFileSync(0, 'utf8')).map(normalize)));"
+        result = subprocess.run(["node", "--input-type=module", "-e", script], cwd=ROOT, input=json.dumps(cases),
+                                capture_output=True, text=True, check=True)
+        self.assertEqual([normalize_free_practice_session(case) for case in cases], json.loads(result.stdout))
+
     def test_stale_or_missing_client_fields_do_not_erase_history_or_change_legacy_write_rules(self):
         existing = state(freePracticeAttempts=[attempt("old", BASE - DAY), attempt("recent")], freePracticeSession=None,
                          favorite=True, interviewCount=9, privateNote="existing")
@@ -171,6 +211,14 @@ class ProblemStateWriteTests(unittest.TestCase):
         conn = StubConnection(in_transaction=True)
         self.save(self.db(), conn, "owner", [state(freePracticeAttempts=[attempt("new")])])
         self.assertFalse(any(sql.startswith("BEGIN") for sql, _ in conn.calls))
+
+    def test_database_write_retains_active_time_and_pause_state(self):
+        previous = state(freePracticeSession=session(elapsedMs=10000, timerStartedAt=iso(BASE)))
+        conn = StubConnection({"q": {"created_at": "first-created", "state_json": json.dumps(previous)}})
+        paused = session(elapsedMs=12500, answerViewed=True)
+        result = self.save(self.db(), conn, "owner", [state(updatedAt=iso(BASE + 2500), freePracticeSession=paused)])
+        self.assertEqual(result[0]["freePracticeSession"], paused)
+        self.assertEqual(json.loads(conn.records["q"]["state_json"])["freePracticeSession"], paused)
 
     def test_postgres_serializes_on_the_user_row_even_before_a_first_problem_state_exists(self):
         conn = StubConnection()
