@@ -1,4 +1,4 @@
-import { requestJson } from '../../api/client.js';
+import { ApiError } from '../../api/client.js';
 import { stableSlugId } from '../../lib/id.js';
 import { parseTags as parseTagsValue } from '../../lib/text.js';
 import { inferSourceFromUrl } from '../../lib/url.js';
@@ -255,13 +255,40 @@ export function getNewsEndpoint(endpoint, fallback = "http://127.0.0.1:8787/news
   const value = String(endpoint || "").trim();
   try {
     const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return "";
     url.pathname = url.pathname.replace(/\/(interview|classify-log)\/?$/, "/news");
     if (!url.pathname.endsWith("/news")) url.pathname = "/news";
     url.search = "";
+    url.hash = "";
     return url.toString();
   } catch {
     return fallback;
   }
+}
+
+// Only the deployment-configured service may receive the cloud session token.
+// A user-entered endpoint may still provide public news, without credentials.
+export function getNewsRequestHeaders(endpoint, trustedEndpoint, headers = {}) {
+  const safeHeaders = { 'Content-Type': 'application/json' };
+  try {
+    const target = new URL(endpoint);
+    const trusted = new URL(trustedEndpoint);
+    if (['http:', 'https:'].includes(target.protocol) && !target.username && !target.password
+      && target.origin === trusted.origin && headers.Authorization) {
+      safeHeaders.Authorization = headers.Authorization;
+    }
+  } catch { /* An invalid endpoint never receives credentials. */ }
+  return safeHeaders;
+}
+
+export function getNewsErrorMessage(code, language = 'zh') {
+  const messages = {
+    auth: ['请重新登录后刷新新闻，已保存的内容仍可查看。', 'Sign in again to refresh news. Saved stories remain available.'],
+    rate_limit: ['刷新过于频繁，请稍后重试；已保存的内容仍可查看。', 'Too many refreshes. Try again later; saved stories remain available.'],
+    timeout: ['新闻刷新超时，请稍后重试；已保存的内容仍可查看。', 'News refresh timed out. Try again later; saved stories remain available.'],
+    unavailable: ['新闻暂时无法刷新，请稍后重试；已保存的内容仍可查看。', 'News cannot be refreshed right now. Try again later; saved stories remain available.']
+  };
+  return (messages[code] || messages.unavailable)[language === 'en' ? 1 : 0];
 }
 
 export async function requestNewsFromApi(options = {}) {
@@ -270,24 +297,44 @@ export async function requestNewsFromApi(options = {}) {
     fetchImpl = globalThis.fetch,
     max = 24,
     normalizeItem = (item) => item,
-    queries = [],
+    headers = {},
+    timeoutMs = 18_000,
     topic = "all"
   } = options;
   if (!endpoint) throw new Error("Missing news endpoint");
-  let data;
+  const controller = new AbortController();
+  const timeoutError = new ApiError('News request timed out');
+  timeoutError.code = 'timeout';
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(timeoutError);
+    }, Number.isFinite(timeoutMs) && timeoutMs > 0 ? Math.min(timeoutMs, 18_000) : 18_000);
+  });
   try {
-    data = await requestJson(endpoint, {
-      method: "POST",
-      body: { max, topic, queries },
-      auth: false,
-      fetchImpl
-    });
+    const data = await Promise.race([deadline, (async () => {
+      const response = await fetchImpl(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ max, topic }),
+        signal: controller.signal,
+        redirect: 'error',
+        credentials: 'omit'
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new ApiError(`News API ${response.status}`, { status: response.status });
+      const items = Array.isArray(payload) ? payload : payload?.items ?? payload?.news;
+      if (!Array.isArray(items)) throw new ApiError('Invalid news response');
+      return items;
+    })()]);
+    return data.map(normalizeItem);
   } catch (error) {
-    if (error?.status) throw new Error(`News API ${error.status}`);
+    if (controller.signal.aborted) throw timeoutError;
     throw error;
+  } finally {
+    clearTimeout(timer);
   }
-  const items = Array.isArray(data) ? data : data.items || data.news || [];
-  return items.map(normalizeItem);
 }
 
 function defaultStableNewsId(title, sourceUrl) {

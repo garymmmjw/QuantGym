@@ -7,6 +7,7 @@ import { NewsList } from "./NewsList.jsx";
 import { NewsDetail } from "./NewsDetail.jsx";
 import { useAppServices } from "../../stores/usePageApi.js";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { getNewsErrorMessage } from "../../modules/news/data.js";
 
 function sourceAbbr(name) {
   const words = String(name || "").trim().split(/[\s/·]+/).filter(Boolean);
@@ -45,7 +46,7 @@ export function NewsPageContent() {
     ? `${model.t("newsSavedCount")} ${model.allNews.length} - ${model.t("newsLatest")} ${model.formatNewsDate?.(latest)}${filteredText}`
     : model.t("newsDefaultSubtitle");
   const syncText = model.syncError
-    ? ` - ${model.t("newsApiUnavailable")}`
+    ? ` - ${getNewsErrorMessage(model.syncError, model.isEnglish ? 'en' : 'zh')}`
     : model.fetchedAt
       ? ` - API ${model.formatTimeOnly?.(model.fetchedAt)}`
       : "";
@@ -106,7 +107,9 @@ export function NewsPageContent() {
             {zh ? "新闻" : "Quant"} <span className="news-title-accent">News</span>
           </h2>
           <p className="news-heading-tagline">{tagline}</p>
-          <small id="newsUpdatedAt" className="news-heading-meta">{`${latestText}${syncText}`}</small>
+          <small id="newsUpdatedAt" className={`news-heading-meta${model.syncError ? ' has-sync-error' : ''}`} role="status" aria-live="polite">
+            {model.syncError ? getNewsErrorMessage(model.syncError, model.isEnglish ? 'en' : 'zh') : `${latestText}${syncText}`}
+          </small>
         </div>
         <div className="news-heading-side">
           <div className="news-search">

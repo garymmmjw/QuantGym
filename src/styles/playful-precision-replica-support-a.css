@@ -190,6 +190,27 @@ body.is-authenticated .app-route-root .qg-news-page .news-heading-meta {
   border: 0;
 }
 
+/* Refresh failures must remain visible even when routine metadata is hidden. */
+body.is-authenticated .app-route-root .qg-news-page .news-heading-meta.has-sync-error {
+  position: static;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 620px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border-left: 3px solid var(--qg-warning);
+  border-radius: 4px;
+  background: var(--qg-surface-2);
+  color: var(--qg-text);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 /* Header right side: search box + icon actions */
 body.is-authenticated .app-route-root .qg-news-page .news-heading-side {
   display: flex;

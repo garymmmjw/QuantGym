@@ -3,6 +3,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { fetchPublicRss } from "./news-fetch.mjs";
+import { createNewsHandler, createNewsSessionAuthenticator } from "./news-service.mjs";
 
 loadEnvFromProjectRoot();
 
@@ -18,50 +20,6 @@ const NEWS_MAX_ITEMS = Number(process.env.NEWS_MAX_ITEMS || 12);
 const MAX_BODY_BYTES = Number(process.env.LLM_MAX_BODY_BYTES || 12 * 1024 * 1024);
 const ALLOWED_ORIGINS = csvValues(process.env.LLM_ALLOWED_ORIGINS || "*");
 const AUTH_API_BASE = String(process.env.LLM_AUTH_API_BASE || "").trim().replace(/\/+$/, "");
-const DEFAULT_NEWS_QUERIES = [
-  '"Jane Street" quant trading',
-  '"Jane Street" market making',
-  '"Citadel Securities" market making',
-  '"quant trading" volatility options',
-  '"Jane Street" CoreWeave AI',
-  '"hedge fund" "electronic trading" market making'
-];
-const NEWS_QUERY_PACKS = {
-  all: DEFAULT_NEWS_QUERIES,
-  quantFirms: [
-    '"Jane Street" trading revenue',
-    '"Citadel Securities" market maker',
-    '"Optiver" quant trading',
-    '"IMC Trading" market making',
-    '"Jump Trading" quant',
-    '"Hudson River Trading" quant',
-    '"Two Sigma" quant trading',
-    '"DE Shaw" systematic trading'
-  ],
-  marketStructure: [
-    '"market making" "exchange"',
-    '"electronic trading" "liquidity"',
-    '"order book" "market structure"',
-    '"options volatility" "market makers"',
-    '"SEC" "market structure" trading',
-    '"CME" "market making"'
-  ],
-  aiInfra: [
-    '"quant trading" "AI infrastructure"',
-    '"Jane Street" CoreWeave AI',
-    '"hedge fund" GPU AI',
-    '"machine learning" "market making"',
-    '"low latency" "machine learning" trading'
-  ],
-  recruiting: [
-    '"quant trading" internship',
-    '"Jane Street" campus recruiting',
-    '"Optiver" graduate trader',
-    '"Citadel Securities" internship',
-    '"IMC Trading" graduate',
-    '"quant researcher" "new grad"'
-  ]
-};
 const DEFAULT_JOB_BOARDS = [
   { token: "janestreet", company: "Jane Street" },
   { token: "optiverus", company: "Optiver" },
@@ -99,9 +57,25 @@ function isRenderRuntime() {
   return Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_SERVICE_NAME);
 }
 
+const handleNews = createNewsHandler({
+  fetchRss: fetchPublicRss,
+  parseRssItems,
+  dedupeNews,
+  authenticate: AUTH_API_BASE ? createNewsSessionAuthenticator(AUTH_API_BASE) : null,
+  feeds: process.env.NEWS_RSS_FEEDS,
+  defaultMax: NEWS_MAX_ITEMS
+});
+
 const server = http.createServer(async (req, res) => {
   setCors(req, res);
-  const requestUrl = new URL(req.url || "/", `http://${req.headers.host || "127.0.0.1"}`);
+  let requestUrl;
+  try {
+    // Routing never uses an untrusted Host header as a URL base.
+    requestUrl = new URL(req.url || "/", "http://127.0.0.1");
+  } catch {
+    sendJson(res, 400, { error: "Invalid request URL" });
+    return;
+  }
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);
@@ -115,18 +89,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (requestUrl.pathname === "/news") {
-    if (!["GET", "POST"].includes(req.method)) {
-      sendJson(res, 405, { error: "Method not allowed" });
-      return;
-    }
-
-    try {
-      const payload = req.method === "POST" ? JSON.parse(await readBody(req)) : {};
-      const result = await fetchQuantNews(payload, requestUrl.searchParams);
-      sendJson(res, 200, result);
-    } catch (error) {
-      sendJson(res, 500, { error: error.message || "News request failed" });
-    }
+    await handleNews(req, res, requestUrl);
     return;
   }
 
@@ -171,40 +134,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`LLM proxy listening on http://${HOST}:${PORT}`);
+  console.log(`LLM proxy listening on http://${HOST}:${server.address().port}`);
 });
-
-async function fetchQuantNews(payload = {}, searchParams = new URLSearchParams()) {
-  const maxItems = clampInt(payload.max || searchParams.get("max") || NEWS_MAX_ITEMS, 1, 30);
-  const queries = normalizeNewsQueries(payload, searchParams);
-  const feeds = normalizeNewsFeeds(payload);
-  const requests = feeds.length
-    ? feeds.map((url) => ({ url, query: "custom feed" }))
-    : queries.map((query) => ({ url: googleNewsRssUrl(query), query }));
-
-  const settled = await Promise.allSettled(requests.map((item) => fetchRssNews(item)));
-  const items = [];
-  const errors = [];
-
-  settled.forEach((result, index) => {
-    if (result.status === "fulfilled") {
-      items.push(...result.value);
-    } else {
-      errors.push({
-        source: requests[index].query,
-        message: result.reason?.message || "RSS fetch failed"
-      });
-    }
-  });
-
-  return {
-    fetchedAt: new Date().toISOString(),
-    count: items.length,
-    items: dedupeNews(items).slice(0, maxItems),
-    sources: requests.map((item) => item.query),
-    errors
-  };
-}
 
 async function fetchQuantJobs(payload = {}, searchParams = new URLSearchParams()) {
   const maxItems = clampInt(payload.max || searchParams.get("max") || 18, 1, 40);
@@ -310,72 +241,16 @@ function dedupeJobs(items) {
     .sort((a, b) => new Date(b.postedAt || 0) - new Date(a.postedAt || 0));
 }
 
-function normalizeNewsQueries(payload, searchParams) {
-  const topic = normalizeNewsTopic(payload.topic || searchParams.get("topic"));
-  const queryParam = searchParams.getAll("q").filter(Boolean);
-  const payloadQueries = Array.isArray(payload.queries) ? payload.queries : [];
-  const singleQuery = payload.query || searchParams.get("query") || "";
-  const queries = [...queryParam, ...payloadQueries, singleQuery]
-    .flatMap((item) => String(item || "").split("|"))
-    .map((item) => item.trim())
-    .filter(Boolean);
-  return queries.length ? [...new Set(queries)] : NEWS_QUERY_PACKS[topic];
-}
-
-function normalizeNewsTopic(value) {
-  const topic = String(value || "all").trim();
-  return NEWS_QUERY_PACKS[topic] ? topic : "all";
-}
-
-function normalizeNewsFeeds(payload) {
-  const fromEnv = String(process.env.NEWS_RSS_FEEDS || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const fromPayload = Array.isArray(payload.feeds) ? payload.feeds.map(String).map((item) => item.trim()).filter(Boolean) : [];
-  return [...new Set([...fromPayload, ...fromEnv])];
-}
-
-function googleNewsRssUrl(query) {
-  const url = new URL("https://news.google.com/rss/search");
-  url.searchParams.set("q", query);
-  url.searchParams.set("hl", "en-US");
-  url.searchParams.set("gl", "US");
-  url.searchParams.set("ceid", "US:en");
-  return url.toString();
-}
-
-async function fetchRssNews({ url, query }) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 9000);
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "Accept": "application/rss+xml, application/xml, text/xml",
-        "User-Agent": "QuantMemoryBoard/1.0"
-      },
-      signal: controller.signal
-    });
-
-    if (!response.ok) throw new Error(`RSS returned ${response.status}`);
-    const xml = await response.text();
-    return parseRssItems(xml, query);
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 function parseRssItems(xml, query) {
   const items = [];
-  for (const match of xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)) {
-    const itemXml = match[0];
-    const rawSource = readXmlTag(itemXml, "source");
-    const link = readXmlTag(itemXml, "link");
-    const rawTitle = readXmlTag(itemXml, "title");
+  for (const itemXml of scanXmlElements(xml, "item", 100)) {
+    const rawSource = readXmlTag(itemXml, "source").slice(0, 120);
+    const link = readXmlTag(itemXml, "link").slice(0, 2048);
+    const rawTitle = readXmlTag(itemXml, "title").slice(0, 320);
     const title = stripSourceSuffix(rawTitle, rawSource);
     if (!title || !link) continue;
 
-    const description = stripHtml(readXmlTag(itemXml, "description"));
+    const description = stripHtml(readXmlTag(itemXml, "description").slice(0, 4000)).slice(0, 2000);
     const source = rawSource || inferSourceFromUrl(link) || "News";
     const publishedAt = normalizeDate(readXmlTag(itemXml, "pubDate"));
     const text = [title, description, source, query].join(" ");
@@ -401,10 +276,36 @@ function parseRssItems(xml, query) {
   return items;
 }
 
+// Index searches advance monotonically. Repeated unclosed start tags cannot
+// trigger quadratic regex backtracking and block the HTTP event loop.
+function* scanXmlElements(xml, tag, max = 1) {
+  // ASCII folding preserves UTF-16 offsets (Unicode lowercasing can expand İ).
+  const lower = xml.replace(/[A-Z]/g, (character) => character.toLowerCase());
+  const opening = `<${tag}`;
+  const closing = `</${tag}>`;
+  let cursor = 0;
+  let count = 0;
+  while (count < max) {
+    const start = lower.indexOf(opening, cursor);
+    if (start < 0) return;
+    const afterName = start + opening.length;
+    const next = lower[afterName];
+    cursor = afterName;
+    if (next !== ">" && !/\s/.test(next || "")) continue;
+    const contentStart = lower.indexOf(">", afterName);
+    if (contentStart < 0) return;
+    const end = lower.indexOf(closing, contentStart + 1);
+    if (end < 0) return;
+    cursor = end + closing.length;
+    count += 1;
+    yield xml.slice(contentStart + 1, end);
+  }
+}
+
 function readXmlTag(xml, tag) {
-  const match = xml.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "i"));
-  if (!match) return "";
-  return decodeXmlEntities(match[1].replace(/^<!\[CDATA\[|\]\]>$/g, "").trim());
+  const value = scanXmlElements(xml, tag).next().value;
+  if (value == null) return "";
+  return decodeXmlEntities(value.replace(/^<!\[CDATA\[|\]\]>$/g, "").trim());
 }
 
 function stripHtml(value) {
@@ -423,10 +324,15 @@ function stripSourceSuffix(title, source) {
   return clean.endsWith(suffix) ? clean.slice(0, -suffix.length).trim() : clean;
 }
 
+function safeXmlCodePoint(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 0x10ffff && !(value >= 0xd800 && value <= 0xdfff)
+    ? String.fromCodePoint(value) : "\uFFFD";
+}
+
 function decodeXmlEntities(value) {
   return String(value || "")
-    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&#(\d+);/g, (_, code) => safeXmlCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => safeXmlCodePoint(parseInt(code, 16)))
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&")

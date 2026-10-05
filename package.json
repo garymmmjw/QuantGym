@@ -10,6 +10,8 @@
     "test:account:api": "python3 scripts/test-account-password-api.py",
     "test:account-email": "node --test scripts/test-account-email-api.mjs scripts/test-account-center.mjs && python3 scripts/test-account-email-security-api.py && python3 scripts/test-account-center-api.py",
     "check:account-email-browser": "node scripts/check-account-email-browser.mjs",
+    "test:news-security": "node --test scripts/test-news-fetch.mjs scripts/test-news-service.mjs scripts/test-news-route.mjs scripts/test-news-client.mjs",
+    "check:news-browser": "node scripts/check-news-browser.mjs",
     "test:cloud-session": "node --test scripts/test-cloud-session-status.mjs scripts/test-cloud-reauth-controller.mjs",
     "dev": "vite",
     "start": "node llm-proxy/server.mjs",

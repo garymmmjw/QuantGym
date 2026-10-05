@@ -9,12 +9,17 @@ export function createNewsSyncController(deps = {}) {
   const refresh = async (showStatus = false) => {
     if (inFlight) return { skipped: true };
     const state = getState();
+    const ownerId = getCurrentUser()?.id;
+    const sessionKey = deps.getSessionKey?.();
+    const sameSession = () => getState() === state && getCurrentUser()?.id === ownerId
+      && deps.getSessionKey?.() === sessionKey;
     inFlight = true;
     state.newsFetchAttemptAt = nowIso();
     if (showStatus) deps.setStatusText?.(deps.getSyncingLabel?.() || "");
 
     try {
       const items = await deps.requestNews?.() || [];
+      if (!sameSession()) return { skipped: true, stale: true };
       if (items.length) deps.upsertNews?.(items, { checkIn: false });
       state.newsFetchedAt = nowIso();
       state.newsSyncError = "";
@@ -22,13 +27,16 @@ export function createNewsSyncController(deps = {}) {
       deps.renderNews?.();
       return { skipped: false, ok: true, count: items.length };
     } catch (error) {
-      state.newsSyncError = error?.message || "News API failed";
+      if (!sameSession()) return { skipped: true, stale: true };
+      state.newsSyncError = error?.status === 401 || error?.status === 403 ? 'auth'
+        : error?.status === 429 ? 'rate_limit'
+          : error?.code === 'timeout' ? 'timeout' : 'unavailable';
       deps.saveState?.({ checkIn: false });
-      if (showStatus) deps.renderNews?.();
+      deps.renderNews?.();
       return { skipped: false, ok: false, error };
     } finally {
       inFlight = false;
-      deps.refreshIcons?.();
+      if (sameSession()) deps.refreshIcons?.();
     }
   };
 
