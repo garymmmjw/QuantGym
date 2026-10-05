@@ -91,6 +91,55 @@ test('page API reveals before or after a result without adding attempts', t => {
   unchangedLegacy(f);
 });
 
+test('page API persists pauses and resumes without counting the time outside a question', t => {
+  const f = fixture(t);
+  const first = f.api.startPractice(problem.id);
+  f.at(T + 8250);
+  const paused = f.api.pausePractice(problem.id, first.sessionId);
+  assert.equal(paused.isRunning, false);
+  const saves = f.calls.saves.length;
+  f.at(T + DAY);
+  assert.equal(f.api.pausePractice(problem.id, first.sessionId).elapsedSeconds, 8);
+  assert.equal(f.calls.saves.length, saves, 'Repeated lifecycle exits must not save or count twice.');
+  assert.equal(f.api.startPractice(problem.id, { recover: true }).elapsedSeconds, 8);
+  f.at(T + DAY + 2750);
+  assert.equal(f.api.recordPracticeOutcome(problem.id, 'correct').elapsedSeconds, 11);
+  unchangedLegacy(f);
+});
+
+test('stale session cleanup cannot pause or checkpoint a different active session', t => {
+  const f = fixture(t);
+  const first = f.api.startPractice(problem.id);
+  f.at(T + 5000);
+  const before = structuredClone(f.personal());
+  const saves = f.calls.saves.length;
+  assert.equal(f.api.pausePractice(problem.id, 'other-account-session').isRunning, true);
+  f.api.checkpointPractice(problem.id, 'other-account-session');
+  assert.deepEqual(f.personal(), before);
+  assert.equal(f.calls.saves.length, saves);
+  f.api.checkpointPractice(problem.id, first.sessionId);
+  f.at(T + 15 * DAY);
+  assert.equal(f.api.startPractice(problem.id, { recover: true }).elapsedSeconds, 5);
+  unchangedLegacy(f);
+});
+
+test('automatic checkpoints save locally without generating activity or cloud traffic', t => {
+  let now = T;
+  t.mock.method(Date, 'now', () => now);
+  const state = { problems: [problem], problemStates: [] };
+  const saves = [];
+  const api = createProblemsPageApi({ getState: () => state, saveState: options => saves.push(options) });
+  const started = api.startPractice(problem.id);
+  now += 10000;
+  api.checkpointPractice(problem.id, started.sessionId);
+  assert.deepEqual(saves.at(-1), { checkIn: false, sync: false });
+  assert.equal(state.problemStates[0].freePracticeSession.elapsedMs, 10000);
+  now += 5000;
+  api.pausePractice(problem.id, started.sessionId);
+  assert.deepEqual(saves.at(-1), { checkIn: false }, 'Exit should sync the saved pause without marking activity.');
+  assert.equal(state.problemStates[0].freePracticeSession.elapsedMs, 15000);
+});
+
 test('page API edits the same record throughout its fixed 24-hour window', t => {
   const f = fixture(t);
   f.api.startPractice(problem.id);

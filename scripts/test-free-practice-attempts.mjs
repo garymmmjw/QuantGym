@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  FREE_PRACTICE_WINDOW_MS as DAY, getFreePracticeStatus, startFreePractice,
+  FREE_PRACTICE_WINDOW_MS as DAY, getFreePracticeStatus, startFreePractice, pauseFreePractice, checkpointFreePractice,
   recordFreePracticeOutcome, markFreePracticeReveal, mergeFreePracticeAttempts,
   normalizeFreePracticeAttempts, normalizeFreePracticeSession
 } from '../src/modules/problems/freePracticeAttempts.js';
@@ -36,6 +36,53 @@ test('viewing an answer or hint is allowed and never records a result', () => {
   assert.equal(getFreePracticeStatus(state, T + 2500).selectedOutcome, null);
   assert.equal(state.freePracticeSession.answerViewed, true);
   assert.equal(state.freePracticeSession.hintViewed, true);
+});
+
+test('leaving pauses active time, reopening excludes the gap and preserves fractional seconds', () => {
+  let state = startFreePractice({ problemId: 'q1', favorite: true }, T, 's');
+  state = markFreePracticeReveal(state, 'answer', T + 500);
+  state = pauseFreePractice(freeze(state), T + 1750);
+  assert.equal(state.freePracticeSession.elapsedMs, 1750);
+  assert.equal(getFreePracticeStatus(state, T + DAY).isRunning, false);
+  assert.equal(getFreePracticeStatus(state, T + DAY).elapsedSeconds, 1);
+  assert.deepEqual(pauseFreePractice(state, T + DAY), state);
+  state = startFreePractice(JSON.parse(JSON.stringify(state)), T + DAY, 'ignored');
+  state = pauseFreePractice(state, T + DAY + 750);
+  assert.equal(state.freePracticeSession.elapsedMs, 2500);
+  const recorded = recordFreePracticeOutcome(state, 'correct', T + 2 * DAY);
+  assert.equal(recorded.freePracticeAttempts[0].id, 's');
+  assert.equal(recorded.freePracticeAttempts[0].elapsedSeconds, 2);
+  assert.equal(recorded.freePracticeAttempts[0].answerViewed, true);
+  assert.equal(recorded.favorite, true);
+});
+
+test('an interrupted page recovers its saved checkpoint without counting time away', () => {
+  const started = startFreePractice({}, T, 's');
+  const saved = checkpointFreePractice(freeze(started), T + 12500);
+  assert.equal(saved.freePracticeSession.elapsedMs, 12500);
+  assert.equal(getFreePracticeStatus(saved, T + 15000).elapsedSeconds, 15);
+  const restored = startFreePractice(JSON.parse(JSON.stringify(saved)), T + 15 * DAY, 'ignored', { recover: true });
+  assert.equal(restored.freePracticeSession.id, 's');
+  assert.equal(getFreePracticeStatus(restored, T + 15 * DAY).elapsedSeconds, 12);
+  assert.equal(getFreePracticeStatus(restored, T + 15 * DAY + 1500).elapsedSeconds, 14);
+});
+
+test('legacy unfinished timers do not import hundreds of hours of wall-clock time', () => {
+  const legacy = { freePracticeSession: { id: 'legacy', startedAt: date(T), answerViewed: true } };
+  assert.equal(getFreePracticeStatus(legacy, T + 15 * DAY).isRunning, false);
+  assert.equal(getFreePracticeStatus(legacy, T + 15 * DAY).elapsedSeconds, 0);
+  const resumed = startFreePractice(legacy, T + 15 * DAY);
+  assert.equal(resumed.freePracticeSession.id, 'legacy');
+  assert.equal(resumed.freePracticeSession.answerViewed, true);
+  assert.equal(getFreePracticeStatus(resumed, T + 15 * DAY + 4000).elapsedSeconds, 4);
+});
+
+test('late pause and checkpoint events cannot alter a recorded outcome or create a session', () => {
+  assert.deepEqual(pauseFreePractice({}, T), {});
+  assert.deepEqual(checkpointFreePractice({}, T), {});
+  const recorded = recordFreePracticeOutcome(startFreePractice({}, T, 's'), 'wrong', T + 5000);
+  assert.deepEqual(pauseFreePractice(recorded, T + 10000), recorded);
+  assert.deepEqual(checkpointFreePractice(recorded, T + DAY), recorded);
 });
 
 test('all three outcomes each create exactly one counted attempt and stop its timer', () => {

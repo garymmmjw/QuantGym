@@ -70,8 +70,11 @@ def normalize_free_practice_session(value):
     started = _timestamp(value.get("startedAt"))
     if started is None:
         return None
+    timer_started = _timestamp(value.get("timerStartedAt"))
     return {
         "id": _id(value["id"]), "startedAt": _iso(started),
+        "elapsedMs": _seconds(value.get("elapsedMs")),
+        "timerStartedAt": _iso(timer_started) if timer_started is not None else None,
         "answerViewed": value.get("answerViewed") is True,
         "hintViewed": value.get("hintViewed") is True,
     }

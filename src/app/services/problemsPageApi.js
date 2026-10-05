@@ -26,7 +26,7 @@ import {
   getProblemBrowserMatches as getProblemBrowserMatchesForState
 } from "../../modules/problems/search.js";
 import { getProblemBrowserViewState } from "../../modules/problems/viewState.js";
-import { getFreePracticeStatus, startFreePractice, recordFreePracticeOutcome, markFreePracticeReveal } from "../../modules/problems/freePracticeAttempts.js";
+import { getFreePracticeStatus, startFreePractice, pauseFreePractice, checkpointFreePractice, recordFreePracticeOutcome, markFreePracticeReveal } from "../../modules/problems/freePracticeAttempts.js";
 import { getPracticeBank } from "../../features/problems/practiceBanks.js";
 
 export function createProblemsPageApi(deps = {}) {
@@ -45,7 +45,7 @@ export function createProblemsPageApi(deps = {}) {
     return Array.isArray(catalogProblems) ? catalogProblems : [];
   }
 
-  function updateFreePractice(problemId, transition) {
+  function updateFreePractice(problemId, transition, saveOptions) {
     const problem = getProblems().find(item => item.id === problemId);
     if (!problem || !getPracticeBank(problem)) return null;
     const state = getState();
@@ -56,7 +56,7 @@ export function createProblemsPageApi(deps = {}) {
     if (JSON.stringify(fields(current)) !== JSON.stringify(fields(next))) {
       if (deps.updateProblemState) deps.updateProblemState(problemId, fields(next));
       else state.problemStates = [...(state.problemStates || []).filter(item => item.problemId !== problemId), { ...next, problemId, updatedAt: new Date(at).toISOString() }];
-      deps.saveState?.();
+      deps.saveState?.(saveOptions);
     }
     return getFreePracticeStatus(next, at);
   }
@@ -592,8 +592,18 @@ export function createProblemsPageApi(deps = {}) {
     getViewModel,
     prewarmSearchIndex,
 
-    startPractice(problemId) {
-      return updateFreePractice(problemId, (state, at) => startFreePractice(state, at, globalThis.crypto?.randomUUID?.()));
+    startPractice(problemId, options) {
+      return updateFreePractice(problemId, (state, at) => startFreePractice(state, at, globalThis.crypto?.randomUUID?.(), options));
+    },
+
+    pausePractice(problemId, sessionId) {
+      return updateFreePractice(problemId, (state, at) => state.freePracticeSession?.id === sessionId
+        ? pauseFreePractice(state, at) : state, { checkIn: false });
+    },
+
+    checkpointPractice(problemId, sessionId) {
+      return updateFreePractice(problemId, (state, at) => state.freePracticeSession?.id === sessionId
+        ? checkpointFreePractice(state, at) : state, { checkIn: false, sync: false });
     },
 
     recordPracticeOutcome(problemId, outcome) {

@@ -14,8 +14,8 @@ const attempt = (id, recordedAt = recent, overrides = {}) => ({
   recordedAt, updatedAt: recordedAt, outcome: 'wrong', elapsedSeconds: 120,
   answerViewed: false, hintViewed: false, ...overrides
 });
-const session = (id = 'session-new', startedAt = later) => ({
-  id, startedAt, answerViewed: false, hintViewed: false
+const session = (id = 'session-new', startedAt = later, overrides = {}) => ({
+  id, startedAt, elapsedMs: 0, timerStartedAt: null, answerViewed: false, hintViewed: false, ...overrides
 });
 const state = overrides => ({ problemId: 'catalog-problem-001', updatedAt: recent, ...overrides });
 const merge = (...lists) => mergeProblemStates(lists);
@@ -44,6 +44,38 @@ test('state normalization filters invalid attempts without changing unrelated pr
   assert.equal(normalized.interviewCount, 7);
   assert.equal(normalized.completed, true);
   assert.equal(normalized.notes, 'keep my notes');
+});
+
+test('legacy timer sessions are paused without reconstructing their old wall-clock duration', () => {
+  const legacy = { id: 'old-session', startedAt: early, answerViewed: true, hintViewed: true };
+  const normalized = normalizeProblemState(state({ freePracticeSession: legacy }));
+  assert.deepEqual(normalized.freePracticeSession, session('old-session', early, { answerViewed: true, hintViewed: true }));
+  assert.equal(Object.hasOwn(legacy, 'elapsedMs'), false);
+});
+
+test('active timer checkpoints and pauses survive local refresh and cloud payload round trips', () => {
+  for (const timerStartedAt of [null, later]) {
+    const saved = session('resumable', early, { elapsedMs: 12567, timerStartedAt, answerViewed: true, hintViewed: true });
+    const local = normalizeState({ problemStates: [state({ freePracticeSession: saved })] }, deps);
+    const refreshed = normalizeState(roundTrip(localStatePayload(local)), deps);
+    assert.deepEqual(refreshed.problemStates[0].freePracticeSession, saved);
+    const body = roundTrip(buildCloudSyncBody({ state: true }, { state: refreshed, cloudStatePayload }));
+    assert.deepEqual(body.problemStates[0].freePracticeSession, saved);
+    const result = buildCloudSessionState(body, {
+      localState: {}, mergeProblemStates: merge,
+      normalizeState: value => normalizeState(value, deps),
+      mergeCloudState: (remote, existing) => mergeCloudState(remote, existing, deps)
+    });
+    assert.deepEqual(result.nextState.problemStates[0].freePracticeSession, saved);
+  }
+});
+
+test('a newer pause keeps accumulated time when merged with a stale running checkpoint', () => {
+  const running = state({ freePracticeSession: session('same-session', early, { elapsedMs: 10000, timerStartedAt: recent }) });
+  const paused = state({ updatedAt: later, freePracticeSession: session('same-session', early, { elapsedMs: 12567 }) });
+  for (const sources of [[running, paused], [paused, running]]) {
+    assert.deepEqual(merge(...sources.map(item => [item]))[0].freePracticeSession, paused.freePracticeSession);
+  }
 });
 
 test('cloud merging keeps older history and applies the latest same-ID judgment once', () => {
