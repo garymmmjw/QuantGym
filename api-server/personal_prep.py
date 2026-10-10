@@ -218,8 +218,9 @@ def merge_behavioral_questions(current, incoming):
     return validate_behavioral_questions(list(questions.values()))
 
 
-TRACKER_STATUSES = {"submitted", "oa_received", "oa_completed", "interview", "offer", "rejected", "withdrawn"}
-TRACKER_EVENT_FIELDS = {"type", "date", "year", "dueDate", "dueTime"}
+TRACKER_STATUSES = {"submitted", "oa_received", "oa_completed", "vi_received", "vi_completed", "interview", "interview_completed", "offer", "rejected", "withdrawn", "custom"}
+TRACKER_INTERVIEW_ROUNDS = {"1st", "2nd", "3rd", "Superday", "Final"}
+TRACKER_EVENT_FIELDS = {"type", "date", "year", "dueDate", "dueTime", "interviewRound", "customLabel"}
 
 
 def tracker_id(value):
@@ -249,6 +250,10 @@ def validate_tracker_event_fields(fields):
             valid = value is None or (type(value) is int and 1 <= value <= 9999)
         elif field == "dueDate":
             valid = value == "" or tracker_date(value)
+        elif field == "interviewRound":
+            valid = isinstance(value, str) and (value == "" or value in TRACKER_INTERVIEW_ROUNDS)
+        elif field == "customLabel":
+            valid = bounded_practice_text(value, 80) and (value == "" or bool(value.strip()))
         else:
             valid = isinstance(value, str) and (value == "" or re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", value) is not None)
         if not valid:
@@ -279,11 +284,13 @@ def validate_tracker_operation(operation):
     if kind == "delete":
         event = operation["event"]
         required_event = {"id", "type", "date"}
-        if not isinstance(event, dict) or not required_event.issubset(event) or set(event) - required_event - {"year", "dueDate", "dueTime"} or event["id"] != operation["eventId"] or event["type"] == "submitted":
+        if not isinstance(event, dict) or not required_event.issubset(event) or set(event) - {"id"} - TRACKER_EVENT_FIELDS or event["id"] != operation["eventId"] or event["type"] == "submitted":
             raise PersonalPrepValidationError("Invalid Tracker deleted event.")
         event = {"dueDate": "", "dueTime": "", **event}
         operation["event"] = event
         validate_tracker_event_fields({field: value for field, value in event.items() if field != "id"})
+        if event["type"] == "custom" and not event.get("customLabel", "").strip():
+            raise PersonalPrepValidationError("Invalid Tracker custom event label.")
         if event["dueTime"] and not event["dueDate"]:
             raise PersonalPrepValidationError("Invalid Tracker deleted event deadline.")
     elif kind == "event":

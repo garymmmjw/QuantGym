@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deadlineDateTime, filterApplications, formatDeadline, getApplicationView, getCurrentDeadline, getCurrentDeadlineEvent, getProgressColumnCount, getSummary, groupApplications, sortApplications } from './dataModel.js';
+import { deadlineDateTime, filterApplications, formatDeadline, getApplicationView, getCurrentDeadline, getCurrentDeadlineEvent, getEventMeta, getProgressColumnCount, getSummary, groupApplications, INTERVIEW_ROUNDS, PROGRESS_TYPES, sortApplications } from './dataModel.js';
 import { buildOverviewActivity } from '../overview/activityMetrics.js';
 
 const stages = [
@@ -15,6 +15,33 @@ const app = (id, date, prepPhase = 's2', company = id) => ({
 const ids = rows => rows.map(row => row.id);
 const stageOptions = { today: '2026-09-28', now: '2026-09-28T23:59:00Z', timeZone: 'UTC' };
 const display = (rows, order) => groupApplications(sortApplications(rows, order), stages, stageOptions);
+
+test('progress presets and legacy labels use the new vocabulary without changing events', () => {
+  assert.deepEqual(PROGRESS_TYPES.filter(type => type !== 'custom').map(type => getEventMeta({ type }).label), [
+    'OA Invite', 'OA Complete', 'VI Invite', 'VI Complete',
+    '1st Interview Invite', '1st Interview Complete', 'Reject', 'Withdraw',
+  ]);
+  const legacy = { id: 'old', type: 'interview', date: '9/17', dueDate: '2026-10-11', dueTime: '14:30' };
+  const before = structuredClone(legacy);
+  assert.equal(getEventMeta(legacy).label, '1st Interview Invite');
+  assert.deepEqual(legacy, before);
+  assert.equal(getEventMeta({ type: 'offer' }).label, 'Offer');
+  for (const interviewRound of INTERVIEW_ROUNDS) {
+    assert.equal(getEventMeta({ type: 'interview', interviewRound }).label, `${interviewRound} Interview Invite`);
+    assert.equal(getEventMeta({ type: 'interview_completed', interviewRound }).label, `${interviewRound} Interview Complete`);
+  }
+  assert.equal(getEventMeta({ type: 'custom', customLabel: '  Team Match  ' }).label, 'Team Match');
+});
+
+test('VI and completed interview rounds remain in the interview view and milestone counts', () => {
+  const rows = ['vi_received', 'vi_completed', 'interview', 'interview_completed', 'custom'].map(type => ({
+    ...app(type, '2026-10-09'), events: [...app(type, '2026-10-09').events, { id: `${type}-next`, type, date: '2026-10-10', customLabel: 'Team Match' }],
+  }));
+  assert.equal(getSummary(rows).interview, 4);
+  assert.equal(getSummary(rows).receivedInterview, 4);
+  assert.equal(filterApplications(rows, { status: 'interview' }).length, 4);
+  assert.equal(filterApplications(rows, { status: 'all' }).length, 5);
+});
 
 test('company and role search intersects every view without changing totals or ordering', () => {
   const research = app('research', '2026-09-16', 's2', 'BlackRock');

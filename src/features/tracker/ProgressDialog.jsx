@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { STATUS_META, localToday } from './dataModel.js';
+import { isInterviewType, localToday } from './dataModel.js';
 import DeadlineFields from './DeadlineFields.jsx';
-
-const PROGRESS_TYPES = ['oa_received', 'oa_completed', 'interview', 'offer', 'rejected', 'withdrawn'];
+import ProgressFields from './ProgressFields.jsx';
 
 export default function ProgressDialog({ application, onClose, onUpdate }) {
   const dialogRef = useRef(null);
-  const [eventType, setEventType] = useState('oa_received');
+  const [progress, setProgress] = useState({ type: 'oa_received', interviewRound: '', customLabel: '' });
   const [eventDate, setEventDate] = useState(localToday);
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
@@ -27,11 +26,17 @@ export default function ProgressDialog({ application, onClose, onUpdate }) {
   function saveProgress(event) {
     event.preventDefault();
     if (!eventDate) return;
+    if (progress.type === 'custom' && !progress.customLabel.trim()) {
+      setError('请填写自定义进展。');
+      return;
+    }
     const saved = onUpdate({
       ...application,
       events: [...application.events, {
         id: crypto.randomUUID(),
-        type: eventType,
+        type: progress.type,
+        ...(isInterviewType(progress.type) ? { interviewRound: progress.interviewRound || '1st' } : {}),
+        ...(progress.type === 'custom' ? { customLabel: progress.customLabel.trim() } : {}),
         date: eventDate,
         year: Number(eventDate.slice(0, 4)),
         dueDate,
@@ -52,12 +57,10 @@ export default function ProgressDialog({ application, onClose, onUpdate }) {
         <button type="button" className="qt-td-close" aria-label="关闭更新进展" onClick={onClose}>×</button>
       </header>
       <form onSubmit={saveProgress}>
-        <label className="qt-td-field" htmlFor="progress-type">
-          <span>进展</span>
-          <select id="progress-type" autoFocus value={eventType} onChange={event => setEventType(event.target.value)}>
-            {PROGRESS_TYPES.map(type => <option key={type} value={type}>{STATUS_META[type].label}</option>)}
-          </select>
-        </label>
+        <ProgressFields idPrefix="progress" values={progress} onChange={changes => {
+          setProgress(current => ({ ...current, ...changes }));
+          setError('');
+        }} />
         <label className="qt-td-field" htmlFor="progress-date">
           <span>发生日期 <span className="qt-td-required">*</span></span>
           <input id="progress-date" type="date" required value={eventDate} onInput={event => setEventDate(event.target.value)} onChange={event => setEventDate(event.target.value)} />

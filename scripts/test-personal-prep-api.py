@@ -1072,6 +1072,81 @@ class PersonalPrepApiTests(unittest.TestCase):
         self.assertEqual(status, 200, accepted)
         self.assertEqual(accepted["data"], original)
 
+    def test_tracker_progress_types_rounds_and_custom_events_round_trip_without_rewriting_history(self):
+        token, _ = self.new_user()
+        operations = tracker_operations()
+        fields_list = [
+            {"type": "vi_received"}, {"type": "vi_completed"},
+            *({"type": status, "interviewRound": interview_round}
+              for status in ("interview", "interview_completed")
+              for interview_round in ("1st", "2nd", "3rd", "Superday", "Final")),
+            {"type": "custom", "customLabel": "  Recruiter call / 猎头沟通  "},
+            {"type": "custom", "customLabel": "😀" * 40},
+            {"type": "offer"},
+        ]
+        for index, fields in enumerate(fields_list):
+            identity = f"progress-{index}"
+            operations.append({
+                "id": f"create-{identity}", "clock": len(operations), "kind": "event",
+                "applicationId": "application-one", "eventId": identity,
+                "fields": {"date": "2026-10-09", "dueDate": "", "dueTime": "", **fields},
+                "order": ["event-submitted", identity],
+            })
+        # Delete snapshots must retain both new fields exactly so immutable
+        # operation IDs still match when another device syncs the same history.
+        for index in (2, 12):
+            event = {"id": f"progress-{index}", "date": "2026-10-09", "dueDate": "", "dueTime": "", **fields_list[index]}
+            operations.append({
+                "id": f"delete-{index}", "clock": len(operations), "kind": "delete",
+                "applicationId": "application-one", "eventId": event["id"], "deleteId": f"deletion-{index}",
+                "event": event, "order": ["event-submitted", event["id"]],
+            })
+            operations.append({
+                "id": f"restore-{index}", "clock": len(operations), "kind": "restore",
+                "applicationId": "application-one", "eventId": event["id"], "deleteId": f"deletion-{index}",
+            })
+        operations.append({
+            "id": "reset-progress-metadata", "clock": len(operations), "kind": "event",
+            "applicationId": "application-one", "eventId": "progress-12",
+            "fields": {"type": "interview_completed", "interviewRound": "", "customLabel": ""},
+        })
+        state = {**empty_state(), "careerTrackerOperations": operations}
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"], state)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        status, resynced, _ = self.put(token, {
+            **empty_state(), "careerTrackerOperations": list(reversed(operations)),
+        }, saved["revision"])
+        self.assertEqual(status, 200, resynced)
+        self.assertEqual(resynced["data"], state)
+
+    def test_tracker_progress_rejects_invalid_rounds_and_custom_labels_without_partial_save(self):
+        token, _ = self.new_user()
+        original = {**empty_state(), "careerTrackerOperations": tracker_operations()}
+        status, saved, _ = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        invalid_fields = [
+            {"interviewRound": value} for value in ("4th", "superday", None, 1, [])
+        ] + [
+            {"customLabel": value} for value in (None, 1, [], " ", "a" * 81, "😀" * 41)
+        ]
+        malformed = [
+            {**tracker_operations()[3], "id": f"invalid-field-{index}", "fields": fields}
+            for index, fields in enumerate(invalid_fields)
+        ]
+        for index, custom_label in enumerate((None, "", " ")):
+            event = {**tracker_operations()[4]["event"], "type": "custom"}
+            if custom_label is not None:
+                event["customLabel"] = custom_label
+            malformed.append({**tracker_operations()[4], "id": f"invalid-snapshot-{index}", "event": event})
+        for operation in malformed:
+            with self.subTest(operation=operation):
+                invalid = {**empty_state("must not save"), "careerTrackerOperations": [operation]}
+                status, rejected, _ = self.put(token, invalid, saved["revision"])
+                self.assertEqual(status, 400, rejected)
+                self.assertEqual(self.request("GET", token=token)[1], saved)
+
     def test_real_javascript_migration_edit_delete_and_restore_operations_round_trip(self):
         fixture = json.loads((ROOT / "scripts/fixtures/tracker-operations-v1.json").read_text(encoding="utf-8"))
         operations = fixture["operations"]

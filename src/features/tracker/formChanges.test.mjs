@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { changedFormFields, deadlineFormChanges, stageFormChanges } from './formChanges.js';
+import { changedFormFields, deadlineFormChanges, progressFormChanges, stageFormChanges } from './formChanges.js';
 import { createTrackerSyncBridge } from './trackerSyncBridge.js';
 import { createPersonalStore } from '../personal/personalStore.js';
 
@@ -16,6 +16,38 @@ function device() {
 }
 const flush = () => new Promise(resolve => queueMicrotask(resolve));
 const transfer = (from, to) => to.personalStore.mergeFromCloud(from.personalStore.getSnapshot().data);
+
+test('changing progress type retains the selected round after a remote type change', async () => {
+  const laptop = device(), phone = device();
+  const opening = { type: 'interview', interviewRound: '2nd', customLabel: '', date: '2026-10-09', dueDate: '', dueTime: '' };
+  laptop.trackerStore.addApplication({ ...app, events: [...app.events, { id: 'round', ...opening }] });
+  await flush(); transfer(laptop, phone);
+  phone.trackerStore.updateEvent(app.id, 'round', { type: 'vi_received' });
+  await flush(); transfer(phone, laptop);
+  laptop.trackerStore.updateEvent(app.id, 'round', progressFormChanges(opening, { ...opening, type: 'interview_completed' }));
+  await flush(); transfer(laptop, phone);
+  for (const current of [laptop, phone]) {
+    const event = current.trackerStore.getSnapshot().applications[0].events.at(-1);
+    assert.equal(event.type, 'interview_completed');
+    assert.equal(event.interviewRound, '2nd');
+  }
+});
+
+test('editing only progress date preserves a remotely changed round', async () => {
+  const laptop = device(), phone = device();
+  const opening = { type: 'interview', interviewRound: '1st', customLabel: '', date: '2026-10-09', dueDate: '', dueTime: '' };
+  laptop.trackerStore.addApplication({ ...app, events: [...app.events, { id: 'round', ...opening }] });
+  await flush(); transfer(laptop, phone);
+  phone.trackerStore.updateEvent(app.id, 'round', { interviewRound: '3rd' });
+  await flush(); transfer(phone, laptop);
+  laptop.trackerStore.updateEvent(app.id, 'round', progressFormChanges(opening, { ...opening, date: '2026-10-10' }));
+  await flush(); transfer(laptop, phone);
+  for (const current of [laptop, phone]) {
+    const event = current.trackerStore.getSnapshot().applications[0].events.at(-1);
+    assert.equal(event.date, '2026-10-10');
+    assert.equal(event.interviewRound, '3rd');
+  }
+});
 
 test('saving a stale detail form edits only its changed field after a remote company change', async () => {
   const laptop = device(), phone = device();

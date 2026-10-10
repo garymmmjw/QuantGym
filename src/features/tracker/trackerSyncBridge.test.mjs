@@ -170,3 +170,31 @@ test('revisioned cloud sync uploads legacy desktop records and an independent ph
   assert.equal(state(desktop).applications[0].events[1].dueTime, '14:00');
   assert.deepEqual(state(phone), state(desktop));
 });
+
+test('round/custom edits, type resets and undo survive device sync and reopening', async () => {
+  const storage = memoryStorage(); seed(storage);
+  const desktop = device(storage), phone = device(); transfer(desktop, phone);
+  desktop.trackerStore.updateEvent('app-1', 'oa-app-1', { type: 'interview', interviewRound: '2nd' });
+  await flush(); transfer(desktop, phone);
+  assert.equal(state(phone).applications[0].events[1].interviewRound, '2nd');
+  phone.trackerStore.updateEvent('app-1', 'oa-app-1', { type: 'interview_completed', interviewRound: 'Final' });
+  await flush(); transfer(phone, desktop);
+  assert.equal(state(desktop).applications[0].events[1].interviewRound, 'Final');
+  desktop.trackerStore.updateEvent('app-1', 'oa-app-1', { type: 'custom', customLabel: '  Team matching  ' });
+  await flush(); transfer(desktop, phone);
+  assert.equal(state(phone).applications[0].events[1].customLabel, 'Team matching');
+  assert.equal(state(phone).applications[0].events[1].interviewRound, undefined);
+  const token = phone.trackerStore.deleteEvent('app-1', 'oa-app-1');
+  await flush(); transfer(phone, desktop);
+  phone.stop();
+  const reopened = device(phone.storage);
+  reopened.trackerStore.restoreEvent(token);
+  await flush(); transfer(reopened, desktop); transfer(desktop, reopened);
+  assert.deepEqual(state(desktop), state(reopened));
+  assert.equal(state(desktop).applications[0].events[1].customLabel, 'Team matching');
+  assert.equal(state(desktop).applications[0].events[1].dueTime, '18:00');
+  reopened.trackerStore.updateEvent('app-1', 'oa-app-1', { type: 'interview' });
+  await flush(); transfer(reopened, desktop);
+  assert.equal(state(desktop).applications[0].events[1].interviewRound, undefined);
+  assert.equal(state(desktop).applications[0].events[1].customLabel, undefined);
+});
