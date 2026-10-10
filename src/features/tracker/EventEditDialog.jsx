@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { STATUS_META } from './dataModel.js';
+import { isInterviewType } from './dataModel.js';
 import DeadlineFields from './DeadlineFields.jsx';
-
-const PROGRESS_TYPES = ['oa_received', 'oa_completed', 'interview', 'offer', 'rejected', 'withdrawn'];
+import ProgressFields from './ProgressFields.jsx';
+import { progressFormChanges } from './formChanges.js';
 
 function validOccurrenceDate(value, allowYearless) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -19,6 +19,8 @@ export default function EventEditDialog({ application, event, onClose, onSave, o
   const dialogRef = useRef(null);
   const original = useRef({
     type: event.type,
+    interviewRound: isInterviewType(event.type) ? event.interviewRound || '1st' : '',
+    customLabel: event.type === 'custom' ? event.customLabel || '' : '',
     date: event.date || '',
     dueDate: event.dueDate || '',
     dueTime: event.dueDate ? event.dueTime || '' : '',
@@ -56,13 +58,20 @@ export default function EventEditDialog({ application, event, onClose, onSave, o
 
   function saveEvent(formEvent) {
     formEvent.preventDefault();
+    if (values.type === 'custom' && !values.customLabel.trim()) {
+      setError('请填写自定义进展。');
+      return;
+    }
     const date = values.date.trim();
     if (!validOccurrenceDate(date, usesYearlessDate)) {
       setError(usesYearlessDate ? '请填写有效日期，例如 09/17 或 2026-09-17。' : '请填写有效的发生日期。');
       return;
     }
-    const next = { ...values, type: isSubmission ? 'submitted' : values.type, date, dueTime: values.dueDate ? values.dueTime : '' };
-    const changes = Object.fromEntries(Object.entries(next).filter(([key, value]) => value !== original.current[key]));
+    const next = { ...values, type: isSubmission ? 'submitted' : values.type, date, dueTime: values.dueDate ? values.dueTime : '',
+      interviewRound: isInterviewType(values.type) ? values.interviewRound || '1st' : '',
+      customLabel: values.type === 'custom' ? values.customLabel.trim() : '',
+    };
+    const changes = progressFormChanges(original.current, next);
     try {
       if (onSave(changes)) onClose();
       else setError('没有保存成功，请检查记录信息后重试。');
@@ -102,12 +111,7 @@ export default function EventEditDialog({ application, event, onClose, onSave, o
         <button type="button" className="qt-td-close" aria-label="关闭修改记录" onClick={onClose}>×</button>
       </header>
       <form onSubmit={saveEvent}>
-        <label className="qt-td-field" htmlFor="event-edit-type">
-          <span>进展</span>
-          <select id="event-edit-type" disabled={isSubmission} autoFocus={!isSubmission} value={values.type} onChange={change => updateValues({ type: change.target.value })}>
-            {(isSubmission ? ['submitted'] : PROGRESS_TYPES).map(type => <option key={type} value={type}>{STATUS_META[type].label}</option>)}
-          </select>
-        </label>
+        <ProgressFields idPrefix="event-edit" values={values} onChange={updateValues} isSubmission={isSubmission} includeOffer={event.type === 'offer'} />
         <label className="qt-td-field" htmlFor="event-edit-date">
           <span>发生日期 <span className="qt-td-required">*</span></span>
           <input

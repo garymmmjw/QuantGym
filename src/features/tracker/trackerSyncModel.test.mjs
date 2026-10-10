@@ -221,3 +221,67 @@ test('diff emits only changed fields at a higher logical clock and leaves its in
   assert.deepEqual([before, after, base], copies);
   assert.deepEqual(diffTrackerOperations(after, after, mergeTrackerOperations(base, added)), []);
 });
+
+test('new progress metadata migrates without changing legacy journal IDs or payloads', () => {
+  const before = snapshot();
+  before.applications[0].events.push(event('legacy-interview', 'interview', '9/17'));
+  const legacyOps = migrateTrackerOperations(before), savedOps = copy(legacyOps);
+  assert.ok(legacyOps.filter(op => op.kind === 'event').every(op => !Object.hasOwn(op.fields, 'interviewRound') && !Object.hasOwn(op.fields, 'customLabel')));
+  assert.deepEqual(migrateTrackerOperations(before, legacyOps), savedOps);
+  const after = copy(before);
+  after.applications[0].events[1].interviewRound = '3rd';
+  after.applications[0].events.push({ ...event('custom', 'custom'), customLabel: 'Recruiter call' }, event('vi', 'vi_completed'));
+  const migrated = migrateTrackerOperations(after, legacyOps);
+  for (const op of legacyOps) assert.deepEqual(migrated.find(item => item.id === op.id), op);
+  const output = projectTrackerOperations(migrated);
+  assert.equal(output.applications[0].events[1].interviewRound, '3rd');
+  assert.equal(output.applications[0].events[2].customLabel, 'Recruiter call');
+  assert.equal(output.applications[0].events[3].type, 'vi_completed');
+  assert.deepEqual(legacyOps, savedOps);
+});
+
+test('type edits explicitly reset metadata and returning to interviews does not resurrect an old round', () => {
+  const before = snapshot();
+  before.applications[0].events.push({ ...event('progress', 'interview'), interviewRound: 'Superday' });
+  const base = migrateTrackerOperations(before), custom = copy(before);
+  custom.applications[0].events[1] = { ...event('progress', 'custom'), customLabel: 'Team matching' };
+  const edits = diffTrackerOperations(before, custom, base);
+  assert.equal(edits[0].fields.interviewRound, '');
+  assert.equal(edits[0].fields.customLabel, 'Team matching');
+  const customOps = mergeTrackerOperations(base, edits), customState = projectTrackerOperations(customOps);
+  assert.equal(customState.applications[0].events[1].interviewRound, undefined);
+  const interview = copy(customState);
+  interview.applications[0].events[1] = event('progress', 'interview_completed');
+  const interviewEdits = diffTrackerOperations(customState, interview, customOps);
+  assert.deepEqual(interviewEdits[0].fields, { type: 'interview_completed', interviewRound: '', customLabel: '' });
+  const output = projectTrackerOperations(mergeTrackerOperations(customOps, interviewEdits));
+  assert.equal(output.applications[0].events[1].interviewRound, undefined);
+  assert.equal(output.applications[0].events[1].customLabel, undefined);
+});
+
+test('custom delete snapshots remain immutable while projection trims labels and strips irrelevant metadata', () => {
+  const before = snapshot();
+  const recovery = { ...event('custom', 'custom'), customLabel: '  Recruiter call  ', interviewRound: '' };
+  const deletion = { id: 'delete-custom', clock: 1, kind: 'delete', applicationId: 'app-1', eventId: 'custom', deleteId: 'undo-custom', event: recovery, order: ['app-1-submitted', 'custom'] };
+  const original = copy(deletion), ops = [...migrateTrackerOperations(before), deletion];
+  assert.deepEqual(validateTrackerOperations(ops).find(op => op.id === deletion.id), original);
+  const deleted = projectTrackerOperations(ops);
+  assert.equal(deleted.deletedEvents[0].event.customLabel, 'Recruiter call');
+  assert.equal(deleted.deletedEvents[0].event.interviewRound, undefined);
+  const restored = copy(deleted);
+  restored.applications[0].events.push(restored.deletedEvents[0].event);
+  restored.deletedEvents = [];
+  const output = projectTrackerOperations(apply(ops, deleted, restored));
+  assert.equal(output.applications[0].events[1].customLabel, 'Recruiter call');
+  assert.deepEqual(deletion, original);
+});
+
+test('metadata patch validation accepts explicit resets and rejects invalid rounds and custom names', () => {
+  const op = { id: 'metadata', clock: 1, kind: 'event', applicationId: 'app-1', eventId: 'progress', fields: { interviewRound: '', customLabel: '' } };
+  assert.deepEqual(validateTrackerOperations([op]), [op]);
+  for (const fields of [{ interviewRound: '4th' }, { interviewRound: null }, { customLabel: ' '.repeat(3) }, { customLabel: 'x'.repeat(81) }]) {
+    assert.throws(() => validateTrackerOperations([{ ...op, fields }]), /无效/);
+  }
+  const custom = snapshot(); custom.applications[0].events.push(event('custom', 'custom'));
+  assert.throws(() => migrateTrackerOperations(custom), /自定义/);
+});

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { STATUS_META, deadlineDateTime, formatDeadline } from './dataModel.js';
+import { getEventMeta, deadlineDateTime, formatDeadline } from './dataModel.js';
 import { changedFormFields } from './formChanges.js';
 
 function readableDate(date) {
@@ -148,13 +148,13 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
                     <span className="qt-td-event-dot" aria-hidden="true" />
                     <div className="qt-td-event-content">
                       <div className="qt-td-event-top">
-                        <strong>{STATUS_META[event.type]?.label || event.type}</strong>
+                        <strong>{getEventMeta(event).label}</strong>
                         <span className="qt-td-event-date">{readableDate(event.date)}</span>
                       </div>
                       {event.dueDate && <p className="qt-td-event-deadline">
                         <span>截止 <time dateTime={deadlineDateTime(event)}>{formatDeadline(event, { fullDate: true })}</time></span>
                       </p>}
-                      {onEditEvent && <div className="qt-td-event-actions"><button type="button" className="qt-deadline-edit-link qt-event-edit-link" aria-label={`修改 ${STATUS_META[event.type]?.label || event.type} ${readableDate(event.date)} 记录`} onClick={() => onEditEvent(application, event)}>修改记录</button></div>}
+                      {onEditEvent && <div className="qt-td-event-actions"><button type="button" className="qt-deadline-edit-link qt-event-edit-link" aria-label={`修改 ${getEventMeta(event).label} ${readableDate(event.date)} 记录`} onClick={() => onEditEvent(application, event)}>修改记录</button></div>}
                     </div>
                   </li>
                 ))}

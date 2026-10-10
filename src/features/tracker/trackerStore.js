@@ -7,6 +7,8 @@ const UPDATED_EVENT = 'quantgym:tracker-updated';
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const copy = value => JSON.parse(JSON.stringify(value));
 const validText = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
+const interviewTypes = new Set(['interview', 'interview_completed']);
+const interviewRounds = new Set(['1st', '2nd', '3rd', 'Superday', 'Final']);
 
 export function trackerStorageKey(ownerId, namespace = '') {
   if (!validText(ownerId, 300) || ownerId === 'guest') throw new Error('请先登录，再保存投递记录。');
@@ -42,7 +44,13 @@ export function validateApplications(applications) {
       if (!validDate(event.date, true) || (dueDate !== '' && !validDate(dueDate))) throw new Error('申请进展的日期无效。');
       if (typeof dueTime !== 'string' || (dueTime !== '' && (!dueDate || !/^([01]\d|2[0-3]):[0-5]\d$/.test(dueTime)))) throw new Error('截止时间无效，请先填写截止日期，再填写小时和分钟。');
       if (event.year != null && (!Number.isInteger(event.year) || event.year < 1 || event.year > 9999)) throw new Error('申请进展的年份无效。');
-      return { id: event.id, type: event.type, date: event.date, dueDate, dueTime, ...(event.year ? { year: event.year } : {}) };
+      if (event.interviewRound != null && event.interviewRound !== '' && !interviewRounds.has(event.interviewRound)) throw new Error('请选择有效的面试轮次。');
+      if (event.customLabel != null && event.customLabel !== '' && !validText(event.customLabel, 80)) throw new Error('自定义进展请填写 1–80 个字符。');
+      if (event.type === 'custom' && !validText(event.customLabel, 80)) throw new Error('自定义进展请填写 1–80 个字符。');
+      return { id: event.id, type: event.type, date: event.date, dueDate, dueTime, ...(event.year ? { year: event.year } : {}),
+        ...(interviewTypes.has(event.type) && event.interviewRound ? { interviewRound: event.interviewRound } : {}),
+        ...(event.type === 'custom' ? { customLabel: event.customLabel.trim() } : {}),
+      };
     });
     if (events[0].type !== 'submitted') throw new Error('第一条进展应为投递记录。');
     return { id: application.id, company: application.company.trim(), role: application.role.trim(), prepPhase: application.prepPhase || '', season: String(application.season || '').slice(0, 20), events };
@@ -210,7 +218,7 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
         if (index < 0) throw new Error('没有找到这条进展，请刷新后重试。');
         const existing = application.events[index];
         const edited = { ...existing };
-        for (const field of ['type', 'date', 'year', 'dueDate', 'dueTime']) {
+        for (const field of ['type', 'date', 'year', 'dueDate', 'dueTime', 'interviewRound', 'customLabel']) {
           if (Object.hasOwn(changes, field)) edited[field] = changes[field];
         }
         if (index === 0 && edited.type !== 'submitted') throw new Error('第一条进展应为投递记录。');

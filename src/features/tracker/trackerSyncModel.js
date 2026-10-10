@@ -13,6 +13,8 @@ const fail = message => { throw new Error(`投递同步数据无效：${message}
 const requireValue = (condition, message) => { if (!condition) fail(message); };
 const text = (value, max, empty = false) => typeof value === 'string' && value.length <= max && (empty || Boolean(value.trim())) && !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value);
 const validId = value => text(value, 200);
+const interviewTypes = new Set(['interview', 'interview_completed']);
+const interviewRounds = new Set(['1st', '2nd', '3rd', 'Superday', 'Final']);
 const isoDate = value => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) || value.startsWith('0000-')) return false;
   const date = new Date(`${value}T12:00:00Z`);
@@ -36,6 +38,8 @@ const fieldRules = {
     year: value => value === null || (Number.isInteger(value) && value >= 1 && value <= 9999),
     dueDate: value => value === '' || isoDate(value),
     dueTime: value => value === '' || (typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)),
+    interviewRound: value => value === '' || interviewRounds.has(value),
+    customLabel: value => value === '' || text(value, 80),
   },
   stage: {
     label: value => text(value, 40), description: value => text(value, 200, true),
@@ -65,6 +69,17 @@ function completeEvent(event) {
   requireValue(own(fields, 'type') && own(fields, 'date'), '进展缺少类型或日期');
   const next = { id: event.id, ...fields, dueDate: fields.dueDate ?? '', dueTime: fields.dueTime ?? '' };
   requireValue(!next.dueTime || next.dueDate, '截止时间缺少日期');
+  requireValue(next.type !== 'custom' || text(next.customLabel, 80), '自定义进展缺少名称');
+  return next;
+}
+
+// Journal payloads are immutable. Normalize only the materialized event, leaving
+// optional reset values and original text in historical operations untouched.
+function normalizeEvent(event) {
+  const next = { ...event };
+  if (!interviewTypes.has(next.type) || !next.interviewRound) delete next.interviewRound;
+  if (next.type === 'custom') next.customLabel = next.customLabel.trim();
+  else delete next.customLabel;
   return next;
 }
 
@@ -256,7 +271,7 @@ export function projectTrackerOperations(operations = []) {
       // make an ISO event internally inconsistent after concurrent field edits.
       if (isoDate(data.date) && data.year != null) data.year = Number(data.date.slice(0, 4));
       else if (data.year === null) delete data.year;
-      return [eventId, completeEvent({ id: eventId, ...data })];
+      return [eventId, normalizeEvent(completeEvent({ id: eventId, ...data }))];
     }));
     const submitted = [...events.values()].filter(event => event.type === 'submitted');
     requireValue(submitted.length === 1, '申请必须保留唯一首次投递');
@@ -316,7 +331,13 @@ function baselineId(op) {
   return `migration-${digest}`;
 }
 const appFields = app => ({ company: app.company, role: app.role, prepPhase: app.prepPhase || '', season: app.season || '' });
-const eventFields = event => Object.fromEntries(Object.entries({ type: event.type, date: event.date, year: event.year ?? null, dueDate: event.dueDate || '', dueTime: event.dueTime || '' }));
+const eventFields = (event, includeResets = false) => {
+  const normalized = normalizeEvent(event);
+  return { type: event.type, date: event.date, year: event.year ?? null, dueDate: event.dueDate || '', dueTime: event.dueTime || '',
+    ...(includeResets || normalized.interviewRound ? { interviewRound: normalized.interviewRound || '' } : {}),
+    ...(includeResets || normalized.customLabel ? { customLabel: normalized.customLabel || '' } : {}),
+  };
+};
 const stageFields = stage => Object.fromEntries(Object.entries({ label: stage.label, description: stage.description || '', recordedDate: stage.recordedDate ?? null,
   ...Object.fromEntries(['createdAt', 'capturedAt', 'updatedAt', 'trackerImportDate'].filter(key => own(stage, key)).map(key => [key, stage[key]])) }));
 const entityKey = op => serialized([op.kind, op.applicationId || op.stageId, op.eventId || '']);
@@ -371,7 +392,15 @@ export function diffTrackerOperations(beforeSnapshot, afterSnapshot, existingOpe
     app.events.forEach((event, index) => {
       const priorEvent = prior?.events.find(item => item.id === event.id);
       const restored = before.deletedEvents.find(item => item.applicationId === app.id && item.event.id === event.id);
-      const fields = changed(priorEvent ? eventFields(priorEvent) : restored ? eventFields(restored.event) : null, eventFields(event));
+      const priorFields = priorEvent ? eventFields(priorEvent, true) : restored ? eventFields(restored.event, true) : null;
+      const nextFields = eventFields(event, true);
+      const fields = changed(priorFields, nextFields);
+      // A type change owns both metadata fields, including explicit resets, so
+      // old rounds or custom names cannot reappear from existing registers.
+      if (priorFields && priorFields.type !== nextFields.type) {
+        fields.interviewRound = nextFields.interviewRound;
+        fields.customLabel = nextFields.customLabel;
+      }
       if (Object.keys(fields).length) add({ kind: 'event', applicationId: app.id, eventId: event.id, fields, ...(!priorEvent && !restored ? { order: app.events.slice(Math.max(0, index - 1), index + 1).map(item => item.id) } : {}) });
       if (restored && !after.deletedEvents.some(item => item.id === restored.id)) add({ kind: 'restore', applicationId: app.id, eventId: event.id, deleteId: restored.id });
     });

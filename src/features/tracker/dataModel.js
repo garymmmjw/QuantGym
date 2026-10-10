@@ -2,19 +2,48 @@ import { applicationStageRecord, getStageApplicationAssignments } from '../caree
 
 export const STATUS_META = Object.freeze({
   submitted: { label: '已投递', tone: 'neutral' },
-  oa_received: { label: '收到 OA', tone: 'blue' },
-  oa_completed: { label: 'OA 已完成', tone: 'blue' },
-  interview: { label: '面试中', tone: 'purple' },
+  oa_received: { label: 'OA Invite', tone: 'blue' },
+  oa_completed: { label: 'OA Complete', tone: 'blue' },
+  vi_received: { label: 'VI Invite', tone: 'purple' },
+  vi_completed: { label: 'VI Complete', tone: 'purple' },
+  interview: { label: '1st Interview Invite', tone: 'purple' },
+  interview_completed: { label: '1st Interview Complete', tone: 'purple' },
   offer: { label: 'Offer', tone: 'green' },
-  rejected: { label: '已拒绝', tone: 'red' },
-  withdrawn: { label: '已撤回', tone: 'muted' },
+  rejected: { label: 'Reject', tone: 'red' },
+  withdrawn: { label: 'Withdraw', tone: 'muted' },
+  custom: { label: '自定义', tone: 'muted' },
 });
+
+export const INTERVIEW_ROUNDS = Object.freeze(['1st', '2nd', '3rd', 'Superday', 'Final']);
+export const PROGRESS_TYPES = Object.freeze([
+  'oa_received', 'oa_completed', 'vi_received', 'vi_completed',
+  'interview', 'interview_completed', 'rejected', 'withdrawn', 'custom',
+]);
+
+export function isInterviewType(type) {
+  return type === 'interview' || type === 'interview_completed';
+}
+
+// Keep historical event keys and chronology intact. Old interview records did
+// not record a round, so they use the same first-round default as the form.
+export function getEventMeta(event) {
+  const meta = STATUS_META[event.type] || { label: event.type, tone: 'neutral' };
+  if (isInterviewType(event.type)) {
+    const round = INTERVIEW_ROUNDS.includes(event.interviewRound) ? event.interviewRound : '1st';
+    return { ...meta, label: `${round} Interview ${event.type === 'interview' ? 'Invite' : 'Complete'}` };
+  }
+  if (event.type === 'custom') return { ...meta, label: event.customLabel?.trim() || meta.label };
+  return meta;
+}
 
 const STATUS_GROUPS = Object.freeze({
   submitted: 'awaiting',
   oa_received: 'oa',
   oa_completed: 'oa',
+  vi_received: 'interview',
+  vi_completed: 'interview',
   interview: 'interview',
+  interview_completed: 'interview',
   offer: 'offer',
   rejected: 'closed',
   withdrawn: 'closed',

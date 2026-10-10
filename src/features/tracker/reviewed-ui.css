@@ -149,3 +149,11 @@
 .quantgym-tracker .qt-event-edit-dialog .qt-event-clear-deadline:hover:not(:disabled) { color: var(--qt-accent); }
 .quantgym-tracker .qt-add-progress:focus-visible { color: var(--qt-accent); background: var(--qt-accent-hover); border-color: var(--qt-accent-border); }
 .quantgym-tracker .qt-edit-progress:hover .qt-event-pill { box-shadow: 0 0 0 2px var(--qt-accent-border); }
+
+/* Custom progress can be longer than the preset labels. */
+.quantgym-tracker .qt-custom-label { max-width: 240px; white-space: normal; overflow-wrap: anywhere; }
+.quantgym-tracker .qt-td-event-top strong { min-width: 0; overflow-wrap: anywhere; }
+.quantgym-tracker .qt-td-event-date { flex-shrink: 0; }
+.quantgym-tracker .qt-td-event-vi_received .qt-td-event-dot,
+.quantgym-tracker .qt-td-event-vi_completed .qt-td-event-dot,
+.quantgym-tracker .qt-td-event-interview_completed .qt-td-event-dot { background: #933cc8; }

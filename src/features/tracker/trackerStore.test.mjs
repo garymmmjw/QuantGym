@@ -619,3 +619,63 @@ test('version 1 and 2 histories migrate on deletion while malformed v3 tombstone
     assert.equal(context.storage.getItem(context.trackerStore.key), original);
   }
 });
+
+test('legacy progress keeps identities, order and dates through the new status schema', () => {
+  const storage = memoryStorage(), key = trackerStorageKey('alice');
+  const legacy = applicationWithProgress();
+  legacy.events[3].date = '9/20';
+  const original = JSON.stringify({ version: 2, ownerId: 'alice', applications: [legacy] });
+  storage.setItem(key, original);
+  const { trackerStore } = stores(storage);
+  assert.equal(trackerStore.getSnapshot().error, '');
+  assert.equal(storage.getItem(key), original);
+  const before = structuredClone(trackerStore.getSnapshot().applications[0]);
+  assert.equal(before.events[3].interviewRound, undefined);
+  trackerStore.updateApplication({ ...before, company: 'Updated Company' });
+  assert.deepEqual(stores(storage).trackerStore.getSnapshot().applications[0].events, before.events);
+});
+
+test('interview rounds and custom progress survive edits, reload, export/import and delete/restore', () => {
+  const { trackerStore, storage } = stores();
+  const row = application();
+  row.events.push(
+    { id: 'vi', type: 'vi_received', date: '2026-09-18' },
+    { id: 'vi-complete', type: 'vi_completed', date: '2026-09-19' },
+    { id: 'interview', type: 'interview', interviewRound: '2nd', date: '2026-09-20', dueDate: '2026-09-21', dueTime: '14:30' },
+    { id: 'custom', type: 'custom', customLabel: '  Recruiter call  ', date: '2026-09-21' },
+  );
+  trackerStore.addApplication(row);
+  trackerStore.updateEvent('a1', 'interview', { type: 'interview_completed', interviewRound: 'Superday' });
+  trackerStore.updateEvent('a1', 'custom', { customLabel: 'Team matching' });
+  const reloaded = stores(storage).trackerStore;
+  const events = reloaded.getSnapshot().applications[0].events;
+  assert.equal(events[3].interviewRound, 'Superday');
+  assert.equal(events[3].dueTime, '14:30');
+  assert.equal(events[4].customLabel, 'Team matching');
+  const imported = stores(memoryStorage(), 'bob');
+  importTrackerPayload({ payload: { applications: reloaded.getSnapshot().applications, stages: [] }, ...imported });
+  assert.deepEqual(imported.trackerStore.getSnapshot().applications[0].events, events);
+  const token = reloaded.deleteEvent('a1', 'custom');
+  const reopened = stores(storage).trackerStore;
+  reopened.restoreEvent(token);
+  assert.deepEqual(reopened.getSnapshot().applications[0].events, events);
+});
+
+test('changing progress types clears irrelevant metadata and invalid custom/round edits preserve durable data', () => {
+  const { trackerStore, storage } = stores();
+  const row = application();
+  row.events.push({ id: 'progress', type: 'custom', customLabel: '  Recruiter call  ', date: '2026-09-18' });
+  trackerStore.addApplication(row);
+  assert.equal(trackerStore.getSnapshot().applications[0].events[1].customLabel, 'Recruiter call');
+  for (const changes of [{ customLabel: '' }, { customLabel: '   ' }, { customLabel: 'x'.repeat(81) }, { type: 'interview', interviewRound: '4th' }]) {
+    const original = storage.getItem(trackerStore.key);
+    assert.throws(() => trackerStore.updateEvent('a1', 'progress', changes), /自定义|轮次/);
+    assert.equal(storage.getItem(trackerStore.key), original);
+  }
+  trackerStore.updateEvent('a1', 'progress', { type: 'interview', interviewRound: 'Final' });
+  assert.equal(trackerStore.getSnapshot().applications[0].events[1].customLabel, undefined);
+  trackerStore.updateEvent('a1', 'progress', { type: 'oa_completed' });
+  const saved = stores(storage).trackerStore.getSnapshot().applications[0].events[1];
+  assert.equal(saved.interviewRound, undefined);
+  assert.equal(saved.customLabel, undefined);
+});

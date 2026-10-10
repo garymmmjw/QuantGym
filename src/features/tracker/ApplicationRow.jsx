@@ -1,17 +1,17 @@
 import React from 'react';
 import { Clock3 } from 'lucide-react';
-import { STATUS_META, getCurrentStatus, getCurrentDeadlineEvent, formatDeadline, deadlineDateTime } from './dataModel.js';
+import { getEventMeta, getCurrentStatus, getCurrentDeadlineEvent, formatDeadline, deadlineDateTime } from './dataModel.js';
 import Icon from './TrackerIcon.jsx';
 
 function EventPill({ event }) {
   if (!event) return <span className="qt-empty-step" aria-label="暂无进展">—</span>;
-  const meta = STATUS_META[event.type] || { label: event.type, tone: 'neutral' };
+  const meta = getEventMeta(event);
   const shortDate = /^\d{4}-\d{2}-\d{2}$/.test(event.date || '')
     ? event.date.slice(5).replace('-', '/') : event.date;
   return (
-    <span className={`qt-event-pill qt-${meta.tone}`} title={`${event.date} · 点击修改记录`}>
+    <span className={`qt-event-pill qt-${meta.tone}`} title={`${meta.label} · ${event.date} · 点击修改记录`}>
       <span className="qt-event-dot" aria-hidden="true"/>
-      <span className="qt-event-label">{meta.label}</span>
+      <span className={`qt-event-label${event.type === 'custom' ? ' qt-custom-label' : ''}`}>{meta.label}</span>
       <span className="qt-event-date">{shortDate || '日期未填'}</span>
     </span>
   );
