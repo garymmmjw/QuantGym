@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAppServicesContext, useAppStore, useAuthStore } from '../../stores/AppServicesContext.jsx';
+import { useAppStore, useAuthStore } from '../../stores/AppServicesContext.jsx';
+import { usePageApi } from '../../stores/usePageApi.js';
 import { membershipConnection } from '../membership/membershipApi.js';
 import { loadLearningSources } from './learningSourcesLoader.mjs';
 
@@ -10,7 +11,7 @@ const CACHE_TTL_MS = 30000;
 
 /** Mount after the membership gate. Content never persists in browser storage. */
 export function useLearningSources({ enabled = true } = {}) {
-  const services = useAppServicesContext();
+  const problemsApi = usePageApi('problems');
   const userId = useAuthStore(state => state.currentUser?.id || '');
   const config = useAppStore(state => state.cloudConfig || {});
   const { connected, token, baseUrl } = membershipConnection(config, userId);
@@ -29,14 +30,14 @@ export function useLearningSources({ enabled = true } = {}) {
     setState({ key, sources: null, loading: true, error: '' });
     loadLearningSources({ token, baseUrl, signal: controller.signal,
       isCurrent: () => key === currentKey.current,
-      getCatalogProblems: () => services.getCatalogProblems(),
+      getCatalogProblems: () => problemsApi.getPracticeCatalog(),
     }).then(sources => {
       if (controller.signal.aborted || key !== currentKey.current) return;
       cachedSources = { key, sources, at: Date.now() };
       setState({ key, loading: false, error: '', sources });
     }).catch(error => { if (!controller.signal.aborted && key === currentKey.current) { cachedSources = null; setState({ key, sources: null, loading: false, error: error.message }); } });
     return () => controller.abort();
-  }, [enabled, connected, key, token, baseUrl, revision, services]);
+  }, [enabled, connected, key, token, baseUrl, revision, problemsApi]);
   const current = state.key === key;
   return { sources: current && enabled ? state.sources : null, loading: enabled && connected && (!current || state.loading), error: current ? state.error : '', refresh };
 }
