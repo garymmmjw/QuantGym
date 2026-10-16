@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PRACTICE_BANKS, getBankProblems, getBankGroups, getBankStats, getPracticeBank, getSourcePracticeBank, getPracticeBrowserProblems, matchesBankGroup, hasPracticeRecord } from "./practiceBanks.js";
+import { PRACTICE_BANKS, getBankProblems, getBankGroups, getBankStats, getPracticeBank, getSourcePracticeBank, getPracticeBrowserProblems, matchesBankGroup, hasPracticeRecord, hasMemberPracticeAccess } from "./practiceBanks.js";
 
 
 const PAGE_SIZE = 20;
@@ -10,7 +10,8 @@ const clean = value => String(value || "").trim().toLocaleLowerCase();
 export function useFreePractice(model, membership = { isMember: false }) {
   const [params, setParams] = useSearchParams();
   const [companySearch, setCompanySearch] = useState("");
-  const catalog = useMemo(() => model.catalogProblems.filter(problem => !getPracticeBank(problem)?.membersOnly || membership.isMember), [model.catalogProblems, membership.isMember]);
+  const memberAccess = hasMemberPracticeAccess(membership);
+  const catalog = useMemo(() => model.catalogProblems.filter(problem => !getPracticeBank(problem)?.membersOnly || memberAccess), [model.catalogProblems, memberAccess]);
   const personal = useMemo(() => new Map((Array.isArray(model.problemStates) ? model.problemStates : []).map(item => [item.problemId, item])), [model.problemStates]);
   const selectedId = params.get("question") || "";
   const selectedProblem = catalog.find(problem => problem.id === selectedId) || null;
@@ -20,7 +21,7 @@ export function useFreePractice(model, membership = { isMember: false }) {
   const bank = useMemo(() => (requestedProblem ? getPracticeBank(requestedProblem) : null)
     || PRACTICE_BANKS.find(item => item.id === requestedBankId)
     || getSourcePracticeBank(catalog, requestedSource), [catalog, requestedBankId, requestedSource, requestedProblem]);
-  const membershipRequired = Boolean(bank?.membersOnly && !membership.isMember);
+  const membershipRequired = Boolean(bank?.membersOnly && !memberAccess);
   const groupId = params.get("group") || "all";
   const sectionId = params.get("section") || "all";
   const query = params.get("q") || "";
@@ -48,7 +49,7 @@ export function useFreePractice(model, membership = { isMember: false }) {
   const directoryProblems = useMemo(() => bank?.kind === "source" ? bankProblems
     : bankProblems.filter(problem => matchesBankGroup(problem, bank?.id, groupId, sectionId)), [bankProblems, bank, groupId, sectionId]);
   const searchText = useMemo(() => new Map(bankProblems.map(problem => [problem.id, clean([
-    problem.titleZh, problem.titleEn, problem.promptZh, problem.promptEn, problem.provenance?.originalNumber, ...(problem.tags || []), ...(problem.companies || [])
+    problem.titleZh, problem.titleEn, problem.promptZh, problem.promptEn, problem.quantvault?.topic, problem.quantvault?.displayId, problem.provenance?.originalNumber, ...(problem.tags || []), ...(problem.companies || [])
   ].join(" "))])), [bankProblems]);
   const filtered = useMemo(() => {
     const terms = clean(query).split(/\s+/).filter(Boolean);
@@ -94,7 +95,7 @@ export function useFreePractice(model, membership = { isMember: false }) {
   useEffect(() => {
     if (selectedProblem) openRef.current(selectedProblem.id);
     else closeRef.current();
-  }, [selectedProblem?.id, membership.isMember]);
+  }, [selectedProblem?.id, memberAccess]);
 
   useEffect(() => {
     const handleOpen = event => {
@@ -157,7 +158,7 @@ export function useFreePractice(model, membership = { isMember: false }) {
   } : summaries.find(item => item.id === bank?.id);
 
   return {
-    bank, groups, group, section, groupId, sectionId, summaries, summary, catalog, membership, membershipRequired,
+    bank, groups, group, section, groupId, sectionId, summaries, summary, catalog, membership, memberAccess, membershipRequired,
     bankProblems, directoryProblems, filtered, pageItems, page, totalPages, pageSize: PAGE_SIZE,
     companySearch, setCompanySearch, query, difficulty, status, topic, isEnglish,
     selectedProblem, selectedId, navigation, personal,

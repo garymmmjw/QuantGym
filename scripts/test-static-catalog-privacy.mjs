@@ -31,6 +31,13 @@ function fixture(t) {
   fs.writeFileSync(path.join(dir, "data/problem-catalog.json"), JSON.stringify({ problems }));
   fs.writeFileSync(path.join(dir, "data/problem-catalog.js"), `window.quantProblemCatalog=${JSON.stringify(problems)};`);
   fs.writeFileSync(path.join(dir, "data/library-catalog.js"), "window.libraryCatalog=[];\n");
+  // Stub only renderer bundling, while proving the real deploy orchestrator
+  // invokes it and includes its output.
+  fs.writeFileSync(path.join(dir, "scripts/build-learn-embed.mjs"), `
+import fs from 'node:fs'; import path from 'node:path';
+const output=process.argv[2]; fs.mkdirSync(output,{recursive:true});
+fs.writeFileSync(path.join(output,'index.html'),'<title>Learn renderer fixture</title>');
+`);
 
   // Exercise the real static publishing code with an isolated Vite output fixture.
   // The full visibility-boundary check also runs the actual Vite application build.
@@ -80,7 +87,7 @@ test("default static catalog drops private, user and unspecified visibility whil
   assert.deepEqual(problems, [publicProblem]);
   assert.equal(source.includes(privateMarker), false);
   assert.deepEqual(fs.readdirSync(path.join(dir, "dist/data")).sort(), ["library-catalog.js", "problem-catalog.js"]);
-  for (const relative of ["version.json", "config.js", "zh/index.html", "en/index.html", "_redirects", "assets/404.html"]) {
+  for (const relative of ["version.json", "config.js", "zh/index.html", "en/index.html", "_redirects", "assets/404.html", "learn-embed/index.html"]) {
     assert.equal(fs.existsSync(path.join(dir, "dist", relative)), true, relative);
   }
 });

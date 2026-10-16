@@ -1,6 +1,6 @@
 import { hasExplicitProblemCompletion, isLeetcodeCatalogProblem } from './completion.js';
 import { escapeHtml } from "../../lib/text.js";
-import { cleanProblemTagValue, getLocalizedProblemField } from "./format.js";
+import { cleanProblemTagValue, getLocalizedProblemField, getProblemAnswerParts } from "./format.js";
 
 export function createProblemDetailNavigationView(options = {}) {
   const navigation = options.navigation || {};
@@ -118,11 +118,7 @@ export function renderProblemDetailView(options = {}) {
     options.getMediaMarkdown?.(problem, "prompt")
   ].filter(Boolean).join("\n\n");
   const hintContent = getLocalizedProblemField(problem, "hint", isEnglish) || t("noHint");
-  const answerParts = [
-    getLocalizedProblemField(problem, "answer", isEnglish),
-    getLocalizedProblemField(problem, "explanation", isEnglish),
-    options.getMediaMarkdown?.(problem, "answer")
-  ].filter(Boolean);
+  const answerParts = getProblemAnswerParts(problem, isEnglish, options.getMediaMarkdown?.(problem, "answer"));
   const answerContent = answerParts.length ? answerParts.join("\n\n") : t("noAnswer");
 
   container.append(

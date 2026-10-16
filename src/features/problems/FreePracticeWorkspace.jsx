@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ProblemDetail } from "./ProblemDetail.jsx";
 import { localizeCategoryLabel, localizeDifficultyLabel } from "./problemDisplayLabels.js";
 import { useProblemsPageModel } from "./problemsHooks.js";
-import { getPracticeBank, getPracticeCompanies, hasPracticeRecord } from "./practiceBanks.js";
+import { getPracticeBank, getPracticeCompanies, getPracticeTopicLabel, hasPracticeRecord } from "./practiceBanks.js";
 import { useMembership } from "../membership/useMembership.js";
 import { useFreePractice } from "./useFreePractice.js";
 import { useFreePracticeAttempt } from "./useFreePracticeAttempt.js";
@@ -17,7 +17,7 @@ const topicLabel = (value, en) => en ? skillDefs[value]?.name || extraTopics[val
 
 function BankCard({ bank, practice: p }) {
   const en = p.isEnglish;
-  const locked = bank.membersOnly && !p.membership.isMember;
+  const locked = bank.membersOnly && !p.memberAccess;
   return <article className={`fp-bank-card fp-bank-featured fp-bank-${bank.id}${bank.membersOnly ? " fp-bank-member" : ""}`} data-bank-card={bank.id}>
     <button className="fp-bank-open" type="button" onClick={() => p.selectBank(bank.id)} aria-label={`${en ? "Open " : "进入"}${name(bank, en)}`}>
       <span className="fp-bank-icon" aria-hidden="true"><BankSymbol symbol={bank.symbol} /></span>
@@ -25,7 +25,7 @@ function BankCard({ bank, practice: p }) {
       <span className="fp-bank-arrow" aria-hidden="true">↗</span>
     </button>
     <div className="fp-bank-bottom">
-      {locked ? <><span className="fp-member-note">{en ? "Access with your member email" : "会员邮箱登录后即可练习"}</span><button className="fp-resume" type="button" onClick={() => p.selectBank(bank.id)}>{en ? "View access" : "查看权限"}<span aria-hidden="true"> →</span></button></> : <>
+      {locked ? <>{bank.catalogCount ? <div className="fp-bank-count"><strong data-bank-count>{number(bank.catalogCount)}</strong><span>{en ? "questions" : "道题"}</span></div> : null}<span className="fp-member-note">{en ? "Access with your member email" : "会员邮箱登录后即可练习"}</span><button className="fp-resume" type="button" onClick={() => p.selectBank(bank.id)}>{en ? "View access" : "查看权限"}<span aria-hidden="true"> →</span></button></> : <>
       <div className="fp-bank-count"><strong data-bank-count>{number(bank.total)}</strong><span>{en ? "questions" : "道题"}</span></div>
       <div className="fp-bank-progress"><span>{en ? `${number(bank.completed)} practiced` : `已练 ${number(bank.completed)}`}</span><progress value={bank.completed} max={bank.total || 1} aria-label={en ? `${name(bank, en)} progress` : `${name(bank, en)}练习进度`} /></div>
       {bank.resumeId ? <button className="fp-resume" type="button" onClick={() => p.resumeBank(bank)}>{en ? "Continue" : "继续刷题"}<span aria-hidden="true"> →</span></button> : <button className="fp-resume" type="button" disabled={!bank.total} onClick={() => p.selectBank(bank.id)}>{bank.total ? (en ? "Review" : "回顾题目") : (en ? "Not loaded" : "暂未加载")}</button>}</>}
@@ -41,9 +41,9 @@ function MemberAccess({ practice: p }) {
   const en = p.isEnglish;
   const { loading, error, connected, refresh } = p.membership;
   return <section className="fp-member-access" aria-live="polite">
-    <span className="fp-access-symbol"><BankSymbol symbol="sunflower" /></span>
+    <span className="fp-access-symbol"><BankSymbol symbol={p.bank.symbol} /></span>
     <span className="fp-member-badge"><i data-lucide="lock-keyhole" />{en ? "Members only" : "会员专享"}</span>
-    <h2>{loading ? (en ? "Checking membership…" : "正在确认会员权限…") : (en ? "Unlock the Sunflower Manual" : "开启葵花宝典")}</h2>
+    <h2>{loading ? (en ? "Checking membership…" : "正在确认会员权限…") : `${en ? "Unlock " : "开启"}${name(p.bank, en)}`}</h2>
     <p>{loading ? (en ? "Your access will appear here shortly." : "请稍候，正在查询当前账号。") : error ? (en ? "Could not check your membership. Please try again." : "暂时无法确认会员权限，请稍后重试。") : connected ? (en ? "This collection is available to member emails. Contact an administrator to add your sign-in email." : "本题集仅向会员开放。请联系管理员，将你的登录邮箱加入会员名单。") : (en ? "Sign in to your online account with a member email to access this collection." : "请使用已加入会员名单的邮箱登录云端账号，即可进入本题集。")}</p>
     <div><button type="button" onClick={p.goHome}>{en ? "Browse question banks" : "返回全部题库"}</button><button type="button" disabled={loading} onClick={() => refresh()}>{en ? "Check again" : "重新检查权限"}</button></div>
   </section>;
@@ -94,7 +94,7 @@ function QuestionList({ practice: p }) {
         const sub = en ? problem.titleZh : problem.titleEn;
         return <button key={problem.id} type="button" className="fp-question-row" data-problem-id={problem.id} onClick={() => p.openQuestion(problem.id)}>
           <span className={`fp-row-number${practiced ? " is-practiced" : ""}`} aria-label={practiced ? (en ? "Practiced" : "已练") : undefined}>{practiced ? "•" : (p.page - 1) * p.pageSize + index + 1}</span>
-          <span className="fp-question-title"><strong>{main}</strong>{sub && sub !== main ? <small>{sub}</small> : null}<span className="fp-row-topic">{problem.provenance?.originalNumber ? <span>{problem.provenance.originalNumber}</span> : null}{topicLabel(problem.category, en)}{state.favorite ? <i data-lucide="bookmark-check" aria-label={en ? "Saved" : "已收藏"} /> : null}</span></span>
+          <span className="fp-question-title"><strong>{main}</strong>{sub && sub !== main ? <small>{sub}</small> : null}<span className="fp-row-topic">{problem.provenance?.originalNumber ? <span>{problem.provenance.originalNumber}</span> : null}{(problem.source === 'quantvault' ? getPracticeTopicLabel(problem, en) : '') || topicLabel(problem.category, en)}{state.favorite ? <i data-lucide="bookmark-check" aria-label={en ? "Saved" : "已收藏"} /> : null}</span></span>
           <span className={`fp-difficulty is-${String(problem.difficulty).toLowerCase()}`}>{localizeDifficultyLabel(problem.difficulty, en)}</span><span className="fp-row-arrow" aria-hidden="true">›</span>
         </button>;
       })}

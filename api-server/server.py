@@ -54,6 +54,7 @@ from memberships import (
     list_memberships, remove_membership,
 )
 from private_practice_catalog import is_curated_private_problem, is_retired_private_problem, lock_problem_catalog
+from problem_access import MEMBER_PROBLEM_SOURCES, blocked_problem_sources, local_quantvault_enabled, quantvault_enabled
 from invitations import (
     INVITATION_SCHEMA,
     InvitationError,
@@ -208,6 +209,23 @@ LIBRARY_TOKEN_SECRET = os.environ.get(
 LIBRARY_READER_TOKEN_TTL_SECONDS = int(os.environ.get("QUANTGYM_LIBRARY_TOKEN_TTL_SECONDS", "600"))
 PORT = int(os.environ.get("PORT", "8790"))
 HOST = os.environ.get("QUANTGYM_HOST", os.environ.get("HOST", "127.0.0.1"))
+LOCAL_QUANTVAULT_ENABLED = local_quantvault_enabled(env_bool("QUANTGYM_ENABLE_LOCAL_QUANTVAULT"), HOST)
+QUANTVAULT_ENABLED = quantvault_enabled(env_bool("QUANTGYM_ENABLE_QUANTVAULT"),
+                                      env_bool("QUANTGYM_ENABLE_LOCAL_QUANTVAULT"), HOST)
+# A production path never falls back to developer files. The old path remains
+# supported only for the explicitly enabled loopback preview.
+_learn_root = os.environ.get("QUANTGYM_LEARN_ROOT")
+if _learn_root is None and LOCAL_QUANTVAULT_ENABLED:
+    _learn_root = os.environ.get("QUANTGYM_LOCAL_LEARN_ROOT", "")
+LEARN_ROOT = Path(_learn_root.strip()).expanduser().resolve() if _learn_root and _learn_root.strip() else None
+LEARN_CONTENT_FILES = {
+    "library": "library.json",
+    "practice": "practice.json",
+    "modules": "scoring/modules.json",
+    "problems-index": "scoring/problems-index.json",
+    "item-difficulty": "scoring/item-difficulty.json",
+    "item-difficulty-v2": "scoring/item-difficulty-v2.json",
+}
 PBKDF2_ROUNDS = int(os.environ.get("QUANTGYM_PBKDF2_ROUNDS", "120000"))
 SESSION_DAYS = int(os.environ.get("QUANTGYM_SESSION_DAYS", "30"))
 MAX_BODY_BYTES = int(os.environ.get("QUANTGYM_MAX_BODY_BYTES", str(25 * 1024 * 1024)))
@@ -2290,11 +2308,15 @@ class Database:
         return self.filter_member_state(conn, user_id, parse_json(row["state_json"], {}) if row else {})
 
     def filter_member_state(self, conn, user_id, state):
-        if not isinstance(state, dict) or not isinstance(state.get("problems"), list) or self.user_is_member(conn, user_id):
+        if not isinstance(state, dict) or not isinstance(state.get("problems"), list):
             return state
-        member_ids = {row["id"] for row in conn.execute("SELECT id FROM problems WHERE source = 'question-bank'").fetchall()}
+        blocked = blocked_problem_sources(self.user_is_member(conn, user_id), QUANTVAULT_ENABLED)
+        if not blocked:
+            return state
+        placeholders = ",".join("?" for _ in blocked)
+        member_ids = {row["id"] for row in conn.execute(f"SELECT id FROM problems WHERE source IN ({placeholders})", tuple(blocked)).fetchall()}
         return {**state, "problems": [problem for problem in state["problems"] if isinstance(problem, dict)
-                                      and problem.get("source") != "question-bank" and problem.get("id") not in member_ids]}
+                                      and problem.get("source") not in blocked and problem.get("id") not in member_ids]}
 
     def get_leaderboard(self, conn: sqlite3.Connection) -> list[dict]:
         if PRIVATE_WORKSPACES:
@@ -2381,7 +2403,7 @@ class Database:
         return list(self.iter_problems(conn, owner_user_id))
 
     def iter_problems(self, conn: sqlite3.Connection, owner_user_id: str | None = None):
-        member = self.user_is_member(conn, owner_user_id)
+        blocked = blocked_problem_sources(self.user_is_member(conn, owner_user_id), QUANTVAULT_ENABLED)
         iterate = conn.iterate if isinstance(conn, PostgresConnection) else conn.execute
         if owner_user_id:
             rows = iterate(
@@ -2405,7 +2427,7 @@ class Database:
         try:
             for row in rows:
                 problem = parse_json(row["problem_json"], {})
-                if not is_retired_private_problem(problem) and (member or problem.get("source") != "question-bank"):
+                if not is_retired_private_problem(problem) and problem.get("source") not in blocked:
                     yield problem
         finally:
             rows.close()
@@ -2555,7 +2577,9 @@ class Database:
             ).fetchone()
         if not row:
             raise HttpError(404, "Problem not found")
-        if row["source"] == "question-bank" and not self.user_is_member(conn, user_id):
+        if row["source"] in blocked_problem_sources(True, QUANTVAULT_ENABLED):
+            raise HttpError(404, "Problem not found")
+        if row["source"] in MEMBER_PROBLEM_SOURCES and not self.user_is_member(conn, user_id):
             raise HttpError(403, "Membership is required for this question bank")
 
     def get_problem_social_summaries(self, conn: sqlite3.Connection, user_id: str | None = None) -> list[dict]:
@@ -2564,8 +2588,10 @@ class Database:
         if user_id:
             visibility_sql = "(p.visibility IN ('public', 'private') OR p.owner_user_id = ?)"
             params.append(user_id)
-        if not self.user_is_member(conn, user_id):
-            visibility_sql += " AND p.source != 'question-bank'"
+        blocked = blocked_problem_sources(self.user_is_member(conn, user_id), QUANTVAULT_ENABLED)
+        if blocked:
+            visibility_sql += " AND p.source NOT IN (" + ",".join("?" for _ in blocked) + ")"
+            params.extend(blocked)
         rows = conn.execute(
             f"""
             SELECT p.id AS problem_id,
@@ -3146,7 +3172,7 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
     def end_headers(self):
         if (PRIVATE_WORKSPACES and urlparse(self.path).path.startswith("/api/")
                 or urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password", "/api/problems"}
-                or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/"))):
+                or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/", "/api/learning/"))):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
             self.send_header("Vary", "Authorization")
@@ -3226,6 +3252,9 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
                 return self.get_admin_metrics()
             if path == "/api/membership" and self.command == "GET":
                 return self.get_membership()
+            learning_content_match = re.fullmatch(r"/api/learning/content/([^/]+)", path)
+            if learning_content_match and self.command == "GET":
+                return self.get_learning_content(learning_content_match.group(1))
             if path == "/api/admin/memberships" and self.command == "GET":
                 return self.get_admin_memberships()
             if path == "/api/admin/memberships" and self.command == "POST":
@@ -3526,6 +3555,30 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
         with db.connect() as conn:
             self.send_json(200, {"isMember": account_is_member(conn, user)},
                            headers={"Cache-Control": "private, no-store", "Vary": "Authorization"})
+
+    def get_learning_content(self, resource):
+        user = self.require_user()
+        with db.connect() as conn:
+            if not account_is_member(conn, user):
+                raise HttpError(403, "Membership is required for learning content")
+        relative_path = LEARN_CONTENT_FILES.get(resource)
+        if not QUANTVAULT_ENABLED or relative_path is None:
+            raise HttpError(404, "Learning content not found")
+        if LEARN_ROOT is None or not LEARN_ROOT.is_dir():
+            raise HttpError(503, "Learning content is not configured")
+        # Resource names are a fixed allowlist; neither URL paths nor symlinks
+        # may select question bodies, assets, or files outside the content root.
+        try:
+            content_path = (LEARN_ROOT / relative_path).resolve(strict=True)
+            if not content_path.is_relative_to(LEARN_ROOT) or not content_path.is_file():
+                raise HttpError(404, "Learning content not found")
+            with content_path.open("r", encoding="utf-8") as content_file:
+                content = json.load(content_file)
+        except FileNotFoundError:
+            raise HttpError(404, "Learning content not found")
+        except (OSError, ValueError, UnicodeError):
+            raise HttpError(503, "Learning content is temporarily unavailable")
+        self.send_json(200, content)
 
     def get_admin_memberships(self):
         user = self.require_admin_user()

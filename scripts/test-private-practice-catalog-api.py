@@ -20,6 +20,7 @@ from private_practice_catalog import (
     import_private_catalog, is_curated_private_problem, is_retired_private_problem,
     lock_problem_catalog, validate_private_catalog,
 )
+from problem_access import blocked_problem_sources
 
 NOW = "2026-09-20T12:00:00Z"
 
@@ -50,14 +51,15 @@ def isolated_database():
     """)
     tree = ast.parse((ROOT / "api-server/server.py").read_text())
     database = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Database")
-    names = {"get_problems", "upsert_problems", "import_problem_catalog"}
+    names = {"get_problems", "iter_problems", "upsert_problems", "import_problem_catalog"}
     methods = [node for node in database.body if isinstance(node, ast.FunctionDef) and node.name in names]
     helper_names = {"sanitize_problem", "normalize_tags", "parse_json", "api_timestamp", "is_valid_timestamp"}
     helpers = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in helper_names]
     namespace = {"sqlite3": sqlite3, "Path": Path, "json": json, "datetime": datetime, "timezone": timezone,
                  "utc_now": lambda: NOW, "HttpError": RuntimeError, "compact_json": json.dumps,
                  "is_curated_private_problem": is_curated_private_problem, "is_retired_private_problem": is_retired_private_problem,
-                 "lock_problem_catalog": lock_problem_catalog}
+                 "lock_problem_catalog": lock_problem_catalog, "blocked_problem_sources": blocked_problem_sources,
+                 "QUANTVAULT_ENABLED": True, "PostgresConnection": type("PostgresFixture", (), {})}
     exec(compile(ast.Module(body=[*helpers, *methods], type_ignores=[]), "isolated-catalog-methods", "exec"), namespace)
     # Catalog import tests use a member owner; HTTP membership enforcement is
     # covered by test-memberships-api.py, without coupling this SQL fixture to accounts.
@@ -109,6 +111,18 @@ class PrivateCatalogTests(unittest.TestCase):
         self.assertEqual(self.db.get_problems(self.db.conn, "owner")[0]["practiceTaxonomy"], taxonomy)
         with self.assertRaises(ValueError):
             validate_private_catalog([question(source="question-bank")], "question-bank", 1)
+
+    def test_quantvault_import_preserves_full_source_metadata_and_private_visibility(self):
+        row = question(source="quantvault", hints=["Source hint"], companies=["Company"],
+                       quantvault={"displayId": "42", "internalId": 7, "topic": "probability"})
+        summary = import_private_catalog(self.db, [row], "quantvault", 1, NOW)
+        self.assertEqual(summary["source"], "quantvault")
+        self.assertEqual(self.db.get_problems(self.db.conn), [])
+        saved = self.db.get_problems(self.db.conn, "owner")[0]
+        for key in ("hints", "companies", "quantvault", "review", "visibility"):
+            self.assertEqual(saved[key], row[key])
+        with self.assertRaises(ValueError):
+            validate_private_catalog([{**row, "visibility": "public"}], "quantvault", 1)
 
     def test_retirement_keeps_states_comments_and_likes_but_hides_removed_questions(self):
         self.seed([question("keep", visibility="public"), question("old", visibility="public"), question("unrelated", source="other", visibility="public")])

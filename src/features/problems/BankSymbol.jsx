@@ -7,5 +7,6 @@ export function BankSymbol({ symbol }) {
     {symbol === 'emerald' ? <>{book}<path d="m30 18-4 5v9l5 5h9l5-5v-9l-5-5z" fill="currentColor" fillOpacity=".14" /><path d="m30 18 2 6h7l1-6m-14 5 6 1v7l-6 1m19-9-6 1v7l6 1m-14 5 1-6h7l1 6" /></> : null}
     {symbol === 'field' ? <><path d="M9 43c14-11 32-11 46 0v10H9z" fill="currentColor" fillOpacity=".1" /><path d="M9 43c14-11 32-11 46 0M9 50c14-11 32-11 46 0M22 53c7-5 14-5 21 0M32 33V20" /><path d="M32 25C21 26 17 19 18 12c10 0 15 6 14 13Zm0-5c0-8 6-12 14-11 0 8-6 13-14 11Z" fill="currentColor" fillOpacity=".16" /><path d="m24 18 8 7m8-10-8 5" /></> : null}
     {symbol === 'sunflower' ? <>{Array.from({ length: 10 }, (_, index) => <ellipse key={index} cx="32" cy="17" rx="4.6" ry="8" transform={`rotate(${index * 36} 32 32)`} fill="currentColor" fillOpacity=".13" />)}<circle cx="32" cy="32" r="10" fill="currentColor" fillOpacity=".22" /><path d="m29 27 8 8m-11-3 8 8m-7-5 8-8m-3 11 7-7" strokeWidth="1.2" /></> : null}
+    {symbol === 'vault' ? <>{book}<rect x="26" y="18" width="20" height="21" rx="3" fill="currentColor" fillOpacity=".12" /><circle cx="36" cy="28.5" r="5.5" /><path d="M36 23v11m-5.5-5.5h11m-9.4-3.9 7.8 7.8m0-7.8-7.8 7.8M26 24h-2m2 10h-2" strokeWidth="1.3" /></> : null}
   </svg>;
 }

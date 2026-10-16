@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppServicesContext, useAppStore, useAuthStore } from "../../stores/AppServicesContext.jsx";
 import { MEMBERSHIP_CHANGED_EVENT, membershipConnection, membershipRequest } from "./membershipApi.js";
 
-/** Only a fresh server response can grant access, including to administrators. */
+/** A server grant belongs to one session; background checks retain it until they finish. */
 export function useMembership() {
   const services = useAppServicesContext();
   const userId = useAuthStore(state => state.currentUser?.id || "");
@@ -39,6 +39,7 @@ export function useMembership() {
       return isMember;
     } catch (error) {
       if (!controller.signal.aborted && currentKey.current === sessionKey) {
+        grantedKey.current = "";
         setState({ key: sessionKey, isMember: false, loading: false, error: error.message });
       }
       return false;
@@ -60,6 +61,10 @@ export function useMembership() {
     };
   }, [refresh]);
   const current = state.key === sessionKey;
-  return { isMember: connected && current && state.isMember, loading: connected && (!current || state.loading),
+  // The first check (or a new account/token) blocks content. Rechecking an
+  // already granted session must not unmount an open answer or pause its timer.
+  // A denied or failed response above immediately clears that grant.
+  const isMember = connected && current && state.isMember;
+  return { isMember, loading: connected && (!current || (state.loading && !isMember)), checking: connected && current && state.loading,
     error: current ? state.error : "", connected, refresh };
 }

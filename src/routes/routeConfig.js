@@ -15,6 +15,8 @@ export const REACT_PAGE_IDS = new Set([
   "technical-interview",
   "behavioral-interview",
   "experiences",
+  "learn",
+  "readiness",
   "news",
   "community",
   "messages",

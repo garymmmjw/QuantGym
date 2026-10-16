@@ -7,8 +7,8 @@ import {
 
 const question = (id, source, extra = {}) => ({ id, source, ...extra });
 
-test('the five source entrances do not absorb other books or interview sources', () => {
-  assert.deepEqual(PRACTICE_BANKS.map((bank) => bank.id), ['quantguide', 'xiaohongshu', 'onepoint3acres', 'glassdoor', 'purple']);
+test('the six source entrances do not absorb other books or interview sources', () => {
+  assert.deepEqual(PRACTICE_BANKS.map((bank) => bank.id), ['quantguide', 'xiaohongshu', 'onepoint3acres', 'glassdoor', 'purple', 'quantvault']);
   const rows = PRACTICE_BANKS.map((bank) => question(bank.id, bank.source));
   rows.push(question('wechat', 'interview-wechat'), question('green', 'green-book', { bookSlug: 'question-bank' }));
   for (const bank of PRACTICE_BANKS) {
@@ -18,6 +18,26 @@ test('the five source entrances do not absorb other books or interview sources',
   }
   assert.equal(getPracticeBank(rows.at(-1)), null);
   assert.deepEqual(getBankGroups(rows, 'missing'), []);
+});
+
+test('Weng Manual is a separate member bank with the original topic and numerical order', () => {
+  const bank = PRACTICE_BANKS.find(item => item.id === 'quantvault');
+  assert.equal(bank.membersOnly, true);
+  assert.equal(bank.nameZh, '翁家宝典');
+  assert.equal(bank.catalogCount, 860);
+  const rows = [
+    question('quantvault-20', 'quantvault', { category: 'probabilityExpectation', quantvault: { categorySlug: 'random-variables', topic: 'Random Variables', orderId: 20 } }),
+    question('quantvault-2', 'quantvault', { category: 'probabilityExpectation', quantvault: { categorySlug: 'expectation', topic: 'Expectation', orderId: 2 } }),
+    question('quantvault-3', 'quantvault', { category: 'probabilityExpectation', quantvault: { categorySlug: 'expectation', orderId: 3 } }),
+    question('quantguide-1', 'quantguide', { quantguide: { topic: 'probability' } }),
+  ];
+  assert.deepEqual(getBankProblems(rows, bank.id).map(item => item.id), ['quantvault-2', 'quantvault-3', 'quantvault-20']);
+  assert.deepEqual(getBankGroups(rows, bank.id).map(({ id, label, count }) => ({ id, label, count })), [
+    { id: 'expectation', label: '期望', count: 2 }, { id: 'random-variables', label: '随机变量', count: 1 },
+  ]);
+  assert.equal(matchesBankGroup(rows[0], 'quantvault', 'random-variables'), true);
+  assert.equal(matchesBankGroup(rows[0], 'quantvault', 'expectation'), false);
+  assert.equal(matchesBankGroup(rows[3], 'quantvault', 'all'), false);
 });
 
 test('company aliases merge spelling variations while related businesses stay separate', () => {

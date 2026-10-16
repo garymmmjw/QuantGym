@@ -99,6 +99,15 @@ export function getLocalizedProblemField(problem, field, isEn = false) {
   return String(problem?.[primary] || problem?.[field] || problem?.[secondary] || "").trim();
 }
 
+export function getProblemAnswerParts(problem, isEnglish = false, media = '') {
+  const answer = getLocalizedProblemField(problem, 'answer', isEnglish);
+  const explanation = getLocalizedProblemField(problem, 'explanation', isEnglish);
+  // Some captured Weng questions have no separate short answer: both fields
+  // intentionally retain the same full solution. Render that body only once.
+  const repeatedWengSolution = problem?.source === 'quantvault' && answer && answer === explanation;
+  return [answer, repeatedWengSolution ? '' : explanation, media].filter(Boolean);
+}
+
 export function getProblemDisplayTitle(problem, options = {}) {
   const isEnglish = Boolean(options.isEnglish);
   const t = options.t || ((key) => key);

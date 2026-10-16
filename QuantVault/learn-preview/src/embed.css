@@ -1,0 +1,166 @@
+/* QuantGym owns navigation and the only page scrollbar. Intrinsic heights are
+   essential: viewport floors here would grow again when the host resizes us. */
+.qg-embedded-learn {
+  --nav-height: 0px;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow-x: clip;
+  overflow-y: visible !important;
+  overflow-anchor: none;
+  background: #fff;
+}
+.qg-embedded-learn body,
+.qg-embedded-learn #root,
+.qg-embedded-learn .main {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  min-width: 0;
+  overflow-y: visible !important;
+}
+.qg-embedded-learn body { margin: 0; width: 100%; overflow-x: clip !important; }
+.qg-embedded-learn .main { flex: 0 0 auto; margin-top: 0 !important; padding: 12px 20px 28px; }
+.qg-embedded-learn .nav,
+.qg-embedded-learn .lp-toc,
+.qg-embedded-learn .footer { display: none !important; }
+
+/* The embedded map has no source-site sidebar to clear. */
+.qg-embedded-learn .lp { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 12px 32px; }
+.qg-embedded-learn .lp__header { padding: 10px 0 18px; }
+.qg-embedded-learn .lp__title { font-size: clamp(24px, 4vw, 28px); line-height: 1.25; overflow-wrap: anywhere; }
+.qg-embedded-learn .lp__tracks {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  max-width: 560px;
+  border-radius: 18px;
+  overflow: visible;
+  gap: 4px;
+}
+.qg-embedded-learn .lp__track-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.qg-embedded-learn .lp__track-btn svg { flex: 0 0 18px; width: 18px; height: 18px; }
+.qg-embedded-learn .lp__units-nav {
+  position: static !important;
+  top: auto !important;
+  z-index: auto;
+  margin: 0;
+  padding: 14px 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  cursor: auto;
+}
+.qg-embedded-learn .lp__units-nav::before,
+.qg-embedded-learn .lp__units-nav::after { display: none; }
+.qg-embedded-learn .lp__units-scroll { flex-wrap: wrap; justify-content: center; gap: 8px; overflow: visible; animation: none; }
+.qg-embedded-learn .lp__unit-pill { min-width: 0; max-width: 100%; min-height: 40px; padding: 8px 12px; font-size: 12px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
+.qg-embedded-learn .lp__unit-header { width: 100%; }
+.qg-embedded-learn .lp__unit-title,
+.qg-embedded-learn .lp__unit-desc,
+.qg-embedded-learn .lp__node-label { overflow-wrap: anywhere; }
+.qg-embedded-learn .lp__node-label { font-size: 12px; max-width: 190px; }
+.qg-embedded-learn .lp__node-type { max-width: 100%; text-align: center; }
+
+/* Course controls stay in the document flow. Contents and formulas expand
+   beside the lesson instead of creating their own vertical scroll regions. */
+.qg-embedded-learn .lp-viewer { width: 100%; min-width: 0; padding-top: 0; }
+.qg-embedded-learn .lp-viewer__topbar { flex-wrap: wrap; }
+.qg-embedded-learn .lp-viewer__crumb { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.qg-embedded-learn .sv { display: flex; flex-direction: column; min-width: 0; height: auto; max-height: none; overflow-y: visible; }
+.qg-embedded-learn .sv__chrome { position: relative !important; top: auto !important; order: 0; }
+.qg-embedded-learn .sv__layout { flex-direction: column; order: 2; height: auto; max-height: none; overflow: visible; }
+.qg-embedded-learn .sv__main,
+.qg-embedded-learn .sv__content { min-width: 0; height: auto; min-height: 0; max-height: none; overflow-y: visible; }
+.qg-embedded-learn .sv__toc { display: none; }
+.qg-embedded-learn .sv__toc.sv__toc--open { display: flex; position: static; inset: auto; width: 100%; height: auto; max-height: none; padding-top: 0; border-right: 0; border-bottom: 1px solid var(--border-color); box-shadow: none; overflow: visible; }
+.qg-embedded-learn .sv__toc-header { position: static; }
+.qg-embedded-learn .sv__toc-list { flex: none; height: auto; max-height: none; overflow: visible; }
+.qg-embedded-learn .sv__toc-item { white-space: normal; align-items: flex-start; }
+.qg-embedded-learn .sv__toc-label { overflow: visible; overflow-wrap: anywhere; }
+.qg-embedded-learn .sv__toc-scrim { display: none !important; }
+.qg-embedded-learn .sv__formulas-overlay { position: static; inset: auto; order: 1; padding: 12px; background: transparent; }
+.qg-embedded-learn .sv__formulas-panel { max-height: none; height: auto; overflow: visible; border: 1px solid var(--border-color); box-shadow: none; }
+.qg-embedded-learn .sv__formulas-header { position: static; border-radius: inherit; }
+.qg-embedded-learn .sv__formulas-grid { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+.qg-embedded-learn .nb-output--text,
+.qg-embedded-learn .local-code-tests pre { max-height: none; height: auto; }
+.qg-embedded-learn .local-code-tests pre { overflow-x: auto; overflow-y: visible; }
+.qg-embedded-learn .lecture-nav__btn { min-width: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.qg-embedded-learn .local-practice { min-width: 0; }
+.qg-embedded-learn .local-practice h1,
+.qg-embedded-learn .local-practice-description,
+.qg-embedded-learn .local-practice-list a,
+.qg-embedded-learn .local-practice-title { overflow-wrap: anywhere; }
+
+/* Topic details are inserted after #root by the captured map renderer. Place
+   their natural-height panel before the map; the host scrolls to its heading. */
+.qg-embedded-learn .lp__modal-overlay { position: relative; inset: auto; order: -1; z-index: 1; padding: 12px 20px; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.qg-embedded-learn .lp__modal { max-width: 720px; max-height: none; height: auto; overflow: visible; border: 1px solid var(--border-color); border-radius: 18px; box-shadow: none; }
+/* The captured overlay animates translateY + scale for 350 ms. The host must
+   measure the final natural-flow header, without animation or scroll anchoring
+   moving its target again after the panel is inserted above the course map. */
+.qg-embedded-learn .lp__modal-overlay,
+.qg-embedded-learn .lp__modal { animation: none; transform: none; transition: none; overflow-anchor: none; }
+.qg-embedded-learn .lp__modal-header { border-radius: 17px 17px 0 0; }
+.qg-embedded-learn .lp__modal-body { flex: none; height: auto; max-height: none; overflow: visible; }
+.qg-embedded-learn .lp__modal-title,
+.qg-embedded-learn .lp__modal-lesson-title { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+
+@media (max-width: 768px) {
+  .qg-embedded-learn .main { padding: 10px 10px 24px; }
+  .qg-embedded-learn .lp { padding: 0 4px 28px; }
+  .qg-embedded-learn .lp__unit-banner { padding: 20px 18px 26px; }
+  .qg-embedded-learn .lp__unit-title { font-size: 18px; line-height: 1.35; }
+  .qg-embedded-learn .lp__unit-desc { font-size: 12px; line-height: 1.6; }
+  .qg-embedded-learn .lp__nodes { gap: 20px; }
+  .qg-embedded-learn .lp__node-label { max-width: 190px; font-size: 12px; }
+  .qg-embedded-learn .lp-viewer { padding: 0; }
+  .qg-embedded-learn .sv.sv--nav4 .sv__chrome { grid-template-columns: 44px minmax(0,1fr) 44px !important; grid-template-areas: "toc title form" "stats nav nav" !important; padding: 8px !important; gap: 6px !important; }
+  .qg-embedded-learn .sv.sv--nav4 .sv__chrome:has(.sv__prail) { grid-template-areas: "toc title form" "stats nav nav" "prac prac prac" !important; }
+  .qg-embedded-learn .sv.sv--nav4 .sv__c-title { font-size: 12px; line-height: 1.4; white-space: normal !important; overflow: visible !important; overflow-wrap: anywhere; }
+  .qg-embedded-learn .sv__c-practice .sv__prail { height: auto; min-height: 44px; white-space: normal; text-align: center; }
+  .qg-embedded-learn .sv__content { padding: 18px 14px; }
+  .qg-embedded-learn .sv__card-title { overflow-wrap: anywhere; }
+  .qg-embedded-learn .sv__formulas-overlay { padding: 8px; }
+  .qg-embedded-learn .sv__formulas-header,
+  .qg-embedded-learn .sv__formulas-grid { padding: 12px; }
+  .qg-embedded-learn .sv__formulas-header h3 { font-size: 16px; }
+  .qg-embedded-learn .lp__modal-overlay { padding: 10px; }
+  .qg-embedded-learn .lp__modal-body { padding: 18px 14px; }
+  .qg-embedded-learn .lp__modal-header { padding: 24px 44px 18px; }
+  .qg-embedded-learn .lp__modal-title { font-size: 21px; line-height: 1.3; }
+}
+@media (max-width: 480px) {
+  .qg-embedded-learn .lp__track-btn { padding: 10px 8px; font-size: 12px; }
+  .qg-embedded-learn .lp__nodes a.lp__node:nth-of-type(4n+1) { margin-left: -28px; }
+  .qg-embedded-learn .lp__nodes a.lp__node:nth-of-type(4n+3) { margin-left: 28px; }
+  .qg-embedded-learn .lp__progress-banner { flex-wrap: wrap; gap: 8px; }
+  .qg-embedded-learn .lp__progress-banner-bar { min-width: 90px; }
+  .qg-embedded-learn .lecture-nav { flex-direction: column; }
+  .qg-embedded-learn .lecture-nav__btn { max-width: none; width: 100%; min-height: 44px; }
+  .qg-embedded-learn .local-practice-list li { display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: start; gap: 7px 10px; }
+  .qg-embedded-learn .local-practice-status { grid-column: 2; max-width: none; text-align: left; }
+  .qg-embedded-learn .local-practice-list a,
+  .qg-embedded-learn .local-practice-title { font-size: 13px; }
+  .qg-embedded-learn .sv__num-form { flex-wrap: wrap; }
+  .qg-embedded-learn .sv__num-input { min-width: 0; width: 100%; }
+  .qg-embedded-learn .sv__num-submit { min-height: 42px; }
+}
+@media (max-width: 360px) {
+  .qg-embedded-learn .lp__tracks { grid-template-columns: minmax(0,1fr); }
+  .qg-embedded-learn .lp__nodes a.lp__node { margin-left: 0 !important; }
+}

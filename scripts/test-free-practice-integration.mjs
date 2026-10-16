@@ -12,6 +12,24 @@ const problem = {
   source: "quantguide", bookSlug: "quantguide", visibility: "private", category: "statistics"
 };
 
+test("Weng Manual normalization retains source taxonomy, all hints, and solution fields", () => {
+  const raw = {
+    id: 'quantvault-14', source: 'quantvault', bookSlug: 'quantvault', bookName: '翁家宝典', visibility: 'private', localOnly: true,
+    titleEn: 'Dice question', promptEn: 'Roll a die.', category: 'probabilityExpectation',
+    hint: '1. First hint\n2. Second hint', hints: ['First hint', 'Second hint'], answerEn: '14/3', explanationEn: 'Full source reasoning.',
+    companies: ['Citadel'], quantvault: { id: 99, displayId: 14, orderId: 14, categorySlug: 'expectation', topic: 'Expectation' },
+  };
+  const row = normalizeProblem(raw, { normalizeProblemCompanies });
+  assert.equal(row.visibility, 'private');
+  assert.equal(row.localOnly, true);
+  assert.deepEqual(row.quantvault, raw.quantvault);
+  assert.deepEqual(row.hints, raw.hints);
+  assert.equal(row.hint, raw.hint);
+  assert.equal(row.explanationEn, raw.explanationEn);
+  assert.equal(row.answerEn, raw.answerEn);
+  assert.deepEqual(row.companies, ['Citadel']);
+});
+
 test("enabled private Purple Book questions and exercises survive the catalog gate", () => {
   for (const id of ["catalog-problem-001", "catalog-exercise-001"]) {
     const item = { id, source: "question-bank", bookSlug: "question-bank", bookName: "紫皮书", visibility: "private" };

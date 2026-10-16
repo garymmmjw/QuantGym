@@ -5,7 +5,7 @@ import json
 import re
 
 
-SOURCES = frozenset({"question-bank", "quantguide", "interview-xiaohongshu", "interview-onepoint3acres", "interview-glassdoor"})
+SOURCES = frozenset({"question-bank", "quantguide", "quantvault", "interview-xiaohongshu", "interview-onepoint3acres", "interview-glassdoor"})
 MAX_IMPORT_BYTES = 25 * 1024 * 1024
 
 

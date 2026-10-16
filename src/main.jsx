@@ -1,6 +1,5 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App.jsx";
 import { versionProblemCatalogScript } from "./lib/problemCatalogScriptUrl.js";
 import "./styles/playful-precision-tokens.css";
 import "./styles/react-route-overrides.css";
@@ -77,7 +76,12 @@ async function ensureRuntimeData() {
 
 async function mountApp() {
   await ensureRuntimeData();
-  const { createAppServices } = await import("./app/createAppServices.js");
+  // App imports constants that capture runtime settings at module evaluation.
+  // Wait for config.js before loading either application entry point.
+  const [{ App }, { createAppServices }] = await Promise.all([
+    import("./App.jsx"),
+    import("./app/createAppServices.js")
+  ]);
   const appServices = createAppServices({ routingMode: "browser" });
   const mountNode = document.getElementById("react-root");
 

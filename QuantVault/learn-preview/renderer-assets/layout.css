@@ -1,0 +1,554 @@
+/* ============================================
+   LAYOUT — Page structure, nav, footer, grid
+   ============================================ */
+
+/* Reset */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Navigation ---- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  /* Near-opaque background instead of a backdrop-filter blur: a fixed element
+     with blur(16px) forces the browser to re-blur the whole viewport every
+     scroll frame (measured ~640ms/frame jank). At ~0.96 alpha the frosted look
+     was barely visible anyway, and scrolling is now smooth. */
+  background: rgba(8, 12, 18, 0.96);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-6);
+}
+/* Light mode: light nav background so text is readable */
+[data-theme="light"] .nav {
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.nav::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-border, rgba(76,139,245,0.25)), transparent);
+}
+
+.nav__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+/* V5 refined-left: links sit right after the logo; theme + auth pushed to the far
+   right with an even 14px gap between the theme toggle, Log in and Sign up. */
+.nav__inner > #theme-toggle-container { margin-left: auto; margin-right: 14px; display: flex; align-items: center; }
+
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: var(--font-bold);
+  font-size: var(--text-lg);
+}
+
+.nav__brand-icon {
+  font-size: var(--text-2xl);
+}
+
+.nav__links {
+  display: flex;
+  list-style: none;
+  gap: var(--space-1);
+  margin-left: var(--space-10);
+}
+
+.nav__link {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.nav__link:hover {
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+
+.nav__link--active {
+  color: var(--accent);
+  background: rgba(76, 139, 245, 0.14);
+  font-weight: var(--font-semibold);
+}
+
+/* Nav dropdown (Problems group) */
+.nav__dd { position: relative; }
+.nav__caret { font-size: 9px; color: var(--text-muted); margin-left: 2px; }
+.nav__menu {
+  position: absolute; top: 100%; left: -8px; min-width: 210px;
+  margin-top: 10px;
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 14px; box-shadow: 0 16px 44px rgba(16,24,40,.16);
+  padding: 8px; display: none; flex-direction: column; gap: 2px; z-index: 60;
+}
+/* invisible bridge over the gap so hover doesn't drop between link and menu */
+.nav__menu::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -14px; height: 14px;
+}
+.nav__dd:hover .nav__menu, .nav__dd:focus-within .nav__menu { display: flex; }
+.nav__menu a {
+  font-size: var(--text-sm); font-weight: var(--font-semibold);
+  color: var(--text-primary); text-decoration: none;
+  padding: 10px 13px; border-radius: 9px; white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.nav__menu a:hover { background: var(--accent-light); color: var(--accent); }
+/* 2026-09-06: between the tablet breakpoint and ~1320px the links + theme +
+   auth row overflowed .nav__inner (Sign up clipped at a 1200px viewport, a
+   common laptop width). Tighten spacing in that band instead of wrapping. */
+@media (min-width: 769px) and (max-width: 1320px) {
+  .nav__links { margin-left: var(--space-6); gap: 0; }
+  .nav__link { padding: var(--space-2) var(--space-3); font-size: 15px; }
+  .nav__inner > #theme-toggle-container { margin-right: 10px; }
+}
+
+@media (max-width: 768px) {
+  .nav__menu { position: static; display: flex; min-width: 0; margin-top: 0; background: transparent;
+    border: none; box-shadow: none; padding: 2px 0 2px 14px; }
+  .nav__menu::before { display: none; }
+  .nav__caret { display: none; }
+}
+/* Small phones: tighten the nav rail (less side padding + a smaller gap before the
+   theme toggle) so the brand + hamburger + theme + auth all fit at 360-400px.
+   Desktop + tablet keep their roomy spacing. Pairs with the auth.css <=480 block
+   and the mobile zoom:1 neutralization. 2026-06-03. */
+@media (max-width: 480px) {
+  .nav { padding: 0 9px; }
+  .nav__inner > #theme-toggle-container { margin-right: 5px; }
+  /* trim the brand wordmark a hair so the right cluster has room */
+  .nav__brand { font-size: var(--text-base); gap: var(--space-1); }
+}
+/* Very small phones (<=360px): the signed-out auth cluster (theme + Log in +
+   Sign up) is the tightest fit. Shave the nav rail + the theme gap a touch more
+   so nothing clips past the right edge at the true ~360px device width. */
+@media (max-width: 360px) {
+  .nav { padding: 0 8px; }
+  .nav__inner > #theme-toggle-container { margin-right: 4px; }
+}
+
+.nav-beta {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-primary, #6366f1);
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+}
+
+.nav__mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--text-xl);
+  cursor: pointer;
+  padding: var(--space-2);
+}
+
+/* ---- Main Content ---- */
+.main {
+  flex: 1;
+  margin-top: var(--nav-height);
+  padding: var(--space-8) var(--space-6);
+  /* No entrance animation: the old `page-fade-in 0.3s` (opacity + translateY)
+     replayed on EVERY full-page navigation, so landing on an already-cached
+     page still looked like it was loading/sliding in. Instant paint feels
+     faster and matches the data already being cached. */
+}
+
+/* Scroll-triggered section reveal */
+.section--hidden {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.section--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Fancier staggered element reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal--in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ---- Page with Sidebar ---- */
+.page-with-sidebar {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  gap: var(--space-8);
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.sidebar {
+  position: sticky;
+  top: calc(var(--nav-height) + var(--space-4));
+  height: fit-content;
+  max-height: calc(100vh - var(--nav-height) - var(--space-8));
+  overflow-y: auto;
+}
+
+/* ---- Grid Systems ---- */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-6);
+}
+
+/* ---- Footer ---- */
+.footer {
+  border-top: 1px solid var(--border-color);
+  padding: var(--space-12) var(--space-6) var(--space-8);
+  margin-top: var(--space-16);
+}
+
+.footer__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.footer__columns {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.footer__brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.footer__brand {
+  font-weight: 600;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+.footer__tagline {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+.footer__email {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.footer__email:hover {
+  color: var(--accent-primary);
+}
+
+.footer__col-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.footer__links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.footer__links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  transition: color var(--transition-fast);
+}
+
+.footer__links a:hover {
+  color: var(--text-primary);
+}
+
+.footer__social-links {
+  display: flex;
+  gap: var(--space-3);
+  list-style: none;
+  margin-top: var(--space-2);
+}
+
+.footer__social-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer__social-links a:hover {
+  color: var(--text-primary);
+}
+
+.footer__coming-soon {
+  font-size: 10px;
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.footer__bottom {
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer__text {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* ---- Section Headings ---- */
+.section-header {
+  margin-bottom: var(--space-8);
+}
+
+.section-header__title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-2);
+}
+
+.section-header__subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+}
+
+/* ---- Breadcrumbs ---- */
+.breadcrumbs {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-6);
+}
+
+.breadcrumbs a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  color: var(--accent);
+}
+
+.breadcrumbs__sep::before {
+  content: '/';
+  margin: 0 var(--space-1);
+}
+
+/* ---- Utility ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.text-center { text-align: center; }
+.mt-4 { margin-top: var(--space-4); }
+.mt-8 { margin-top: var(--space-8); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-8 { margin-bottom: var(--space-8); }
+
+/* ============================================
+   MOBILE — fit the shared chrome to a ~360px
+   phone with zero horizontal overflow. Desktop
+   (>768px) is untouched; everything below lives
+   inside max-width media queries. 2026-06-03.
+   ============================================ */
+@media (max-width: 768px) {
+  /* Main content rails: 24px sides crowd a 360px phone. Drop to 16px so the
+     content breathes without ever exceeding the viewport. */
+  .main {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+  /* The container is width:100% inside .main's padding; cap it so any stray
+     wide child can't push the page past the device width. */
+  .container { max-width: 100%; }
+
+  /* Footer: trim the generous side padding and let the social row wrap rather
+     than push a single non-wrapping line past the edge. (responsive.css already
+     makes the columns 2-up at this breakpoint.) */
+  .footer {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+  .footer__social-links { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  /* Tightest phones: stack the footer to a single column so the brand tagline
+     and link lists each get the full width and never overflow. */
+  .footer__columns {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  /* Tagline max-width (280px) is fine at 360px, but cap to 100% defensively so
+     it can't combine with padding to overflow on a 320px device. */
+  .footer__tagline { max-width: 100%; }
+  .main { padding-left: var(--space-3); padding-right: var(--space-3); }
+  .footer { padding-left: var(--space-3); padding-right: var(--space-3); }
+}
+
+/* ============================================
+   MOBILE BOTTOM TAB BAR (.qv-tabbar) — Duolingo-style primary nav.
+   Injected by app.js initNav ONLY at <=768px; these rules are scoped to the
+   same breakpoint and the bar is force-hidden above it. Desktop unaffected.
+   ============================================ */
+.qv-tabbar { display: none; }
+@media (max-width: 768px) {
+  .qv-tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 9000;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .qv-tabbar__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 0 7px;
+    min-height: 52px;
+    text-decoration: none;
+    color: var(--text-muted);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .qv-tabbar__icon { display: flex; }
+  .qv-tabbar__icon svg { width: 22px; height: 22px; }
+  .qv-tabbar__label {
+    font-size: 10px;
+    font-weight: var(--font-semibold);
+    letter-spacing: 0.01em;
+  }
+  .qv-tabbar__item.is-active { color: var(--accent); }
+  .qv-tabbar__item:active { transform: scale(0.94); transition: transform 0.1s; }
+  /* Immersive views (problem solve, lesson viewer, game play): the primary
+     nav is a distraction there and can occlude CTAs — slide it away. */
+  .qv-tabbar { transition: transform 0.25s ease; }
+  body.qv-immersive .qv-tabbar {
+    transform: translateY(115%);
+    pointer-events: none;
+  }
+  body.qv-immersive.has-qv-tabbar .main,
+  body.qv-immersive.has-qv-tabbar main { padding-bottom: 20px; }
+  body.qv-immersive.has-qv-tabbar .qr-toast { bottom: 20px; }
+  /* The global footer is noise mid-lesson/mid-solve, and scrolling into it
+     un-pins the lesson's sticky chrome — suppress it while immersive. */
+  body.qv-immersive .footer { display: none; }
+  /* Reserve space so page content never hides behind the bar. */
+  body.has-qv-tabbar .main,
+  body.has-qv-tabbar main { padding-bottom: 76px; }
+  body.has-qv-tabbar .footer { padding-bottom: 86px; }
+  /* Toasts must float above the tab bar, not cover it. */
+  body.has-qv-tabbar .qr-toast { bottom: 76px; }
+}
+
+/* Mobile: fully opaque header (no content ghosting under the wordmark) + full-size hamburger hit area. */
+@media (max-width: 640px) {
+  .nav { background: rgb(8, 12, 18); }
+  [data-theme="light"] .nav { background: rgb(255, 255, 255); }
+  .nav__mobile-toggle { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+}
+
+/* Mobile + tab bar: the 76px main reserve already separates the footer. */
+@media (max-width: 640px) {
+  body.has-qv-tabbar .footer { margin-top: 0; }
+}

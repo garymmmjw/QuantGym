@@ -1,0 +1,6 @@
+.auth/
+data/
+captures/
+__pycache__/
+*.py[cod]
+.venv/

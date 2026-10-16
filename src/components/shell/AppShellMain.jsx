@@ -36,10 +36,11 @@ const SHEET_NAV_GROUPS = [
     ]
   },
   {
-    label: "资源",
+    label: "学习",
     labelKey: "navResources",
     items: [
-      ["experiences", "面经", "notebook-pen", "experiences"]
+      ["learn", "Learn 课程", "book-open", "learn"],
+      ["readiness", "能力与 Offer Bar", "chart-no-axes-combined", "readiness"]
     ]
   },
   {

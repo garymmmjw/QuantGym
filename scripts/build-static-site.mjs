@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import {
   assertExplicitlyPublicProblems,
   selectExplicitlyPublicProblems
@@ -57,6 +57,12 @@ execSync("node_modules/.bin/vite build", {
 writeConfig(outputDir);
 writeVersionFile(outputDir);
 copyRuntimeStaticFiles(outputDir);
+// Learn is part of every deploy. Its build accepts renderer assets only; member
+// content and illustrations are supplied by the authenticated API at runtime.
+execFileSync(process.execPath, [path.join(scriptDir, "build-learn-embed.mjs"), path.join(outputDir, "learn-embed")], {
+  cwd: projectRoot,
+  stdio: "inherit"
+});
 
 // Locale entry pages (/zh/ and /en/) are generated after Vite build because
 // they reference the hashed asset URLs already in dist/index.html.

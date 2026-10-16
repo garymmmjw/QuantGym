@@ -1,0 +1,417 @@
+/* ============================================
+   NOTEBOOK — Styles for rendered .ipynb content
+   ============================================ */
+
+.nb {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* ---- Cell base ---- */
+.nb-cell {
+  margin-bottom: var(--space-4);
+}
+
+/* ---- Markdown cells ---- */
+.nb-cell--md {
+  line-height: 1.75;
+  color: var(--text-primary);
+}
+
+/* Headers */
+.nb-h1 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-bright);
+  margin: var(--space-8) 0 var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+  letter-spacing: -0.01em;
+}
+
+.nb-h1:first-child {
+  margin-top: 0;
+}
+
+.nb-h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-bright);
+  margin: var(--space-6) 0 var(--space-3);
+  letter-spacing: -0.01em;
+}
+
+.nb-h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: var(--space-5) 0 var(--space-2);
+}
+
+.nb-h4 {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.nb-h5, .nb-h6 {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  margin: var(--space-3) 0 var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Paragraphs */
+.nb-p {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  line-height: 1.8;
+}
+
+/* Lists */
+.nb-list {
+  margin: var(--space-2) 0 var(--space-4);
+  padding-left: var(--space-6);
+}
+
+.nb-list li {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-base);
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.nb-list--ordered {
+  list-style-type: decimal;
+}
+
+.nb-list li::marker {
+  color: var(--accent);
+}
+
+/* Inline code */
+.nb-inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.15em 0.4em;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--tag-teal);
+}
+
+/* Links */
+.nb-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-fast);
+}
+
+.nb-link:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* Tables */
+.nb-table-wrap {
+  overflow-x: auto;
+  margin: var(--space-4) 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.nb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.nb-table th {
+  background: var(--bg-elevated);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.nb-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.nb-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+
+/* ---- Code cells ---- */
+.nb-cell--code {
+  margin-bottom: var(--space-4);
+}
+
+.nb-code-container {
+  position: relative;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.nb-code-label {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 2px var(--space-3);
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border-bottom-left-radius: var(--radius-sm);
+  border-left: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.nb-code {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+  overflow-x: auto;
+  background: transparent;
+  tab-size: 4;
+}
+
+.nb-code code {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ---- Outputs ---- */
+.nb-output {
+  margin-top: -1px;
+  border: 1px solid var(--border-color);
+  border-top: 1px dashed var(--border-color);
+}
+
+.nb-output--text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: var(--space-3) var(--space-5);
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  margin: 0;
+}
+
+.nb-output--image {
+  text-align: center;
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.nb-output--image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.nb-output--html {
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-secondary);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow-x: auto;
+  font-size: var(--text-sm);
+}
+
+/* Style pandas DataFrames inside output */
+.nb-output--html table {
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.nb-output--html table th,
+.nb-output--html table td {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+}
+
+.nb-output--html table th {
+  background: var(--bg-elevated);
+  font-weight: var(--font-semibold);
+}
+
+/* ---- KaTeX overrides for notebook context ---- */
+.nb .katex-display {
+  margin: var(--space-4) 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--space-2) 0;
+}
+
+.nb .katex {
+  font-size: 1.05em;
+}
+
+/* ---- Callout boxes (blockquotes) ---- */
+.nb-blockquote {
+  margin: var(--space-4) 0;
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-elevated);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: var(--text-base);
+}
+
+.nb-blockquote p {
+  margin-bottom: var(--space-2);
+}
+
+.nb-blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Interview tip callout styling */
+.nb-blockquote--tip {
+  border-left-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.06);
+}
+
+/* Example callout styling */
+.nb-blockquote--example {
+  border-left-color: #a78bfa;
+  background: rgba(167, 139, 250, 0.06);
+}
+
+/* Warning callout styling */
+.nb-blockquote--warning {
+  border-left-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.06);
+}
+
+/* Definition callout styling */
+.nb-blockquote--definition {
+  border-left-color: #34d399;
+  background: rgba(52, 211, 153, 0.06);
+}
+
+/* ---- Horizontal rule ---- */
+.nb-hr {
+  border: none;
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--space-6) 0;
+}
+
+/* ---- Loading state ---- */
+.nb-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: var(--space-3);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .nb {
+    padding: var(--space-3) var(--space-2);
+    max-width: 100%;
+  }
+
+  .nb-h1 { font-size: var(--text-xl); }
+  .nb-h2 { font-size: var(--text-lg); }
+  .nb-h3 { font-size: var(--text-base); }
+
+  /* Long words / URLs in prose must not push the page wide */
+  .nb-p,
+  .nb-list li,
+  .nb-blockquote {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Code cells: scroll horizontally instead of widening the viewport.
+     The label sat over the first code line on narrow widths — give the
+     code top padding so the first row clears it, and shrink the gutters. */
+  .nb-code {
+    font-size: 0.75rem;
+    padding: var(--space-4) var(--space-3) var(--space-3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nb-code-label {
+    font-size: 0.6rem;
+    padding: 2px var(--space-2);
+  }
+
+  /* Text / dataframe / html outputs scroll-x, never overflow the page */
+  .nb-output--text,
+  .nb-output--html {
+    padding: var(--space-3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nb-output--text {
+    font-size: 0.72rem;
+  }
+
+  /* Tables (markdown + pandas) stay inside their scroll wrapper */
+  .nb-table-wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* KaTeX display blocks overflow on small screens — let them scroll */
+  .nb .katex-display {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Images / plots never exceed the column width */
+  .nb-output--image img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .nb-blockquote {
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .nb {
+    padding: var(--space-2) var(--space-2);
+  }
+
+  .nb-code {
+    font-size: 0.7rem;
+  }
+
+  .nb-output--text {
+    font-size: 0.68rem;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .nb-output--html table {
+    font-size: 0.62rem;
+  }
+}

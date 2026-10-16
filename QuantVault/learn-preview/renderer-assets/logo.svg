@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="qRing" x1="25" y1="18" x2="74" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3a68fc"/><stop offset="1" stop-color="#5b4bfb"/>
+    </linearGradient>
+    <linearGradient id="qTail" x1="50" y1="56" x2="84" y2="86" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5a3df5"/><stop offset="1" stop-color="#7d54f3"/>
+    </linearGradient>
+  </defs>
+  <path d="M 47.36 16.20 L 52.78 16.32 L 59.31 17.73 L 64.44 19.95 L 69.37 23.33 L 72.92 26.88 L 76.57 32.22 L 79.07 38.33 L 80.21 44.44 L 80.21 50.14 L 79.07 56.25 L 76.71 62.08 L 74.31 65.71 L 65.37 55.42 L 67.01 48.89 L 66.57 43.19 L 64.35 37.78 L 60.14 33.01 L 57.92 31.48 L 53.75 29.68 L 49.44 28.96 L 46.39 29.10 L 42.36 30.09 L 39.44 31.48 L 36.33 33.75 L 34.44 35.77 L 31.76 40.28 L 30.49 45.00 L 30.49 49.86 L 31.62 54.17 L 34.58 59.23 L 39.86 63.80 L 45.69 66.02 L 51.39 66.61 L 59.21 76.94 L 55.83 78.10 L 52.22 78.68 L 46.39 78.68 L 40.14 77.41 L 34.58 75.05 L 29.38 71.53 L 25.28 67.42 L 21.62 61.94 L 19.40 56.53 L 18.13 49.72 L 18.26 43.47 L 19.54 37.50 L 22.18 31.53 L 25.28 27.16 L 30.69 22.18 L 36.53 18.84 L 42.50 16.90 Z" fill="url(#qRing)"/>
+  <path d="M 48.47 55.93 L 60.69 55.93 L 81.73 80.42 L 66.39 80.46 Z" fill="url(#qTail)"/>
+</svg>

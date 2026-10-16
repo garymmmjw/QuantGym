@@ -192,6 +192,21 @@
       "lastImportedAt": "2026-06-02T08:34:19+00:00",
       "rightsNote": "Official public Oxford author-hosted problem sheet; generated non-official answers because no public solution file is included.",
       "lastBuiltAt": "2026-06-02T08:34:19.997Z"
+    },
+    {
+      "slug": "quantvault",
+      "name": "翁家宝典",
+      "type": "platform",
+      "sourceUrl": "https://quantvault.org/explore.html",
+      "problemFile": "quantvault/problems.json",
+      "problemCount": 860,
+      "localOnly": false,
+      "excludeFromCatalog": true,
+      "visibility": "private",
+      "privacyNote": "Owner-requested invitation-only VIP beta. Private content is imported through an operator server session; excluded from compiled/browser catalogs and the public Git repository.",
+      "lastImportedAt": "2026-10-16",
+      "accessTier": "vip",
+      "delivery": "authenticated-server-private-catalog"
     }
   ]
 }

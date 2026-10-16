@@ -14,8 +14,9 @@ export const MOBILE_SECTIONS = [
     { id: 'leetcode', label: 'LeetCode', accessibleLabel: 'LeetCode 刷题训练' },
     { id: 'tools', label: '速算', accessibleLabel: '速算 Mental Math' },
   ] },
-  { id: 'resources', label: '资源', defaultModuleId: 'experiences', modules: [
-    { id: 'experiences', label: '面经', accessibleLabel: '面经' },
+  { id: 'resources', label: '学习', defaultModuleId: 'learn', modules: [
+    { id: 'learn', label: 'Learn 课程', accessibleLabel: 'Learn 课程' },
+    { id: 'readiness', label: '能力评分', accessibleLabel: '能力评分与 Offer Bar' },
   ] },
   { id: 'mine', label: '我的', defaultModuleId: 'account', modules: [
     { id: 'account', label: '账户与设置', accessibleLabel: '账户与设置' },
@@ -27,7 +28,7 @@ const SECTION_BY_MODULE = new Map([
   ...MOBILE_SECTIONS.flatMap(section => section.modules.map(module => [module.id, section.id])),
   ...['plan', 'resume', 'jobs', 'companies'].map(id => [id, 'career']),
   ...['skills', 'league', 'interview', 'technical-interview', 'pk'].map(id => [id, 'training']),
-  ...['library', 'courses', 'memory', 'news'].map(id => [id, 'resources']),
+  ...['library', 'courses', 'memory', 'news', 'experiences'].map(id => [id, 'resources']),
   ...['settings', 'community', 'messages', 'network'].map(id => [id, 'mine']),
 ]);
 

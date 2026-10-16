@@ -7,6 +7,8 @@ import { routeConfig } from "./routeConfig.js";
 import { PRIVATE_WORKSPACES, SHARING_MODULE_IDS } from "../modules/privacyPolicy.js";
 
 const GuardianPage = lazy(() => import("../features/guardian/GuardianPage.jsx").then((m) => ({ default: m.GuardianPage })));
+const LearnPage = lazy(() => import("../features/learning/LearnPage.jsx").then((m) => ({ default: m.LearnPage })));
+const ReadinessPage = lazy(() => import("../features/learning/ReadinessPage.jsx").then((m) => ({ default: m.ReadinessPage })));
 const NewsPage = lazy(() => import("../pages/NewsPage.jsx").then((m) => ({ default: m.NewsPage })));
 const CompaniesPage = lazy(() => import("../pages/CompaniesPage.jsx").then((m) => ({ default: m.CompaniesPage })));
 const SettingsPage = lazy(() => import("../pages/SettingsPage.jsx").then((m) => ({ default: m.SettingsPage })));
@@ -48,6 +50,8 @@ const REACT_PAGES = {
   "technical-interview": TechnicalInterviewPage,
   "behavioral-interview": BehavioralInterviewPage,
   experiences: ExperiencesPage,
+  learn: LearnPage,
+  readiness: ReadinessPage,
   news: NewsPage,
   community: CommunityPage,
   messages: MessagesPage,
@@ -121,6 +125,7 @@ export function AppRoutes() {
           <Route element={<AppChromeLayout />}>
             {AppRouteElements()}
             <Route path="/behavioral" element={<BehavioralRedirect />} />
+            <Route path="/resources" element={<Navigate to="/learn" replace />} />
             <Route path="/daily-mock/*" element={<Navigate to="/leetcode" replace />} />
             <Route path="/coding-oa/*" element={<Navigate to="/leetcode" replace />} />
             <Route path="/poker/*" element={<Navigate to="/calendar" replace />} />

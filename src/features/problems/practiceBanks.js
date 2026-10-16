@@ -6,6 +6,7 @@ export const PRACTICE_BANKS = Object.freeze([
   { id: 'onepoint3acres', source: 'interview-onepoint3acres', nameZh: '种田秘籍', nameEn: 'Field Guide', kind: 'companies', descriptionZh: '一亩三分地面经', descriptionEn: '1Point3Acres interviews', symbol: 'field' },
   { id: 'glassdoor', source: 'interview-glassdoor', nameZh: '绿宝书', nameEn: 'Emerald Book', kind: 'companies', descriptionZh: 'Glassdoor 面经', descriptionEn: 'Glassdoor interviews', symbol: 'emerald' },
   { id: 'purple', source: 'question-bank', nameZh: '葵花宝典', nameEn: 'Sunflower Manual', kind: 'chapters', descriptionZh: '量化面试进阶题集', descriptionEn: 'Advanced quant interview collection', symbol: 'sunflower', membersOnly: true },
+  { id: 'quantvault', source: 'quantvault', nameZh: '翁家宝典', nameEn: 'Weng Manual', kind: 'topics', descriptionZh: '860 道量化面试题 · 提示与完整解答', descriptionEn: '860 quant interview questions · Hints and full solutions', symbol: 'vault', membersOnly: true, catalogCount: 860 },
 ].map(Object.freeze));
 
 const TOPICS = [
@@ -15,6 +16,29 @@ const TOPICS = [
   { id: 'statistics', zh: '统计', en: 'Statistics' },
   { id: 'pure-math', zh: '纯数学', en: 'Pure Math' },
 ];
+const QUANTVAULT_TOPICS = [
+  { id: 'probability', zh: '概率', en: 'Probability' },
+  { id: 'expectation', zh: '期望', en: 'Expectation' },
+  { id: 'coding', zh: '编程', en: 'Coding' },
+  { id: 'statistics', zh: '统计', en: 'Statistics' },
+  { id: 'combinatorics', zh: '组合数学', en: 'Combinatorics' },
+  { id: 'regression', zh: '回归', en: 'Regression' },
+  { id: 'optimization', zh: '优化', en: 'Optimization' },
+  { id: 'options-pricing', zh: '期权定价', en: 'Options Pricing' },
+  { id: 'game-theory', zh: '博弈论', en: 'Game Theory' },
+  { id: 'finance', zh: '金融', en: 'Finance' },
+  { id: 'machine-learning', zh: '机器学习', en: 'Machine Learning' },
+  { id: 'linear-algebra', zh: '线性代数', en: 'Linear Algebra' },
+  { id: 'time-series', zh: '时间序列', en: 'Time Series' },
+  { id: 'brain-teaser', zh: '脑筋急转弯', en: 'Brain Teaser' },
+  { id: 'random-variables', zh: '随机变量', en: 'Random Variables' },
+  { id: 'market-microstructure', zh: '市场微观结构', en: 'Market Microstructure' },
+  { id: 'stochastic-process', zh: '随机过程', en: 'Stochastic Process' },
+];
+const topicsForBank = bankId => bankId === 'quantvault' ? QUANTVAULT_TOPICS : TOPICS;
+
+/** Unknown access and failed checks cannot expose a member collection. */
+export const hasMemberPracticeAccess = membership => membership?.isMember === true && !membership.loading && !membership.error;
 const naturalOrder = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 const companyKey = (value) => String(value || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 const companyAliases = new Map();
@@ -61,12 +85,12 @@ function companyId(name) {
   return `company-${name.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '')}`;
 }
 
-/** Returns a catalog descriptor, or null for sources outside these five banks. */
+/** Returns a catalog descriptor, or null for sources outside the home banks. */
 export function getPracticeBank(problem) {
   return PRACTICE_BANKS.find((bank) => bank.source === problem?.source) || null;
 }
 
-/** Other Library sources keep a scoped list without becoming a sixth home bank. */
+/** Other Library sources keep a scoped list without becoming a home bank. */
 export function getSourcePracticeBank(problems = [], source = '') {
   if (!source) return null;
   const supported = getPracticeBank({ source });
@@ -119,7 +143,8 @@ function compareProblems(a, b, bankId) {
   const bTaxonomy = b.practiceTaxonomy || {};
   const pairs = bankId === 'purple'
     ? ['chapterOrder', 'sectionOrder', 'questionOrder'].map((key) => [aTaxonomy[key], bTaxonomy[key]])
-    : bankId === 'quantguide' ? [[a.quantguide?.orderId, b.quantguide?.orderId]] : [];
+    : bankId === 'quantguide' ? [[a.quantguide?.orderId, b.quantguide?.orderId]]
+      : bankId === 'quantvault' ? [[a.quantvault?.orderId ?? a.quantvault?.displayId, b.quantvault?.orderId ?? b.quantvault?.displayId]] : [];
   for (const [left, right] of pairs) {
     const delta = order(left) - order(right);
     if (delta && !Number.isNaN(delta)) return delta;
@@ -140,8 +165,14 @@ export function getBankProblems(problems = [], bankId) {
 }
 
 function topicId(problem) {
-  const topic = String(problem?.quantguide?.topic || '').trim().toLowerCase().replace(/[\s_]+/g, '-');
-  return TOPICS.some((item) => item.id === topic) ? topic : 'unknown';
+  const bankId = getPracticeBank(problem)?.id;
+  const topic = String(bankId === 'quantvault' ? problem?.quantvault?.categorySlug || problem?.quantvault?.topic || '' : problem?.quantguide?.topic || '').trim().toLowerCase().replace(/[\s_]+/g, '-');
+  return topicsForBank(bankId).some((item) => item.id === topic) ? topic : 'unknown';
+}
+
+export function getPracticeTopicLabel(problem, isEnglish = false) {
+  const topic = topicsForBank(getPracticeBank(problem)?.id).find(item => item.id === topicId(problem));
+  return topic ? topic[isEnglish ? 'en' : 'zh'] : '';
 }
 
 function chapterId(problem) {
@@ -211,7 +242,7 @@ export function getBankGroups(problems = [], bankId, { isEnglish = false, proble
       add(chapter.sections, sectionId(problem), localized(taxonomy, 'section', isEnglish, isEnglish ? 'Unassigned section' : '待归类小节'), problem);
     } else if (bank.kind === 'topics') {
       const id = topicId(problem);
-      const topic = TOPICS.find((item) => item.id === id);
+      const topic = topicsForBank(bank.id).find((item) => item.id === id);
       add(groups, id, topic ? topic[isEnglish ? 'en' : 'zh'] : isEnglish ? 'Unassigned topic' : '待归类主题', problem);
     } else {
       for (const company of getPracticeCompanies(problem)) {
@@ -222,7 +253,7 @@ export function getBankGroups(problems = [], bankId, { isEnglish = false, proble
   const result = [...groups.values()];
   if (bank.kind === 'chapters') return result.map(({ sections, ...chapter }) => ({ ...chapter, children: [...sections.values()] }));
   if (bank.kind === 'topics') {
-    const topicOrder = [...TOPICS.map((item) => item.id), 'unknown'];
+    const topicOrder = [...topicsForBank(bank.id).map((item) => item.id), 'unknown'];
     return result.sort((a, b) => topicOrder.indexOf(a.id) - topicOrder.indexOf(b.id));
   }
   return result.sort((a, b) => Number(a.id === 'unknown') - Number(b.id === 'unknown') || b.count - a.count || naturalOrder.compare(a.label, b.label));

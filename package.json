@@ -124,7 +124,12 @@
     "vite": "^8.0.16"
   },
   "dependencies": {
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "dompurify": "3.4.17",
+    "katex": "0.16.9",
     "lucide-react": "^1.47.0",
+    "pyodide": "314.0.7",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.17.0",
