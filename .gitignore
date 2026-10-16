@@ -27,6 +27,7 @@ artifacts/quantguide-ocr/
 
 # Private/raw source exports. Keep normalized catalogs in Git instead.
 data/question-banks/quantguide/raw-export/
+data/question-banks/quantvault/problems.json
 data/question-banks/*/problems.js
 
 # Large design references are archived outside the runtime repo.
@@ -38,3 +39,12 @@ docs/ui-reference/**/*.webp
 # Local extraction/scraping workspaces and raw book archives.
 QuantGuide/
 量化书籍/
+
+# QuantVault captures and release payloads stay on private storage.
+QuantVault/.auth/
+QuantVault/captures/
+QuantVault/data/
+QuantVault/rea-research/
+QuantVault/learn-preview/public/private/
+QuantVault/learn-preview/qa/
+QuantVault/learn-preview/.openai/

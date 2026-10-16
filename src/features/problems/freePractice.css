@@ -39,6 +39,9 @@ body.is-authenticated .app-route-root .qg-free-practice .fp-bank-copy h3 { font-
 .fp-bank-onepoint3acres { --fp-emblem: #807342; }
 .fp-bank-glassdoor { --fp-emblem: #2d8069; }
 .fp-bank-purple { --fp-emblem: #a27624; }
+.fp-bank-quantvault { --fp-emblem: #815e98; }
+.fp-source-companies { margin-top: 14px; color: var(--qg-text-2); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.fp-source-companies > span { color: var(--qg-muted); margin-right: 10px; }
 .fp-bank-card .fp-bank-icon { color: var(--fp-emblem); background: color-mix(in srgb, var(--fp-emblem) 8%, var(--qg-surface)); border-radius: 16px; }
 .fp-bank-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .fp-bank-member { grid-column: 1 / -1; border-color: color-mix(in srgb, var(--fp-emblem) 26%, var(--qg-border)); }
@@ -58,6 +61,7 @@ body.is-authenticated .app-route-root .qg-free-practice .fp-member-access h2 { c
 [data-qg-theme="dark"] .fp-bank-onepoint3acres { --fp-emblem: #c5b57f; }
 [data-qg-theme="dark"] .fp-bank-glassdoor { --fp-emblem: #7bbfa8; }
 [data-qg-theme="dark"] .fp-bank-purple { --fp-emblem: #d3ad62; }
+[data-qg-theme="dark"] .fp-bank-quantvault { --fp-emblem: #c2a3da; }
 [data-qg-theme="dark"] :is(.fp-member-badge, .fp-access-symbol) { color: #d3ad62; }
 .fp-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 12px; color: var(--qg-muted); }
 .fp-breadcrumbs button { background: none; padding: 4px 0; color: var(--qg-brand-ink); border: 0; }

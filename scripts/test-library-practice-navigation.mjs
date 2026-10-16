@@ -86,7 +86,7 @@ function libraryFixture(browser, { catalog = true } = {}) {
   return { api, filters, switches };
 }
 
-test("Library practice opens all five supported banks with a single query-bearing navigation", async () => {
+test("Library practice opens every supported bank with a single query-bearing navigation", async () => {
   for (const bank of PRACTICE_BANKS) {
     const browser = browserFixture();
     const unmount = mountBridge(browser);
@@ -140,8 +140,8 @@ test("Library legacy sources clear stale bank selections and reach a scoped ques
   assert.deepEqual(practice.summary, { total: 2, completed: 1 });
   assert.match(html, /Green question one/);
   assert.doesNotMatch(html, /Red question|Purple question/);
-  assert.equal(practice.summaries.length, 5);
-  assert.equal(getPracticeBank(practice.pageItems[0]), null, "legacy source keeps existing completion instead of the five-bank timer");
+  assert.equal(practice.summaries.length, PRACTICE_BANKS.length);
+  assert.equal(getPracticeBank(practice.pageItems[0]), null, "legacy source keeps existing completion instead of the bank timer");
 });
 
 const sourceCatalog = [
@@ -179,7 +179,7 @@ test("legacy source filters, direct details and previous/next stay within that s
   assert.equal(detail.navigation.total, 2);
 });
 
-test("source loading never falls through to another bank and the home still has exactly five banks", () => {
+test("source loading never falls through to another bank and the home keeps the supported banks", () => {
   const loading = renderPracticeRoute("/problems?source=green-book", []).practice;
   assert.equal(loading.bank.source, "green-book");
   assert.equal(loading.pageItems.length, 0);
@@ -224,4 +224,24 @@ test("non-members cannot expose cached member questions through a conflicting pu
   assert.equal(locked.bank.id, "purple");
   assert.equal(locked.selectedProblem, null);
   assert.deepEqual(locked.pageItems, []);
+});
+
+test("Weng Manual content stays hidden for pending, failed, and denied membership checks", () => {
+  const memberProblem = { id: 'quantvault-14', source: 'quantvault', titleEn: 'Member-only question body', quantvault: { categorySlug: 'expectation' } };
+  const rows = [...sourceCatalog, memberProblem];
+  for (const membership of [{ isMember: false }, { isMember: true, loading: true }, { isMember: true, error: 'network unavailable' }]) {
+    for (const url of ['/problems?bank=quantvault', '/problems?bank=quantguide&question=quantvault-14', '/problems?source=quantvault&question=quantvault-14']) {
+      const { practice, html } = renderPracticeRoute(url, rows, membership);
+      assert.equal(practice.bank.id, 'quantvault');
+      assert.equal(practice.membershipRequired, true);
+      assert.equal(practice.selectedProblem, null);
+      assert.deepEqual(practice.pageItems, []);
+      assert.ok(!html.includes(memberProblem.titleEn));
+    }
+  }
+  const { practice, html } = renderPracticeRoute('/problems?bank=quantvault&question=quantvault-14', rows, { isMember: true, loading: false, error: '' });
+  assert.equal(practice.membershipRequired, false);
+  assert.equal(practice.selectedProblem.id, 'quantvault-14');
+  assert.match(html, /Member-only question body/);
+  assert.deepEqual(practice.groups.map(group => group.id), ['expectation']);
 });

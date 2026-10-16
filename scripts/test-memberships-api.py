@@ -30,6 +30,8 @@ class MembershipApiTests(unittest.TestCase):
             {"id": "public-member-problem", "source": "question-bank", "visibility": "public", "titleZh": "Public membership fixture", "promptZh": "Must still require membership"},
             {"id": "public-problem", "source": "quantguide", "visibility": "public", "titleZh": "Public fixture", "promptZh": "Public question fixture"},
             {"id": "private-free-problem", "source": "interview-xiaohongshu", "visibility": "private", "titleZh": "Signed-in fixture", "promptZh": "Other banks remain available"},
+            {"id": "quantvault-private-problem", "source": "quantvault", "visibility": "private", "titleEn": "Weng fixture", "promptEn": "Local VIP question fixture", "explanation": "Local VIP complete solution", "hints": ["Local VIP hint"], "companies": ["Fixture company"]},
+            {"id": "quantvault-public-problem", "source": "quantvault", "visibility": "public", "titleEn": "Misclassified Weng fixture", "promptEn": "Must still require local VIP access"},
         ]
         catalog_file = cls.directory / "catalog.json"
         catalog_file.write_text(json.dumps(cls.catalog))
@@ -41,6 +43,7 @@ class MembershipApiTests(unittest.TestCase):
             "QUANTGYM_POSTGRES_DATABASE_URL": "", "QUANTGYM_DATABASE_URL": "", "DATABASE_URL": "",
             "QUANTGYM_PROBLEM_CATALOG": str(catalog_file), "QUANTGYM_JOBS_CATALOG": str(catalog_file),
             "QUANTGYM_TECHNICAL_BUNDLE_PATH": str(bundle_file), "QUANTGYM_PRIVATE_WORKSPACES": "0",
+            "QUANTGYM_ENABLE_LOCAL_QUANTVAULT": "1",
             "QUANTGYM_MEDIA_ROOT": str(cls.directory / "media"),
             "QUANTGYM_REQUIRE_EMAIL_VERIFICATION": "0", "QUANTGYM_REQUIRE_INVITE_CODE": "0",
             "QUANTGYM_BETA_EMAIL_ALLOWLIST": "", "QUANTGYM_ADMIN_EMAILS": "admin@example.invalid",
@@ -133,22 +136,26 @@ class MembershipApiTests(unittest.TestCase):
         self.grant("  " + self.email.upper() + "  ")
         self.grant()
         self.assertEqual(self.request("GET", "/api/membership", token=self.token), (200, {"isMember": True}))
-        self.assertEqual(len(self.problem_ids(self.token)), 4)
+        self.assertEqual(len(self.problem_ids(self.token)), len(self.catalog))
         memberships = self.request("GET", "/api/admin/memberships", token=self.admin["token"])[1]["memberships"]
         self.assertEqual(sum(member["email"] == self.email for member in memberships), 1)
         self.revoke()
         self.assertEqual(self.request("GET", "/api/membership", token=self.token), (200, {"isMember": False}))
         self.assertEqual(self.problem_ids(self.token), {"public-problem", "private-free-problem"})
         self.grant()
-        self.assertEqual(len(self.problem_ids(self.token)), 4)
+        self.assertEqual(len(self.problem_ids(self.token)), len(self.catalog))
 
     def test_social_routes_cannot_bypass_access(self):
         self.grant()
-        self.assertEqual(self.request("POST", "/api/problem-social/member-problem/comments", {"text": "Private solution discussion"}, self.token)[0], 201)
+        member_ids = ["member-problem", "quantvault-private-problem", "quantvault-public-problem"]
+        for identity in member_ids:
+            self.assertEqual(self.request("POST", f"/api/problem-social/{identity}/comments", {"text": "Private solution discussion"}, self.token)[0], 201)
         self.revoke()
-        for method, suffix, body in [("GET", "", None), ("POST", "/like", {}), ("POST", "/comments", {"text": "not allowed"})]:
-            self.assertEqual(self.request(method, "/api/problem-social/member-problem" + suffix, body, self.token)[0], 403)
-        self.assertNotIn("member-problem", {item["problemId"] for item in self.request("GET", "/api/problem-social", token=self.token)[1]["problemSocial"]})
+        for identity in member_ids:
+            for method, suffix, body in [("GET", "", None), ("POST", "/like", {}), ("POST", "/comments", {"text": "not allowed"})]:
+                self.assertEqual(self.request(method, f"/api/problem-social/{identity}" + suffix, body, self.token)[0], 403)
+        summaries = {item["problemId"] for item in self.request("GET", "/api/problem-social", token=self.token)[1]["problemSocial"]}
+        self.assertTrue(set(member_ids).isdisjoint(summaries))
 
     def test_legacy_technical_endpoint_requires_membership(self):
         path = "/api/practice/technical/questions"
@@ -163,20 +170,77 @@ class MembershipApiTests(unittest.TestCase):
 
     def test_embedded_state_sync_and_login_filter_revoked_catalog_keep_progress(self):
         self.grant()
-        state = {"problems": self.catalog, "problemStates": [{"problemId": "member-problem", "favorite": True}]}
+        # ID-based filtering also closes stale/client-spoofed source metadata.
+        spoofed = {**self.catalog[-1], "source": "public-catalog"}
+        state = {"problems": [*self.catalog, spoofed], "problemStates": [{"problemId": "member-problem", "favorite": True}, {"problemId": "quantvault-private-problem", "favorite": True}]}
         self.assertEqual(self.request("PUT", "/api/state", {"state": state}, self.token)[0], 200)
         self.revoke()
         status, result = self.request("GET", "/api/state", token=self.token)
         self.assertEqual(status, 200)
-        self.assertTrue(all(item["source"] != "question-bank" for item in result["state"]["problems"]))
+        self.assertEqual({item["id"] for item in result["state"]["problems"]}, {"public-problem", "private-free-problem"})
         self.assertEqual(result["state"]["problemStates"], state["problemStates"])
         for method, path, body in [("POST", "/api/sync", {"state": state}), ("PUT", "/api/state", {"state": state})]:
             status, result = self.request(method, path, body, self.token)
             self.assertEqual(status, 200, result)
-            self.assertTrue(all(item["source"] != "question-bank" for item in result["state"]["problems"]))
+            self.assertEqual({item["id"] for item in result["state"]["problems"]}, {"public-problem", "private-free-problem"})
         status, login = self.request("POST", "/api/auth/login", {"email": self.email, "password": "MemberFixture1234"})
         self.assertEqual(status, 200, login)
-        self.assertTrue(all(item["source"] != "question-bank" for item in login["state"]["problems"]))
+        self.assertEqual({item["id"] for item in login["state"]["problems"]}, {"public-problem", "private-free-problem"})
+
+    def test_quantvault_member_payload_preserves_hints_companies_and_solution(self):
+        self.grant()
+        status, result = self.request("GET", "/api/problems", token=self.token)
+        self.assertEqual(status, 200)
+        question = next(item for item in result["problems"] if item["id"] == "quantvault-private-problem")
+        self.assertEqual(question["hints"], ["Local VIP hint"])
+        self.assertEqual(question["companies"], ["Fixture company"])
+        self.assertEqual(question["explanation"], "Local VIP complete solution")
+
+    def test_quantvault_requires_explicit_local_opt_in_even_for_members(self):
+        self.grant()
+        state = {"problems": self.catalog, "problemStates": [{"problemId": "quantvault-private-problem", "favorite": True}]}
+        self.assertEqual(self.request("PUT", "/api/state", {"state": state}, self.token)[0], 200)
+        self.assertEqual(self.request("POST", "/api/problem-social/quantvault-private-problem/comments", {"text": "Hidden outside local preview"}, self.token)[0], 201)
+        self.stop_server()
+        self.environment.pop("QUANTGYM_ENABLE_LOCAL_QUANTVAULT")
+        try:
+            self.start_server()
+            self.assertEqual(self.problem_ids(self.token), {"member-problem", "public-member-problem", "public-problem", "private-free-problem"})
+            for identity in ("quantvault-private-problem", "quantvault-public-problem"):
+                for method, suffix, body in [("GET", "", None), ("POST", "/like", {}), ("POST", "/comments", {"text": "not allowed"})]:
+                    self.assertEqual(self.request(method, f"/api/problem-social/{identity}" + suffix, body, self.token)[0], 404)
+            summaries = self.request("GET", "/api/problem-social", token=self.token)[1]["problemSocial"]
+            self.assertTrue(all(not item["problemId"].startswith("quantvault-") for item in summaries))
+            for method, path, body in [("GET", "/api/state", None), ("POST", "/api/sync", {"state": state}), ("PUT", "/api/state", {"state": state})]:
+                status, result = self.request(method, path, body, self.token)
+                self.assertEqual(status, 200, result)
+                self.assertTrue(all(item["source"] != "quantvault" for item in result["state"]["problems"]))
+                self.assertEqual(result["state"]["problemStates"], state["problemStates"])
+            status, login = self.request("POST", "/api/auth/login", {"email": self.email, "password": "MemberFixture1234"})
+            self.assertEqual(status, 200, login)
+            self.assertTrue(all(item["source"] != "quantvault" for item in login["state"]["problems"]))
+        finally:
+            self.stop_server()
+            self.environment["QUANTGYM_ENABLE_LOCAL_QUANTVAULT"] = "1"
+            self.start_server()
+
+    def test_production_feature_preserves_vip_catalog_social_state_and_login_gates(self):
+        old = dict(self.environment)
+        self.stop_server()
+        self.environment.pop("QUANTGYM_ENABLE_LOCAL_QUANTVAULT", None)
+        self.environment.update({"QUANTGYM_ENABLE_QUANTVAULT": "1", "QUANTGYM_HOST": "0.0.0.0"})
+        try:
+            self.start_server()
+            self.assertFalse(any(identity.startswith("quantvault-") for identity in self.problem_ids("")))
+            self.assertFalse(any(identity.startswith("quantvault-") for identity in self.problem_ids(self.token)))
+            self.test_quantvault_member_payload_preserves_hints_companies_and_solution()
+            self.test_social_routes_cannot_bypass_access()
+            self.test_embedded_state_sync_and_login_filter_revoked_catalog_keep_progress()
+        finally:
+            self.stop_server()
+            self.environment.clear()
+            self.environment.update(old)
+            self.start_server()
 
     def test_grant_before_registration_and_persistence(self):
         email = "future-member@example.invalid"

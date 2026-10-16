@@ -24,6 +24,8 @@ const MODULE_ICONS = {
   "behavioral-interview": "speech",
   pk: "zap",
   experiences: "notebook-pen",
+  learn: "book-open",
+  readiness: "chart-no-axes-combined",
   news: "newspaper",
   community: "message-circle-heart",
   messages: "message-square-text",

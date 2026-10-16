@@ -12,6 +12,7 @@ import {
   difficultyClass,
   formatProblemCardPreview,
   getLocalizedProblemField,
+  getProblemAnswerParts,
   normalizeDifficultyFilter
 } from "../../modules/problems/format.js";
 import { getProblemFilterActionState } from "../../modules/problems/filterState.js";
@@ -427,11 +428,7 @@ export function createProblemsPageApi(deps = {}) {
     ].filter(Boolean).join("\n\n");
 
     const hintContent = getLocalizedProblemField(problem, "hint", isEnglish) || deps.t?.("noHint");
-    const answerParts = [
-      getLocalizedProblemField(problem, "answer", isEnglish),
-      getLocalizedProblemField(problem, "explanation", isEnglish),
-      deps.getProblemMediaMarkdown?.(problem, "answer")
-    ].filter(Boolean);
+    const answerParts = getProblemAnswerParts(problem, isEnglish, deps.getProblemMediaMarkdown?.(problem, "answer"));
     const answerContent = answerParts.length ? answerParts.join("\n\n") : deps.t?.("noAnswer");
 
     return {

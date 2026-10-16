@@ -13,6 +13,8 @@ import { FreePracticeTimer, FreePracticeOutcomes } from "./FreePracticeAttempt.j
 import { useAuthStore } from '../../stores/AppServicesContext.jsx';
 import { PRIVATE_WORKSPACES } from '../../modules/privacyPolicy.js';
 import { problemNoteStorageKey } from './problemNotes.js';
+import { getPracticeTopicLabel } from './practiceBanks.js';
+import { WengAssessmentPanel } from '../learning/WengAssessmentPanel.jsx';
 
 function DetailBlock({
   title,
@@ -101,7 +103,7 @@ export function ProblemDetail({
   } : getProblemTitlePair(detail.id, detail.title, isEnglish);
   const mainTitle = titles.main;
   const subTitle = titles.sub !== mainTitle ? titles.sub : "";
-  const topicLabel = localizeCategoryLabel(info?.category || detail.meta?.[0] || "", isEnglish);
+  const topicLabel = (info?.source === 'quantvault' ? getPracticeTopicLabel(info, isEnglish) : '') || localizeCategoryLabel(info?.category || detail.meta?.[0] || "", isEnglish);
   const sourceLabel = getSourceShortLabel(info?.bookSlug) || info?.bookName || "";
   const provenance = info?.provenance;
   const answerStatusLabel = {
@@ -139,8 +141,9 @@ export function ProblemDetail({
         </div>
         <h2 className="qg-detail-title">{mainTitle}</h2>
         {subTitle ? <div className="qg-detail-sub">{subTitle}</div> : null}
+        {info?.source === 'quantvault' && firms.length ? <div className="fp-source-companies"><span>{isEnglish ? 'Companies' : '公司'}</span>{firms.join(' · ')}</div> : null}
         {provenance?.originalNumber ? <div className="fp-source-reference" data-original-number={provenance.originalNumber}>
-          <span>{isEnglish ? "Book question " : "原书题号 "}{provenance.originalNumber}</span>
+          <span>{info?.source === 'quantvault' ? (isEnglish ? 'Source question ' : '来源题号 ') : (isEnglish ? "Book question " : "原书题号 ")}{provenance.originalNumber}</span>
           {provenance.pdfPage ? <span>{isEnglish ? `PDF page ${provenance.pdfPage}` : `PDF 第 ${provenance.pdfPage} 页`}</span> : null}
         </div> : null}
       </header>
@@ -262,7 +265,7 @@ export function ProblemDetail({
           </details> : null}
         </aside> : null}
 
-        {practiceAttempt ? <FreePracticeOutcomes practice={practiceAttempt} isEnglish={isEnglish} /> : <div className="qg-detail-stats">
+        {practiceAttempt && info?.source === 'quantvault' ? <WengAssessmentPanel key={`${ownerId}:${detail.id}`} problem={info} practice={practiceAttempt} hintRevealed={detail.hintRevealed} answerRevealed={detail.answerRevealed} /> : practiceAttempt ? <FreePracticeOutcomes practice={practiceAttempt} isEnglish={isEnglish} /> : <div className="qg-detail-stats">
           <div>
             <span>{isEnglish ? "Pass rate" : "通过率"}</span>
             <b>{accText}</b>

@@ -10,7 +10,9 @@
       "slug": "question-bank",
       "expectedActive": false,
       "expectedProblemCount": 128,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "blocked",
         "basis": "Archived disabled source; temporarily removed from the app catalog pending copyright review.",
@@ -27,7 +29,9 @@
       "slug": "green-book",
       "expectedActive": true,
       "expectedProblemCount": 183,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -44,7 +48,9 @@
       "slug": "yellow-book",
       "expectedActive": true,
       "expectedProblemCount": 153,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -61,7 +67,9 @@
       "slug": "red-book",
       "expectedActive": true,
       "expectedProblemCount": 242,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -78,7 +86,9 @@
       "slug": "hull-derivatives",
       "expectedActive": true,
       "expectedProblemCount": 763,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -95,7 +105,9 @@
       "slug": "stefanica-fe-math",
       "expectedActive": true,
       "expectedProblemCount": 35,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -112,7 +124,9 @@
       "slug": "quantitative-primer",
       "expectedActive": true,
       "expectedProblemCount": 41,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -129,7 +143,9 @@
       "slug": "dudeney-puzzles",
       "expectedActive": true,
       "expectedProblemCount": 123,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -146,7 +162,9 @@
       "slug": "linalg-primer",
       "expectedActive": true,
       "expectedProblemCount": 18,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -163,7 +181,9 @@
       "slug": "probability-stochastic-10",
       "expectedActive": true,
       "expectedProblemCount": 10,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Local owner-provided normalized source for current invite-only beta only.",
@@ -180,7 +200,9 @@
       "slug": "quantguide",
       "expectedActive": true,
       "expectedProblemCount": 1204,
-      "allowedCatalogVisibility": ["private"],
+      "allowedCatalogVisibility": [
+        "private"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Project owner confirmed this authorized signed-in QuantGuide import is allowed for the current invite-only beta only.",
@@ -197,7 +219,9 @@
       "slug": "stat110-strategic-practice",
       "expectedActive": true,
       "expectedProblemCount": 184,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Official public course materials imported for current invite-only beta; redistribution still requires public/commercial review.",
@@ -214,7 +238,9 @@
       "slug": "stanford-msande214-hw3",
       "expectedActive": true,
       "expectedProblemCount": 5,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Official public course handout files with generated non-official answers for current invite-only beta.",
@@ -231,7 +257,9 @@
       "slug": "probabilitycourse-solved-samples",
       "expectedActive": true,
       "expectedProblemCount": 16,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Public in-chapter solved examples only; excludes the separately sold student solutions guide; prompts and answers are paraphrased/reviewed for current invite-only beta.",
@@ -248,7 +276,9 @@
       "slug": "boyd-cvxbook-additional-exercises",
       "expectedActive": true,
       "expectedProblemCount": 10,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Official public additional exercises with generated non-official answers for current invite-only beta.",
@@ -265,7 +295,9 @@
       "slug": "etheridge-finmath-problem-sheets",
       "expectedActive": true,
       "expectedProblemCount": 10,
-      "allowedCatalogVisibility": ["public"],
+      "allowedCatalogVisibility": [
+        "public"
+      ],
       "privateBeta": {
         "status": "allowed",
         "basis": "Official public author-hosted problem sheet with generated non-official answers for current invite-only beta.",
@@ -276,6 +308,25 @@
         "status": "needs-review",
         "basis": "Public course material source; public/commercial redistribution has not been approved in this manifest.",
         "requiredNextStep": "Record explicit redistribution review or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "quantvault",
+      "expectedActive": false,
+      "expectedProblemCount": 860,
+      "allowedCatalogVisibility": [
+        "private"
+      ],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Project owner explicitly requested deployment of Learn and 翁家宝典 on 2026-10-16 to the existing invitation-only QuantGym beta, with VIP-only authenticated delivery. This records the requested deployment scope; it is not a claim of permission from the original publisher.",
+        "reviewedBy": "project-owner-deployment-request",
+        "reviewedAt": "2026-10-16"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "VIP-only invitation beta deployment requested by the project owner. No public or commercial redistribution permission from the original publisher is recorded.",
+        "requiredNextStep": "Review distribution rights before enabling access beyond the local preview."
       }
     }
   ]

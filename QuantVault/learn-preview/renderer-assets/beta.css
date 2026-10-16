@@ -1,0 +1,358 @@
+/* ============================================
+   BETA CSS — Banner, Badge, Quanta Counter,
+   Toast, Quest Widget, Modal styles
+   ============================================ */
+
+/* ---- Beta Banner (top of all pages) ---- */
+.beta-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  height: 36px;
+  background: linear-gradient(90deg, #4c8bf5 0%, #6c5ce7 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  gap: 8px;
+}
+
+.beta-banner a {
+  color: #fff;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.beta-banner__dismiss {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.beta-banner__dismiss:hover {
+  color: #fff;
+}
+
+/* Push body content down when banner is visible */
+body.has-beta-banner {
+  padding-top: 36px;
+}
+
+body.has-beta-banner .nav {
+  top: 36px;
+}
+
+/* ---- BETA Nav Badge ---- */
+.nav__beta-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(245, 183, 49, 0.2), rgba(245, 158, 11, 0.2));
+  border: 1px solid rgba(245, 183, 49, 0.3);
+  color: #fbbf24;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ---- Quanta Counter (nav bar) ---- */
+.nav__quanta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-right: 8px;
+  cursor: default;
+  user-select: none;
+}
+
+.nav__quanta-icon {
+  font-size: 14px;
+}
+
+#quanta-badge {
+  color: var(--accent-gold, #fbbf24);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Toast Notification ---- */
+.quanta-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-card, #1a1f2e);
+  border: 1px solid var(--border-color, #2a2f3f);
+  color: var(--text-bright, #f1f5f9);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  max-width: 400px;
+  text-align: center;
+}
+
+.quanta-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ---- Quanta Modal (insufficient funds) ---- */
+.quanta-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.quanta-modal {
+  background: var(--bg-card, #1a1f2e);
+  border: 1px solid var(--border-color, #2a2f3f);
+  border-radius: 16px;
+  max-width: 380px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.quanta-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* ---- Quest Widget ---- */
+#quest-widget {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 900;
+  width: 300px;
+}
+
+.quest-card {
+  background: var(--bg-card, #1a1f2e);
+  border: 1px solid var(--border-color, #2a2f3f);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.25s ease;
+}
+
+.quest-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-bright, #f1f5f9);
+  margin-bottom: 12px;
+  user-select: none;
+}
+
+.quest-card__toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quest-card__chevron {
+  font-size: 10px;
+  color: var(--text-secondary);
+  transition: transform 0.25s ease;
+}
+
+.quest-card__body {
+  overflow: hidden;
+  max-height: 400px;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+  opacity: 1;
+}
+
+/* Collapsed state */
+.quest-card--collapsed .quest-card__header {
+  margin-bottom: 0;
+}
+.quest-card--collapsed .quest-card__body {
+  max-height: 0;
+  opacity: 0;
+}
+.quest-card--collapsed .quest-card__chevron {
+  transform: rotate(-90deg);
+}
+
+.quest-card__count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.quest-card__tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quest-card__divider {
+  height: 1px;
+  background: var(--border-color, #2a2f3f);
+  margin: 10px 0;
+}
+
+.quest-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.quest-task--done {
+  color: var(--text-bright, #f1f5f9);
+}
+
+.quest-task--done .quest-task__reward {
+  color: #22c55e;
+}
+
+.quest-task--locked {
+  opacity: 0.5;
+}
+
+.quest-task--unlocked {
+  color: var(--accent-gold, #fbbf24);
+}
+
+.quest-task--unlocked .quest-task__link {
+  color: var(--accent-gold, #fbbf24);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.quest-task__check {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.quest-task__reward {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.quest-task__link {
+  color: var(--accent, #4c8bf5);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- Unlock Buttons (on locked content) ---- */
+.quanta-unlock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(76, 139, 245, 0.15), rgba(108, 92, 231, 0.15));
+  border: 1px solid rgba(76, 139, 245, 0.3);
+  color: #93c5fd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quanta-unlock-btn:hover {
+  background: linear-gradient(135deg, rgba(76, 139, 245, 0.25), rgba(108, 92, 231, 0.25));
+  border-color: rgba(76, 139, 245, 0.5);
+  transform: translateY(-1px);
+}
+
+.quanta-unlock-btn__cost {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ---- Flag Error Button ---- */
+.flag-error-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+}
+
+.flag-error-btn:hover {
+  color: var(--accent, #4c8bf5);
+}
+
+/* ---- Mobile Responsive ---- */
+@media (max-width: 768px) {
+  .beta-banner {
+    font-size: 11px;
+    height: 32px;
+    padding: 0 40px 0 8px;
+  }
+
+  body.has-beta-banner {
+    padding-top: 32px;
+  }
+
+  body.has-beta-banner .nav {
+    top: 32px;
+  }
+
+  #quest-widget {
+    bottom: 70px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
+
+  .quanta-toast {
+    bottom: 70px;
+    max-width: 90%;
+    font-size: 13px;
+  }
+}

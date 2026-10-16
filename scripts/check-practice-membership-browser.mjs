@@ -84,7 +84,7 @@ try {
     await page.locator('[data-bank-card="purple"]').waitFor();
     await page.waitForFunction(() => Boolean(window.lucide));
     await page.evaluate(() => window.lucide.createIcons());
-    assert.deepEqual(await page.locator('[data-bank-card]').evaluateAll(cards => cards.map(card => card.dataset.bankCard)), ['quantguide', 'xiaohongshu', 'onepoint3acres', 'glassdoor', 'purple']);
+    assert.deepEqual(await page.locator('[data-bank-card]').evaluateAll(cards => cards.map(card => card.dataset.bankCard)), ['quantguide', 'xiaohongshu', 'onepoint3acres', 'glassdoor', 'purple', 'quantvault']);
     assert.deepEqual(await page.locator('.fp-bank-copy h3').allTextContents(), ['蓝宝书', '红宝书', '种田秘籍', '绿宝书', '葵花宝典']);
     assert.deepEqual(await page.locator('.fp-bank-copy p').allTextContents(), ['量化面试精选题', '小红书面经', '一亩三分地面经', 'Glassdoor 面经', '量化面试进阶题集']);
     assert.equal(await page.locator('.fp-book-grid > .fp-bank-featured').count(), 5);

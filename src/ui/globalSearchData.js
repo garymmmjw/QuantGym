@@ -156,6 +156,8 @@ export function buildGlobalSearchResults(query, deps = {}) {
 export function getModuleSearchDefs(t = (key) => key) {
   return [
     { module: "overview", label: t("overview"), detail: "Dashboard / 总览", fields: [t("overview"), "overview", "dashboard", "总览", "首页", "home"] },
+    { module: "learn", label: t("learn"), detail: "99 lessons / 课程与关联练习", fields: ["learn", "学习", "课程", "翁家宝典", "资源"] },
+    { module: "readiness", label: t("readiness"), detail: "Topic mastery / 主题掌握度与岗位准备度", fields: ["readiness", "offer bar", "能力", "掌握度", "评分", "岗位权重"] },
     { module: "plan", label: t("plan"), detail: "Interview prep plan / 备战计划", fields: [t("plan"), "plan", "计划", "备战", "schedule", "baseline"] },
     { module: "experiences", label: t("experiences"), detail: "Interview log / 面经", fields: [t("experiences"), "interview log", "面经", "复盘", "debrief", "experience"] },
     { module: "community", label: t("community"), detail: "Forum / 论坛", fields: [t("community"), "community", "forum", "论坛", "社区", "动态"] },

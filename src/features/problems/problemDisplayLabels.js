@@ -66,6 +66,7 @@ const SOURCE_SHORT_LABELS = {
   "red-book": "红宝书",
   "hull-derivatives": "Hull",
   quantguide: "蓝宝书",
+  quantvault: "翁家宝典",
   "stat110-strategic-practice": "Stat 110"
 };
 

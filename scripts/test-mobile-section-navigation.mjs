@@ -5,13 +5,13 @@ import { MODULE_MANIFEST } from '../src/modules/manifest.js';
 import { isModuleVisible } from '../src/modules/availability.js';
 import { getModulePath } from '../src/routes/routeConfig.js';
 
-test('the five mobile categories cover the nine supported entries exactly once', () => {
-  assert.deepEqual(MOBILE_SECTIONS.map(section => section.label), ['总览', '求职', '训练', '资源', '我的']);
+test('the five mobile categories replace Resources with Learn and readiness', () => {
+  assert.deepEqual(MOBILE_SECTIONS.map(section => section.label), ['总览', '求职', '训练', '学习', '我的']);
   const entries = MOBILE_SECTIONS.flatMap(section => section.modules.map(module => module.id));
   assert.equal(new Set(entries).size, entries.length);
   assert.deepEqual([...entries].sort(), [
     'overview', 'tracker', 'calendar', 'behavioral-interview',
-    'leetcode', 'tools', 'problems', 'experiences', 'account',
+    'leetcode', 'tools', 'problems', 'learn', 'readiness', 'account',
   ].sort());
   for (const section of MOBILE_SECTIONS) {
     assert.ok(section.modules.some(module => module.id === section.defaultModuleId));
@@ -69,7 +69,7 @@ test('pressing the selected bottom category preserves the current child page, qu
 });
 
 test('entering a different category uses its default route without copying page-specific state', () => {
-  const defaults = { overview: 'overview', career: 'tracker', training: 'problems', resources: 'experiences', mine: 'account' };
+  const defaults = { overview: 'overview', career: 'tracker', training: 'problems', resources: 'learn', mine: 'account' };
   for (const [sectionId, moduleId] of Object.entries(defaults)) {
     const pathname = sectionId === 'mine' ? '/tracker' : '/account';
     assert.equal(getMobileSectionHref(sectionId, { pathname, search: '?section=security', hash: '#password' }), getModulePath(moduleId));
