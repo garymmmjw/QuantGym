@@ -1,9 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import { createPageApi } from '../src/app/pageApi.js';
+import { isCatalogProblem } from '../src/modules/problems/data.js';
+import { membershipConnection } from '../src/features/membership/membershipApi.js';
+import { lessonProblem } from '../src/features/learning/learnBridge.mjs';
 import { loadLearningSources, requestLearningContent } from '../src/features/learning/learningSourcesLoader.mjs';
 
 const connection = { token: 'fixture-session', baseUrl: 'https://example.invalid/api' };
-const record = { id: 'quantvault-14', source: 'quantvault', quantvault: { id: 900, displayId: 14 }, explanation: 'Complete solution' };
+const record = { id: 'quantvault-14', source: 'quantvault', bookSlug: 'quantvault', quantvault: { id: 900, displayId: 14 }, explanation: 'Complete solution' };
 const payloads = {
   modules: { modules: [] }, 'problems-index': [{ id: 900, di: 14 }],
   'item-difficulty': { b: {} }, 'item-difficulty-v2': { b: {}, c: {} },
@@ -13,6 +19,55 @@ const response = (status, payload = {}, retryAfter = null) => ({ ok: status === 
   headers: new Headers(retryAfter === null ? {} : { 'Retry-After': retryAfter }),
   json: async () => payload, body: { cancel: async () => {} } });
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
+
+test('the real Learn hook reads the real page API catalog used by the question bank', async () => {
+  // Build the production page API rather than invent a top-level services
+  // method. Both the page lookup and Learn hook below execute their real code.
+  const catalogState = { problems: [record, { id: 'other', source: 'quantguide', bookSlug: 'quantguide' }] };
+  const services = { pageApi: createPageApi({ getState: () => catalogState, isCatalogProblem }) };
+  assert.equal(services.getCatalogProblems, undefined);
+  assert.equal(typeof services.pageApi.problems.getPracticeCatalog, 'function');
+  const states = [], refs = [], effects = [], requests = [];
+  let stateIndex = 0, refIndex = 0, pending;
+  const context = vm.createContext({
+    AbortController, Date, membershipConnection,
+    useAppServicesContext: () => services,
+    useAuthStore: selector => selector({ currentUser: { id: 'contract-user' } }),
+    useAppStore: selector => selector({ cloudConfig: { userId: 'contract-user', token: connection.token, endpoint: connection.baseUrl } }),
+    useCallback: fn => fn,
+    useRef(value) { return refs[refIndex++] ||= { current: value }; },
+    useState(value) {
+      const index = stateIndex++;
+      if (!(index in states)) states[index] = value;
+      return [states[index], next => { states[index] = typeof next === 'function' ? next(states[index]) : next; }];
+    },
+    useEffect: effect => effects.push(effect),
+    loadLearningSources(options) {
+      pending = loadLearningSources({ ...options, fetchImpl: async url => {
+        requests.push(url); return response(200, payloads[url.split('/').at(-1)]);
+      } });
+      return pending;
+    },
+  });
+  const runnable = file => readFileSync(new URL(file, import.meta.url), 'utf8')
+    .replace(/^import .*;\r?\n/gm, '').replaceAll('export function ', 'function ');
+  vm.runInContext(runnable('../src/stores/usePageApi.js'), context);
+  vm.runInContext(runnable('../src/features/learning/useLearningSources.js'), context);
+  context.useLearningSources();
+  const dispose = effects[0]();
+  await pending;
+  // Let the hook's completion handler publish its source state.
+  await new Promise(resolve => setImmediate(resolve));
+  stateIndex = 0; refIndex = 0;
+  const result = context.useLearningSources();
+  assert.equal(result.loading, false); assert.equal(result.error, '');
+  assert.deepEqual(result.sources.records, [record]);
+  assert.deepEqual(result.sources.downloadedProblemIds, [900]);
+  assert.equal(lessonProblem(result.sources.records, 900).solution, 'Complete solution');
+  assert.equal(requests.length, 6);
+  assert.ok(requests.every(url => url.includes('/learning/content/')));
+  dispose();
+});
 
 test('Learn reuses the gated session catalog after six authorized reads, with at most two requests at once', async () => {
   let active = 0, peak = 0, completed = 0, catalogReads = 0;
