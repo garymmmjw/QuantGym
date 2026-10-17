@@ -10,7 +10,8 @@ import {
 } from "./problemDisplayLabels.js";
 import { ProblemRichText } from "./ProblemRichText.jsx";
 import { FreePracticeTimer, FreePracticeOutcomes } from "./FreePracticeAttempt.jsx";
-import { useAuthStore } from '../../stores/AppServicesContext.jsx';
+import { useAuthStore, useUserStateStore } from '../../stores/AppServicesContext.jsx';
+import { usePageApi } from '../../stores/usePageApi.js';
 import { PRIVATE_WORKSPACES } from '../../modules/privacyPolicy.js';
 import { problemNoteStorageKey } from './problemNotes.js';
 import { getPracticeTopicLabel } from './practiceBanks.js';
@@ -71,19 +72,14 @@ export function ProblemDetail({
 }) {
   const [commentDraft, setCommentDraft] = useState("");
   const ownerId = useAuthStore(state => state.currentUser?.id || '');
-  const [note, setNote] = useState({ key: '', text: '' });
+  const api = usePageApi('problems');
+  const personalStates = useUserStateStore(state => state.value?.problemStates || []);
   const bodyRef = useRef(null);
   const detailId = detail?.id || "";
   const noteKey = problemNoteStorageKey(ownerId, detailId);
-  const noteDraft = note.key === noteKey ? note.text : '';
+  const noteDraft = personalStates.find(item => item.problemId === detailId)?.note || '';
 
   useEffect(() => {
-    if (!noteKey) return;
-    try {
-      setNote({ key: noteKey, text: window.localStorage.getItem(noteKey) || '' });
-    } catch {
-      setNote({ key: noteKey, text: '' });
-    }
     setCommentDraft('');
   }, [noteKey]);
 
@@ -122,10 +118,9 @@ export function ProblemDetail({
   const handleNoteChange = (event) => {
     if (!noteKey) return;
     const value = event.target.value;
-    setNote({ key: noteKey, text: value });
+    if (!api.saveNote(detailId, value, ownerId)) return;
     try {
-      if (value) window.localStorage.setItem(noteKey, value);
-      else window.localStorage.removeItem(noteKey);
+      window.localStorage.setItem(noteKey, value);
     } catch {
       /* storage unavailable */
     }
@@ -282,9 +277,12 @@ export function ProblemDetail({
 
         <textarea
           className="qg-detail-notes"
+          aria-label={isEnglish ? 'Private question note' : '题目私人笔记'}
+          maxLength={20000}
           placeholder={isEnglish ? "Jot a note… (autosaved)" : "写点笔记…（自动保存）"}
           value={noteDraft}
           onChange={handleNoteChange}
+          onBlur={() => api.flushPractice()}
         />
 
         <div className="qg-detail-cta-row">

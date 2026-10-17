@@ -27,6 +27,12 @@ export function WengAssessmentPanel({ problem, practice, hintRevealed, answerRev
   currentSubmission.current = `${state.sessionKey}:${eventId}`;
   useEffect(() => () => { currentSubmission.current = null; }, []);
   const ready = !state.syncing && !loading && !error && !state.error && sources && state.profile && eventId;
+  const practiceRef = useRef(practice); practiceRef.current = practice;
+  useEffect(() => {
+    // Reading the learning profile repairs older score-only submissions in the
+    // server transaction. Fetch that ledger once to update this browser too.
+    if (saved) practiceRef.current?.refresh?.();
+  }, [saved?.id, state.sessionKey]);
   const effectiveOutcome = seenAnswer ? 'unsolved' : outcome;
   const submit = async () => {
     if (!ready || busy.current || saved || !effectiveOutcome) return;
@@ -34,14 +40,20 @@ export function WengAssessmentPanel({ problem, practice, hintRevealed, answerRev
     busy.current = true;
     const submitting = currentSubmission.current;
     try {
+      const checkpoint = await practice.checkpoint?.();
+      if (currentSubmission.current !== submitting) return;
+      if (!checkpoint?.ok) throw new Error('做题记录尚未上传，请检查网络后重试。');
       const answer = { eventId, x: effectiveOutcome === 'correct' ? 1 : 0, h: usedHint, reveal: seenAnswer,
         ...(effectiveOutcome === 'partial' ? { pc: Number(partial) / 100 } : {}) };
       const next = await state.submitAttempt(problem, answer);
       if (currentSubmission.current !== submitting) return;
-      // The original practice recorder is idempotent within its 24h window.
-      // This replaces its old buttons for this bank, so one click is one result.
-      practice.recordOutcome(effectiveOutcome === 'correct' ? 'correct' : effectiveOutcome === 'partial' ? 'idea_wrong' : 'wrong');
-      setResult(next); setMessage('本次自评已保存到账号云端，练习记录与能力页面已同步。');
+      // The API commits the score and practice ledger together. Refreshing only
+      // updates the visible copy; it is not a second required save operation.
+      const refreshed = await practice.refresh?.();
+      if (currentSubmission.current !== submitting) return;
+      setResult(next); setMessage(refreshed?.ok
+        ? '本次自评和做题记录已保存到账号云端。'
+        : '本次自评和做题记录已保存到账号云端，当前页面暂未刷新；联网后会自动重试。');
     } catch (cause) { if (currentSubmission.current === submitting) setMessage(`未能完成保存：${cause.message}`); }
     finally { busy.current = false; }
   };

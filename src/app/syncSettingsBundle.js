@@ -2,9 +2,15 @@ import {
   buildCloudSyncBody,
   createCloudSyncController
 } from '../api/cloudSync.js';
+import { mergeProblemStates } from '../modules/problems/data.js';
+import { mergeRecordsById } from '../state/data.js';
 import { sanitizeAccountForCloud } from '../api/cloud.js';
 import { createLeaderboardCloudController } from '../modules/overview/leaderboardCloud.js';
 import { createSettingsController } from '../modules/settings/controller.js';
+
+const canonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+const personalFingerprint = rows => canonical([...rows].sort((a, b) => a.problemId.localeCompare(b.problemId)));
 
 export function createSyncSettingsBundle(deps = {}) {
   const {
@@ -24,6 +30,7 @@ export function createSyncSettingsBundle(deps = {}) {
     invalidateLeaderboardCloud,
     LEADERBOARD_CLOUD_REFRESH_MS,
     llmConfigRuntime,
+    loadStateForUser,
     normalizeCloudLeaderboardRows,
     normalizeCountry,
     normalizeLanguage,
@@ -59,7 +66,28 @@ export function createSyncSettingsBundle(deps = {}) {
     windowRef
   });
 
+  function mergePersonalRecords(records) {
+    const current = userState.value;
+    const latestLocal = loadStateForUser?.(appState.currentUser?.id)?.problemStates || [];
+    const merged = mergeProblemStates([records || [], latestLocal, current.problemStates || []], {
+      mergeRecordsById: (...lists) => mergeRecordsById(lists)
+    });
+    if (JSON.stringify(merged) === JSON.stringify(current.problemStates || [])) return merged;
+    current.problemStates = merged;
+    saveState?.({ sync: false, checkIn: false });
+    return merged;
+  }
+
   const cloudSyncController = createCloudSyncController({
+    eventTarget: windowRef,
+    scheduler: windowRef || globalThis,
+    storage: deps.storage,
+    beforeSync: () => mergePersonalRecords([]),
+    onStatus(status) {
+      appState.cloudConfig.problemSyncStatus = status;
+      syncStores?.();
+      settingsController?.renderCloudStatus?.();
+    },
     defaultDelay: CLOUD_SYNC_DEBOUNCE_MS,
     getCurrentUser: () => appState.currentUser,
     getConfig: () => appState.cloudConfig,
@@ -75,7 +103,14 @@ export function createSyncSettingsBundle(deps = {}) {
         sanitizeAccount: sanitizeAccountForCloud
       });
     },
-    onSuccess(result, dirty) {
+    onSuccess(result, dirty, { pull } = {}) {
+      if (Array.isArray(result?.problemStates)) {
+        const merged = mergePersonalRecords(result.problemStates);
+        const remote = mergeProblemStates([result.problemStates]);
+        // A previous version may have left records only on this device without
+        // an outbox marker. Reconcile those once, uploading only personal rows.
+        if (pull && personalFingerprint(merged) !== personalFingerprint(remote)) cloudSyncController.queue('problemStates');
+      }
       appState.cloudConfig.lastSyncAt = result.syncedAt || new Date().toISOString();
       appState.cloudConfig.lastError = "";
       saveCloudConfig();
@@ -125,8 +160,15 @@ export function createSyncSettingsBundle(deps = {}) {
     formatDate
   });
 
+  // Store notifications are synchronous and may also be raised by our status
+  // updates; sessionChanged only acts when identity/credentials actually change.
+  const unsubscribeSession = deps.subscribeSession?.(() => cloudSyncController.sessionChanged());
+  // Let the app finish wiring its service facade before the initial read.
+  Promise.resolve().then(() => cloudSyncController.start());
+
   return {
     cloudSyncController,
+    dispose() { unsubscribeSession?.(); cloudSyncController.stop(); },
     getCloudStatusText: settingsController.getCloudStatusText,
     leaderboardCloudController,
     renderCloudStatus: settingsController.renderCloudStatus,

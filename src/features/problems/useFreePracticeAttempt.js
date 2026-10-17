@@ -27,7 +27,10 @@ export function useFreePracticeAttempt(problemId, model) {
       setNow(lastCheckpoint);
     };
     const pause = () => {
-      if (ownsAccount() && sessionId) modelRef.current.pausePractice(problemId, sessionId);
+      if (ownsAccount() && sessionId) {
+        modelRef.current.pausePractice(problemId, sessionId);
+        modelRef.current.flushPractice?.();
+      }
     };
     const tick = () => {
       if (!visible()) return;
@@ -79,6 +82,12 @@ export function useFreePracticeAttempt(problemId, model) {
 
   return {
     ...status,
+    flush: () => model.flushPractice?.(),
+    refresh: () => model.refreshPractice?.(),
+    checkpoint: () => {
+      if (status.sessionId) model.checkpointPractice(problemId, status.sessionId);
+      return model.flushPractice?.();
+    },
     remainingSeconds: Math.max(0, Math.ceil(((status.windowExpiresAtMs || 0) - now) / 1000)),
     recordOutcome(outcome) {
       model.recordPracticeOutcome(problemId, outcome);

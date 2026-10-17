@@ -444,6 +444,8 @@ windowRef
     userState,
     userStateRuntime,
     saveState,
+    flushCloudSync: deps.flushCloudSync,
+    refreshProblemCloud: () => deps.cloudSyncController?.refresh?.(),
     mergeCloudState: deps.mergeCloudState,
     localStatePayload: deps.localStatePayload,
     userStateKey: deps.userStateKey,

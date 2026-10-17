@@ -1,10 +1,11 @@
 import { useLocation } from "react-router-dom";
 import { useAuthStore } from "../../stores/AppServicesContext.jsx";
 import { useCareerStages } from "../careerStages/useCareerStages.js";
+import { ProblemNotesMigration } from '../problems/ProblemAccountSync.jsx';
 
 function AccountWorkspace({ ownerId }) {
   useCareerStages({ ownerId });
-  return null;
+  return <ProblemNotesMigration ownerId={ownerId} />;
 }
 
 // Keep the same account writer active across routes, including legacy Tracker

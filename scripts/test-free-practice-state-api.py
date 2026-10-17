@@ -14,7 +14,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "api-server"))
-from free_practice_attempts import merge_free_practice_attempts, merge_free_practice_state, normalize_free_practice_session
+from free_practice_attempts import (merge_free_practice_attempts, merge_free_practice_state,
+                                   normalize_free_practice_session, sanitize_personal_problem_fields)
 
 BASE = 1789905600000
 DAY = 86400000
@@ -39,6 +40,53 @@ def session(identity="active", **extra):
 
 
 class FreePracticeMergeTests(unittest.TestCase):
+    def test_notes_and_favorites_keep_independent_clocks_against_stale_timer_snapshots(self):
+        saved = state(note="新笔记", noteUpdatedAt=iso(BASE + 1000), favorite=False,
+                      favoriteUpdatedAt=iso(BASE + 2000))
+        stale = state(updatedAt=iso(BASE + 3000), note="旧笔记", noteUpdatedAt=iso(BASE),
+                      favorite=True, favoriteUpdatedAt=iso(BASE), freePracticeSession=session())
+        for first, second in ((saved, stale), (stale, saved)):
+            merged = merge_free_practice_state(first, second)
+            self.assertEqual(merged["note"], "新笔记")
+            self.assertEqual(merged["noteUpdatedAt"], iso(BASE + 1000))
+            self.assertFalse(merged["favorite"])
+            self.assertEqual(merged["favoriteUpdatedAt"], iso(BASE + 2000))
+            self.assertEqual(merged["freePracticeSession"], session())
+            self.assertEqual(merged["updatedAt"], iso(BASE + 3000))
+
+    def test_explicit_note_deletion_and_unfavorite_survive_legacy_clients(self):
+        cleared = state(note="", noteUpdatedAt=iso(BASE), favorite=False, favoriteUpdatedAt=iso(BASE))
+        legacy = state(updatedAt=iso(BASE + DAY), note="旧浏览器副本", favorite=True)
+        missing = state(updatedAt=iso(BASE + DAY))
+        for other in (legacy, missing):
+            for first, second in ((cleared, other), (other, cleared)):
+                result = merge_free_practice_state(first, second)
+                self.assertEqual(result["note"], "")
+                self.assertEqual(result["noteUpdatedAt"], iso(BASE))
+                self.assertFalse(result["favorite"])
+
+    def test_field_clock_ties_are_deterministic_including_utf16_text_order(self):
+        left = state(note="\U0001f600", noteUpdatedAt=iso(BASE), favorite=True, favoriteUpdatedAt=iso(BASE))
+        right = state(note="\ue000", noteUpdatedAt=iso(BASE), favorite=False, favoriteUpdatedAt=iso(BASE))
+        for first, second in ((left, right), (right, left)):
+            result = merge_free_practice_state(first, second)
+            self.assertEqual(result["note"], "\ue000")
+            self.assertFalse(result["favorite"])
+        # Parse timestamps as instants, never lexically by timezone text.
+        later = state(note="later", noteUpdatedAt="2026-09-20T13:00:00+02:00")
+        earlier = state(note="earlier", noteUpdatedAt="2026-09-20T10:00:00Z")
+        self.assertEqual(merge_free_practice_state(later, earlier)["note"], "later")
+
+    def test_personal_field_validation_and_empty_note_tombstone(self):
+        self.assertEqual(sanitize_personal_problem_fields({"note": "", "noteUpdatedAt": iso(BASE)}),
+                         {"note": "", "noteUpdatedAt": iso(BASE)})
+        self.assertEqual(sanitize_personal_problem_fields({"note": "\U0001f600" * 10000})["note"], "\U0001f600" * 10000)
+        for invalid in ({"note": None}, {"note": "a" * 20001}, {"note": "\U0001f600" * 10001},
+                        {"note": "x", "noteUpdatedAt": "invalid"}, {"noteUpdatedAt": iso(BASE)},
+                        {"favorite": "true", "favoriteUpdatedAt": iso(BASE)}):
+            with self.assertRaises(ValueError):
+                sanitize_personal_problem_fields(invalid)
+
     def test_legacy_timer_is_paused_without_including_the_time_since_its_old_start(self):
         legacy = {"id": "old", "startedAt": iso(BASE - 350 * 3600000), "answerViewed": True}
         normalized = normalize_free_practice_session(legacy)
@@ -186,6 +234,7 @@ class ProblemStateWriteTests(unittest.TestCase):
             "sqlite3": SimpleNamespace(Connection=object), "json": json,
             "utc_now": lambda: "2026-09-20T13:00:00Z", "HttpError": RuntimeError,
             "merge_free_practice_state": merge_free_practice_state,
+            "sanitize_personal_problem_fields": sanitize_personal_problem_fields,
             "compact_json": json.dumps, "guardian": SimpleNamespace(evaluate=lambda *args: None),
         }
         exec(compile(ast.Module(body=[*functions, method], type_ignores=[]), "isolated-problem-state-write", "exec"), namespace)
@@ -204,7 +253,7 @@ class ProblemStateWriteTests(unittest.TestCase):
         self.assertEqual(result[0]["freePracticeAttempts"], previous["freePracticeAttempts"])
         self.assertIsNone(result[0]["freePracticeSession"])
         self.assertTrue(result[0]["favorite"])
-        self.assertEqual(result[0]["updatedAt"], "2026-09-20T13:00:00Z")
+        self.assertEqual(result[0]["updatedAt"], iso(BASE))
         self.assertEqual(conn.records["q"]["created_at"], "first-created")
 
     def test_an_existing_transaction_is_reused_without_a_nested_begin(self):

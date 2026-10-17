@@ -242,6 +242,8 @@ export function useProblemsPageModel() {
     startPractice: (problemId, options) => { const result = api?.startPractice?.(problemId, options); bump(); return result; },
     pausePractice: (problemId, sessionId) => api?.pausePractice?.(problemId, sessionId),
     checkpointPractice: (problemId, sessionId) => api?.checkpointPractice?.(problemId, sessionId),
+    flushPractice: () => api?.flushPractice?.(),
+    refreshPractice: () => api?.refreshPractice?.(),
     recordPracticeOutcome: (problemId, outcome) => { const result = api?.recordPracticeOutcome?.(problemId, outcome); bump(); return result; },
     toggleSaved: (problemId) => { api?.toggleSaved?.(problemId); bump(); },
     revealBlock: (problemId, blockKey) => { api?.revealBlock?.(problemId, blockKey); bump(); },

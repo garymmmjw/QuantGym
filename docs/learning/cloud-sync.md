@@ -18,3 +18,17 @@ Verification:
 - Existing learning integration, source-loader, bridge, concurrency and layout tests; embedded bridge/layout/render/build tests; production strict static build.
 
 No course bodies, private exports, user profiles or credentials belong in the static build or public repository.
+
+## Question practice, bookmarks and private notes
+
+The regular question ledger remains in `user_problem_states`, keyed by authenticated account and question ID. It stores timed practice attempts, hint/answer usage, bookmarks, and `note` text (20,000 UTF-16 units). It uses `/api/problem-states` for reads and `/api/sync` for queued writes. Both endpoints return private, non-cacheable responses. These fields are never added to the public question catalog.
+
+`favoriteUpdatedAt` and `noteUpdatedAt` are independent logical edit clocks. A timer checkpoint cannot change either field's ordering. Explicit clocks outrank old clients without clocks; the latest field edit wins, including `false` and an empty string. Exact timestamp ties converge deterministically (unbookmark wins; text uses UTF-16 ordering). This is a last-edit-wins note, not collaborative text editing. Browser backups retain that device's most recently entered text. The clock advances monotonically against the known field value, but unrelated offline devices with badly skewed system clocks can still disagree about real-world edit order.
+
+Owned `quantgym.problemNote.v2:<owner>:<problem>` browser notes migrate after the first successful cloud read, only if no cloud/local note or note deletion exists. Original keys are retained. Unscoped and other-account notes are never assigned to the current user. Older browser-only practice rows also reconcile after hydration.
+
+Pending upload markers persist per API destination and account; data itself remains in that account's local cache. Login, focus, page visibility and network recovery refresh the cloud copy. Requests retry transient failures; stale account/token/destination responses cannot update the new session. Edits during an upload remain queued, and explicit flush waits for acknowledgment. Active timers checkpoint every ten seconds; leaving a question starts an immediate flush. An abrupt browser termination may still leave pending data on the original device until it next reconnects. The question page distinguishes pending/error from confirmed cloud sync.
+
+Weng scoring saves and the corresponding ordinary practice result now commit in one database transaction. Mapping uses server-owned `quantvault.id` → display question ID metadata, never a guessed numeric prefix. Reading a learning profile also repairs older missing practice rows idempotently. Existing attempt identity/timing is preserved; reading does not award XP. Human self-assessment rules are unchanged.
+
+Additional checks: `scripts/test-problem-account-sync.mjs`, `scripts/test-problem-cloud-sync.mjs`, the free-practice suites, and the SQLite/PostgreSQL HTTP learning-state suite (independent clients, stale writes, deletion, account isolation, internal/display ID mapping, atomic rollback and legacy repair).
