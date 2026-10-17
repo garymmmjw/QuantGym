@@ -46,6 +46,13 @@ from personal_prep import (
     save_personal_prep,
     validate_personal_prep_request,
 )
+from learning_state import (
+    MAX_LEARNING_STATE_BYTES,
+    LearningStateValidationError,
+    get_learning_state,
+    save_learning_state,
+    validate_learning_state_request,
+)
 from guardian import GUARDIAN_SCHEMA, GuardianService
 from privacy_policy import PRIVATE_WORKSPACES
 from free_practice_attempts import merge_free_practice_state
@@ -1737,6 +1744,14 @@ class Database:
                   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
 
+                CREATE TABLE IF NOT EXISTS user_learning_states (
+                  user_id TEXT PRIMARY KEY,
+                  data_json TEXT NOT NULL,
+                  revision INTEGER NOT NULL CHECK (revision > 0),
+                  updated_at TEXT NOT NULL,
+                  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
                 CREATE TABLE IF NOT EXISTS community (
                   id INTEGER PRIMARY KEY CHECK (id = 1),
                   community_json TEXT NOT NULL,
@@ -3252,6 +3267,10 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
                 return self.get_admin_metrics()
             if path == "/api/membership" and self.command == "GET":
                 return self.get_membership()
+            if path == "/api/learning/state" and self.command == "GET":
+                return self.get_account_learning_state()
+            if path == "/api/learning/state" and self.command == "PUT":
+                return self.put_account_learning_state()
             learning_content_match = re.fullmatch(r"/api/learning/content/([^/]+)", path)
             if learning_content_match and self.command == "GET":
                 return self.get_learning_content(learning_content_match.group(1))
@@ -4550,6 +4569,37 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
         except (OSError, ValueError, TypeError):
             supplements = {"readingList": [], "sourceMetadata": None}
         self.send_json(200, {"source": "question-bank", "questions": questions, **supplements})
+
+    def get_account_learning_state(self):
+        # Personal records remain available even if course membership expires.
+        user = self.require_user()
+        with db.connect() as conn:
+            envelope = get_learning_state(conn, user["id"])
+        self.send_json(200, envelope)
+
+    def put_account_learning_state(self):
+        # Neither a body field nor a query parameter can select another owner.
+        user = self.require_user()
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            raise HttpError(400, "Invalid Content-Length")
+        if length < 0:
+            raise HttpError(400, "Invalid Content-Length")
+        if length > min(MAX_BODY_BYTES, MAX_LEARNING_STATE_BYTES):
+            raise HttpError(413, "Learning state request exceeds the 10 MiB limit.")
+        try:
+            base_revision, data_json = validate_learning_state_request(self.read_json())
+        except LearningStateValidationError as error:
+            raise HttpError(error.status, str(error))
+        except (ValueError, RecursionError):
+            raise HttpError(400, "Invalid JSON")
+        with db.connect() as conn:
+            saved, envelope = save_learning_state(conn, user["id"], base_revision, data_json)
+        # Only acknowledge after the database transaction commits.
+        if not saved:
+            return self.send_json(409, {**envelope, "error": "Learning state changed. Merge the current revision before retrying."})
+        self.send_json(200, envelope)
 
     def get_personal_preparation(self):
         user = self.require_user()

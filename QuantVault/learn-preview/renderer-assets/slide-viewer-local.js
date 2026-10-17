@@ -108,7 +108,7 @@ const SlideViewer = (() => {
               <span class="sv__hud-streak" id="sv-streak" ${acctStreak() < 2 ? 'style="display:none"' : ''}>${FLAME_SVG}${acctStreak()}</span>
             </div>
             <span style="position:relative" id="sv-flag-anchor">
-              <button class="sv__btn sv__btn--icon" onclick="SlideViewer.flagSlide(event)" title="Save a local note" aria-label="Save a local note">
+              <button class="sv__btn sv__btn--icon" onclick="SlideViewer.flagSlide(event)" title="Save a note" aria-label="Save a note">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
               </button>
             </span>
