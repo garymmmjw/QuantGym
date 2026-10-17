@@ -1,6 +1,7 @@
 import { skillDefs } from '../../skills.js';
 import { parseTags as parseTagsValue } from '../../lib/text.js';
 import { isLegacyCatalogMarker } from './format.js';
+import { mergeProblemPersonalFields } from './personalFields.js';
 import {
   mergeFreePracticeAttempts,
   normalizeFreePracticeAttempts,
@@ -348,7 +349,6 @@ export function mergeProblemStates(lists = [], deps = {}) {
     }
     const lastScoreAt = latestIso(previous.lastScoreAt, next.lastScoreAt);
     const scoreSource = previous.lastScoreAt === lastScoreAt ? previous : next;
-    const favoriteSource = latestIso(previous.updatedAt, next.updatedAt) === next.updatedAt ? next : previous;
     const completedSource = latestIso(previous.updatedAt, next.updatedAt) === next.updatedAt ? next : previous;
     const freePracticeAttempts = mergeFreePracticeAttempts([previous.freePracticeAttempts, next.freePracticeAttempts]);
     const previousHasSession = Object.prototype.hasOwnProperty.call(previous, "freePracticeSession");
@@ -369,7 +369,7 @@ export function mergeProblemStates(lists = [], deps = {}) {
       ...previous,
       ...next,
       interviewCount: Math.max(previous.interviewCount || 0, next.interviewCount || 0),
-      favorite: Boolean(favoriteSource.favorite),
+      ...mergeProblemPersonalFields(previous, next),
       completed: Boolean(completedSource.completed),
       completedAt: completedSource.completed ? latestIso(previous.completedAt, next.completedAt) : "",
       favorites: mergeRecordsById(previous.favorites || [], next.favorites || []),

@@ -123,7 +123,7 @@ test('stale session cleanup cannot pause or checkpoint a different active sessio
   unchangedLegacy(f);
 });
 
-test('automatic checkpoints save locally without generating activity or cloud traffic', t => {
+test('automatic checkpoints persist to the account without generating activity', t => {
   let now = T;
   t.mock.method(Date, 'now', () => now);
   const state = { problems: [problem], problemStates: [] };
@@ -132,7 +132,7 @@ test('automatic checkpoints save locally without generating activity or cloud tr
   const started = api.startPractice(problem.id);
   now += 10000;
   api.checkpointPractice(problem.id, started.sessionId);
-  assert.deepEqual(saves.at(-1), { checkIn: false, sync: false });
+  assert.deepEqual(saves.at(-1), { checkIn: false });
   assert.equal(state.problemStates[0].freePracticeSession.elapsedMs, 10000);
   now += 5000;
   api.pausePractice(problem.id, started.sessionId);

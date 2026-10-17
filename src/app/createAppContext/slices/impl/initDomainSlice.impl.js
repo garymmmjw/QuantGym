@@ -543,6 +543,12 @@ export function initDomainSliceImpl(shared, ctx) {
     invalidateLeaderboardCloud,
     LEADERBOARD_CLOUD_REFRESH_MS,
     llmConfigRuntime,
+    loadStateForUser,
+    subscribeSession(listener) {
+      const offAuth = domainStores.authStore.subscribe(listener);
+      const offApp = domainStores.appStore.subscribe(listener);
+      return () => { offAuth(); offApp(); };
+    },
     normalizeCloudLeaderboardRows,
     normalizeCountry,
     normalizeLanguage,

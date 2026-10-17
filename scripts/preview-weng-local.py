@@ -22,8 +22,9 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--no-build', action='store_true')
 parser.add_argument('--web-port', type=int, default=5188)
 parser.add_argument('--api-port', type=int, default=8894)
+parser.add_argument('--work-dir', type=Path, default=ROOT / 'artifacts' / 'weng-local-preview')
 args = parser.parse_args()
-WORK = ROOT / 'artifacts' / 'weng-local-preview'
+WORK = args.work_dir.resolve()
 BUILD = WORK / 'web'
 WORK.mkdir(parents=True, exist_ok=True)
 for port in [args.web_port, args.api_port]:

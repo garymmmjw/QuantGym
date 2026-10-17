@@ -7,6 +7,7 @@ import { useMembership } from "../membership/useMembership.js";
 import { useFreePractice } from "./useFreePractice.js";
 import { useFreePracticeAttempt } from "./useFreePracticeAttempt.js";
 import { BankSymbol } from "./BankSymbol.jsx";
+import { ProblemSyncStatus } from './ProblemAccountSync.jsx';
 import { skillDefs } from "../../skills.js";
 import "./freePractice.css";
 
@@ -129,6 +130,7 @@ export function FreePracticeWorkspace() {
   const completed = p.summaries.reduce((sum, item) => sum + item.completed, 0);
   useEffect(() => { window.lucide?.createIcons?.(); }, [bank?.id, p.selectedId, p.groups, p.page, p.companySearch]);
   return <section className="problem-section qg-training-page qg-problems-page qg-free-practice" data-free-practice-root>
+    <ProblemSyncStatus isEnglish={en} />
     {bank || p.selectedId ? <nav className="fp-breadcrumbs" aria-label={en ? "Breadcrumb" : "浏览路径"}><button type="button" onClick={p.goHome}>{en ? "All question banks" : "全部题库"}</button><span aria-hidden="true">/</span>{bank ? <button type="button" onClick={() => p.selectBank(bank.id)}>{name(bank, en)}</button> : <span>{en ? "Question" : "题目"}</span>}{p.group ? <><span aria-hidden="true">/</span><span>{p.group.label}</span></> : null}{p.section ? <><span aria-hidden="true">/</span><span>{p.section.label}</span></> : null}</nav> : null}
     <header className="fp-header"><div><h1>{bank ? name(bank, en) : (en ? "Questions" : "题目")}</h1><p>{bank ? (en ? bank.descriptionEn : bank.descriptionZh) : (en ? "Choose a collection and build your next solution." : "选一本题集，从下一道题开始。")}</p></div>{!p.membershipRequired ? <div className="fp-header-stats"><span><strong>{number(summary?.total ?? total)}</strong>{en ? " questions" : " 道题"}</span><span><strong>{number(summary?.completed ?? completed)}</strong>{en ? " practiced" : " 已练"}</span></div> : null}</header>
     {p.membershipRequired ? <MemberAccess practice={p} /> : !bank && !p.selectedId ? <BankHome practice={p} /> : <div className={`fp-workspace${!hasDirectory ? " fp-without-directory" : ""}`}><>{hasDirectory ? <BankDirectory practice={p} /> : null}</><main className="fp-main">{p.selectedId && p.selectedProblem ? <QuestionDetail practice={p} model={model} /> : p.selectedId ? <div className="fp-empty"><h2>{en ? "Question unavailable" : "暂时找不到这道题"}</h2><p>{en ? "The question may have moved or may require sign-in." : "这道题可能已调整，或需要登录后加载。"}</p><button type="button" onClick={p.closeQuestion}>{en ? "Back" : "返回题目列表"}</button></div> : <QuestionList practice={p} />}</main></div>}

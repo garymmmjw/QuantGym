@@ -19,7 +19,8 @@ export async function requestJson(path, options = {}) {
   const response = await fetchImpl(requestUrl, {
     method: options.method || "GET",
     headers,
-    body: serializeBody(options.body)
+    body: serializeBody(options.body),
+    ...(options.cache ? { cache: options.cache } : {})
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {

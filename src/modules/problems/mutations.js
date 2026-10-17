@@ -1,4 +1,5 @@
 import { hasExplicitProblemCompletion } from './completion.js';
+import { nextProblemFieldTime } from './personalFields.js';
 
 export function upsertCatalogProblems(existingProblems = [], incomingProblems = [], options = {}) {
   const {
@@ -77,9 +78,11 @@ export function updateProblemStates(problemStates = [], problemId = "", update =
 export function getProblemSavedToggle(current = {}, options = {}) {
   const isSaved = Boolean(current.favorite);
   const nowIso = options.nowIso || (() => new Date().toISOString());
+  const at = nextProblemFieldTime(current.favoriteUpdatedAt, Date.parse(nowIso()));
   return {
     favorite: !isSaved,
-    lastFavoriteAt: isSaved ? "" : nowIso()
+    lastFavoriteAt: isSaved ? "" : at,
+    favoriteUpdatedAt: at
   };
 }
 

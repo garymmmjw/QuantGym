@@ -482,6 +482,7 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     clearUserState: clearUserStateValue,
     migrateLegacyState: migrateLegacyStateValue,
     normalizeState,
+    mergeProblemStates,
     serializeState: localStatePayload,
     userStateKey,
     legacyKey: STORAGE_KEY,

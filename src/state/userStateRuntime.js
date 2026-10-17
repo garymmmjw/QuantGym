@@ -38,6 +38,15 @@ export function createUserStateRuntime(initialState = {}, deps = {}) {
   function save(options = {}) {
     const currentUser = deps.getCurrentUser?.();
     if (!currentUser) return;
+    // Another tab may have saved an independent favorite/note/attempt since
+    // this tab rendered. Merge those rows before replacing the shared cache.
+    if (deps.mergeProblemStates) {
+      const latest = deps.loadUserState?.(currentUser.id, {
+        createBaseState: () => ({}), normalizeState: value => value,
+        userStateKey: deps.userStateKey
+      });
+      state.value.problemStates = deps.mergeProblemStates(latest?.problemStates || [], state.value.problemStates || []);
+    }
     const activityHooks = deps.getActivityHooks?.() || {};
     const checkInResult = options.checkIn === false ? null : activityHooks.markActivity?.();
     state.value.updatedAt = deps.nowIso?.() || new Date().toISOString();

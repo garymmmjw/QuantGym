@@ -100,10 +100,10 @@ test('manual sync waits for an active request and then flushes pending edits', a
   controller.markAllDirty();
   const manual = controller.flush();
   complete({syncedAt:'first'});
-  await first;
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(calls, 2);
   complete({syncedAt:'second'});
+  assert.equal((await first).ok, true);
   assert.equal((await manual).ok, true);
   assert.equal(controller.isInFlight(), false);
 });

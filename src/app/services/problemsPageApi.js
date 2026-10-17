@@ -29,6 +29,7 @@ import {
 import { getProblemBrowserViewState } from "../../modules/problems/viewState.js";
 import { getFreePracticeStatus, startFreePractice, pauseFreePractice, checkpointFreePractice, recordFreePracticeOutcome, markFreePracticeReveal } from "../../modules/problems/freePracticeAttempts.js";
 import { getPracticeBank } from "../../features/problems/practiceBanks.js";
+import { nextProblemFieldTime, normalizeProblemNote } from '../../modules/problems/personalFields.js';
 
 export function createProblemsPageApi(deps = {}) {
   let searchQuery = "";
@@ -583,6 +584,20 @@ export function createProblemsPageApi(deps = {}) {
   }
 
   return {
+    flushPractice: () => deps.flushCloudSync?.(),
+    refreshPractice: () => deps.refreshProblemCloud?.(),
+    saveNote(problemId, text, ownerId, { migrate = false } = {}) {
+      if (!ownerId || ownerId === 'guest' || deps.appState?.currentUser?.id !== ownerId || !problemId) return false;
+      const current = (getState().problemStates || []).find(item => item.problemId === problemId) || {};
+      if (migrate && (Object.hasOwn(current, 'note') || current.noteUpdatedAt)) return false;
+      const note = normalizeProblemNote(text);
+      if (current.note === note) return true;
+      const patch = { note, noteUpdatedAt: nextProblemFieldTime(current.noteUpdatedAt) };
+      if (deps.updateProblemState) deps.updateProblemState(problemId, patch);
+      else getState().problemStates = [...(getState().problemStates || []).filter(item => item.problemId !== problemId), { ...current, ...patch, problemId, updatedAt: patch.noteUpdatedAt }];
+      deps.saveState?.({ checkIn: false });
+      return true;
+    },
     getPracticeCatalog: () => getProblems().filter((problem) => deps.isCatalogProblem?.(problem) ?? true),
     getSearchQuery: () => searchQuery,
     getSearchDebounceMs: () => Math.max(0, Number(deps.searchDebounceMs ?? 140)),
@@ -600,7 +615,7 @@ export function createProblemsPageApi(deps = {}) {
 
     checkpointPractice(problemId, sessionId) {
       return updateFreePractice(problemId, (state, at) => state.freePracticeSession?.id === sessionId
-        ? checkpointFreePractice(state, at) : state, { checkIn: false, sync: false });
+        ? checkpointFreePractice(state, at) : state, { checkIn: false });
     },
 
     recordPracticeOutcome(problemId, outcome) {

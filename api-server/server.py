@@ -50,12 +50,13 @@ from learning_state import (
     MAX_LEARNING_STATE_BYTES,
     LearningStateValidationError,
     get_learning_state,
+    project_weng_practice_states,
     save_learning_state,
     validate_learning_state_request,
 )
 from guardian import GUARDIAN_SCHEMA, GuardianService
 from privacy_policy import PRIVATE_WORKSPACES
-from free_practice_attempts import merge_free_practice_state
+from free_practice_attempts import merge_free_practice_state, sanitize_personal_problem_fields
 from memberships import (
     MEMBERSHIP_SCHEMA, MembershipError, add_membership, has_membership,
     list_memberships, remove_membership,
@@ -1367,7 +1368,10 @@ def sanitize_problem_state(state: dict | None) -> dict:
     problem_id = str(raw.get("problemId") or raw.get("problem_id") or "").strip()
     if not problem_id:
         raise HttpError(400, "problemId is required")
-    next_state = {**raw, "problemId": problem_id}
+    try:
+        next_state = {**sanitize_personal_problem_fields(raw), "problemId": problem_id}
+    except ValueError as error:
+        raise HttpError(400, str(error))
     next_state["updatedAt"] = str(next_state.get("updatedAt") or utc_now())
     return next_state
 
@@ -2565,7 +2569,8 @@ class Database:
             state = merge_free_practice_state(parse_json(previous["state_json"], {}) if previous else {}, state)
             created_at = previous["created_at"] if previous else utc_now()
             updated_at = utc_now()
-            state["updatedAt"] = updated_at
+            # This column is server receipt time; the JSON clock is the actual
+            # client edit time used to order timer checkpoints across devices.
             conn.execute(
                 """
                 INSERT INTO user_problem_states (user_id, problem_id, state_json, created_at, updated_at)
@@ -2578,6 +2583,36 @@ class Database:
             )
         guardian.evaluate(conn, user_id)
         return self.get_problem_states(conn, user_id)
+
+    def project_weng_practice(self, conn, user_id, envelope):
+        data = envelope.get("data")
+        training = data.get("training") if isinstance(data, dict) else None
+        if not isinstance(training, dict) or not training.get("events"):
+            return
+        # Use the same owner lock as ordinary notes/favorites/timer writes.
+        # A scoring CAS and its practice projection must succeed together.
+        if self.backend == "postgres":
+            conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", (user_id,)).fetchone()
+        elif not conn.in_transaction:
+            conn.execute("BEGIN IMMEDIATE")
+        # Select only the identity metadata, never the large private question
+        # bodies. Display numbers are not interchangeable with scoring IDs.
+        source_id = "problem_json -> 'quantvault' ->> 'id'" if self.backend == "postgres" else "json_extract(problem_json, '$.quantvault.id')"
+        display_id = "problem_json -> 'quantvault' ->> 'displayId'" if self.backend == "postgres" else "json_extract(problem_json, '$.quantvault.displayId')"
+        rows = conn.execute(f"SELECT id, {source_id} AS source_id, {display_id} AS display_id FROM problems WHERE source = 'quantvault' AND visibility = 'private' AND owner_user_id IS NULL").fetchall()
+        problem_ids, ambiguous = {}, set()
+        for row in rows:
+            source, display = str(row["source_id"]), str(row["display_id"])
+            if not re.fullmatch(r"[1-9][0-9]*", source) or not re.fullmatch(r"[1-9][0-9]*", display) or row["id"] != f"quantvault-{display}":
+                continue
+            if source in problem_ids and problem_ids[source] != row["id"]:
+                ambiguous.add(source)
+            problem_ids[source] = row["id"]
+        for source in ambiguous:
+            problem_ids.pop(source, None)
+        states = project_weng_practice_states(data, self.get_problem_states(conn, user_id), problem_ids)
+        if states:
+            self.save_problem_states(conn, user_id, states)
 
     def ensure_visible_problem(self, conn: sqlite3.Connection, problem_id: str, user_id: str | None = None) -> None:
         if user_id:
@@ -3186,7 +3221,7 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
 
     def end_headers(self):
         if (PRIVATE_WORKSPACES and urlparse(self.path).path.startswith("/api/")
-                or urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password", "/api/problems"}
+                or urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password", "/api/problems", "/api/problem-states", "/api/sync"}
                 or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/", "/api/learning/"))):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
@@ -4575,6 +4610,7 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
         user = self.require_user()
         with db.connect() as conn:
             envelope = get_learning_state(conn, user["id"])
+            db.project_weng_practice(conn, user["id"], envelope)
         self.send_json(200, envelope)
 
     def put_account_learning_state(self):
@@ -4596,6 +4632,8 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
             raise HttpError(400, "Invalid JSON")
         with db.connect() as conn:
             saved, envelope = save_learning_state(conn, user["id"], base_revision, data_json)
+            if saved:
+                db.project_weng_practice(conn, user["id"], envelope)
         # Only acknowledge after the database transaction commits.
         if not saved:
             return self.send_json(409, {**envelope, "error": "Learning state changed. Merge the current revision before retrying."})
@@ -4732,7 +4770,9 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
         if isinstance(data.get("problemState"), dict):
             states = [data["problemState"]]
         with db.connect() as conn:
-            self.send_json(200, {"problemStates": db.save_problem_states(conn, user["id"], states)})
+            saved = db.save_problem_states(conn, user["id"], states)
+        # Do not advertise a cloud save before its transaction has committed.
+        self.send_json(200, {"problemStates": saved})
 
     def get_problem_social_summaries(self):
         if PRIVATE_WORKSPACES:
@@ -4945,16 +4985,17 @@ class QuantGymHandler(RuntimeLimitsHandlerMixin, BaseHTTPRequestHandler):
                 community = db.save_community(conn, data["community"], merge=False)
             else:
                 community = db.get_community(conn)
-            self.send_json(
-                200,
-                {
-                    "account": account,
-                    "state": state,
-                    "problemStates": problem_states,
-                    "community": community,
-                    "syncedAt": utc_now(),
-                },
-            )
+        # All personal edits must commit before the browser marks them synced.
+        self.send_json(
+            200,
+            {
+                "account": account,
+                "state": state,
+                "problemStates": problem_states,
+                "community": community,
+                "syncedAt": utc_now(),
+            },
+        )
 
 
 def main():

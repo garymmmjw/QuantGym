@@ -12,6 +12,11 @@ import math
 import re
 from datetime import date, datetime, timezone
 
+from free_practice_attempts import (
+    _iso, _timestamp, merge_free_practice_attempts, merge_free_practice_state,
+    normalize_free_practice_session,
+)
+
 LEARNING_STATE_VERSION = 1
 MAX_LEARNING_STATE_BYTES = 10 * 1024 * 1024
 MAX_RECORDS = 10000
@@ -177,6 +182,56 @@ def get_learning_state(conn, user_id):
         updated_at = updated_at.isoformat().replace("+00:00", "Z")
     data = json.loads(row["data_json"]) if isinstance(row["data_json"], str) else row["data_json"]
     return {"version": LEARNING_STATE_VERSION, "revision": int(row["revision"]), "data": data, "updatedAt": updated_at}
+
+
+def project_weng_practice_states(data, existing_states, problem_ids):
+    """Idempotently derive the ordinary practice ledger from saved Weng events.
+
+    The caller holds the account lock and commits these states in the same
+    transaction as its learning snapshot. Reading an older snapshot can also
+    repair the historical gap left by the former two-request submission path.
+    """
+    training = data.get("training") if isinstance(data, dict) else None
+    events = training.get("events", []) if isinstance(training, dict) else []
+    by_problem = {item["problemId"]: item for item in existing_states if isinstance(item, dict) and item.get("problemId")}
+    changed = {}
+    for event in events if isinstance(events, list) else []:
+        if not isinstance(event, dict) or not isinstance(event.get("id"), str) or not event["id"].startswith("weng-"):
+            continue
+        # Scoring IDs are source-internal IDs; ordinary rows use display IDs.
+        # Only the operator-managed catalog may establish that relationship.
+        problem_id = problem_ids.get(str(event.get("problemId", "")))
+        if not problem_id:
+            continue
+        identity, at = event["id"][5:], _timestamp(event.get("at"))
+        if not identity or at is None:
+            continue
+        previous = changed.get(problem_id, by_problem.get(problem_id, {"problemId": problem_id}))
+        attempts = merge_free_practice_attempts([previous.get("freePracticeAttempts", [])])
+        old = next((leaf for item in attempts for leaf in item.get("syncRecords", [item]) if leaf["id"] == identity), None)
+        session = normalize_free_practice_session(previous.get("freePracticeSession"))
+        matching_session = session if session and session["id"] == identity else None
+        if old:
+            record = dict(old)
+        else:
+            started = min(at, _timestamp(matching_session["startedAt"])) if matching_session else at
+            elapsed = matching_session["elapsedMs"] if matching_session else 0
+            if matching_session and matching_session["timerStartedAt"]:
+                elapsed += max(0, at - _timestamp(matching_session["timerStartedAt"]))
+            partial = event.get("pc")
+            outcome = "wrong" if event.get("reveal") is True else "correct" if event.get("x") == 1 else "idea_wrong" if type(partial) in (int, float) and partial > 0 else "wrong"
+            record = {"id": identity, "startedAt": _iso(started), "recordedAt": _iso(at), "updatedAt": _iso(at),
+                      "elapsedSeconds": math.floor(elapsed / 1000), "outcome": outcome,
+                      "hintViewed": False, "answerViewed": False}
+        record["hintViewed"] = record["hintViewed"] or event.get("h") is True or bool(matching_session and matching_session["hintViewed"])
+        record["answerViewed"] = record["answerViewed"] or event.get("reveal") is True or bool(matching_session and matching_session["answerViewed"])
+        if old == record and not matching_session:
+            continue
+        next_state = merge_free_practice_state(previous, {**previous, "problemId": problem_id,
+            "freePracticeAttempts": merge_free_practice_attempts([attempts, [record]]),
+            "updatedAt": _iso(max(at, _timestamp(previous.get("updatedAt")) or 0))})
+        changed[problem_id] = next_state
+    return list(changed.values())
 
 
 def save_learning_state(conn, user_id, base_revision, data_json):

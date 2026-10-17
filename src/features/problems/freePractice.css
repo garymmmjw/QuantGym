@@ -204,3 +204,5 @@ body.is-authenticated .app-route-root .qg-free-practice .fp-attempt-rule { margi
   .qg-free-practice .fp-attempt-timer-bar { gap: 10px; flex-wrap: wrap; }
   .qg-free-practice .fp-attempt-clock { gap: 7px; }
 }
+.fp-cloud-status { margin: 0 0 16px; color: var(--text-secondary, #64748b); font-size: 13px; line-height: 1.5; }
+.fp-cloud-status button { border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }

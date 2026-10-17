@@ -37,13 +37,18 @@ class LearningStateApiTests(unittest.TestCase):
         cls.log = (cls.directory / "server.log").open("ab")
         catalog = cls.directory / "empty.json"
         catalog.write_text("[]")
+        problems = cls.directory / "synthetic-problems.json"
+        problems.write_text(json.dumps([{"id": f"quantvault-{display}", "source": "quantvault", "visibility": "private",
+            "titleEn": "Synthetic projection fixture", "promptEn": "Synthetic test question", "answer": "Synthetic answer",
+            "quantvault": {"id": internal, "displayId": display}}
+            for internal, display in ((900, 14), (42, 142))]))
         cls.port = cls.free_port()
         cls.environment = {
             **{key: value for key, value in os.environ.items() if not key.startswith("QUANTGYM_") and key != "DATABASE_URL"},
             "PYTHONDONTWRITEBYTECODE": "1", "PORT": str(cls.port), "QUANTGYM_HOST": "127.0.0.1",
             "QUANTGYM_DB": str(cls.database), "QUANTGYM_DB_BACKEND": "sqlite",
             "QUANTGYM_DATABASE_URL": "", "QUANTGYM_POSTGRES_DATABASE_URL": "", "DATABASE_URL": "",
-            "QUANTGYM_PROBLEM_CATALOG": str(catalog), "QUANTGYM_JOBS_CATALOG": str(catalog),
+            "QUANTGYM_PROBLEM_CATALOG": str(problems), "QUANTGYM_JOBS_CATALOG": str(catalog),
             "QUANTGYM_JOBS_SOURCE_URL": "", "QUANTGYM_PRIVATE_WORKSPACES": "0",
             "QUANTGYM_MEDIA_ROOT": str(cls.directory / "media"),
             "QUANTGYM_REQUIRE_EMAIL_VERIFICATION": "0", "QUANTGYM_REQUIRE_INVITE_CODE": "0",
@@ -60,8 +65,8 @@ class LearningStateApiTests(unittest.TestCase):
           learn.renderer = {'slide:lec-q-prob-slides-03': 2};
           learn.notes = [{lessonId:'lec-q-prob-slides-03', text:'云端笔记'}];
           const training = submitTrainingAttempt(createTrainingProfile({now,id:'profile-fixture'}),
-            {eventId:'weng-fixture',problemId:14,x:1,h:true,reveal:false,now:now+1},
-            {problemsIndex:[{id:14,c:'probability',d:'easy',co:[],t:[]}]}).profile;
+            {eventId:'weng-fixture',problemId:900,x:1,h:true,reveal:false,now:now+1},
+            {problemsIndex:[{id:900,di:14,c:'probability',d:'easy',co:[],t:[]}]}).profile;
           console.log(JSON.stringify({learn,training}));
         """], cwd=ROOT, text=True)
         cls.fixture = json.loads(fixture)
@@ -246,6 +251,148 @@ class LearningStateApiTests(unittest.TestCase):
             status, saved, _ = self.put(token, data, revision)
             self.assertEqual(status, 200, saved)
             self.assertEqual(saved["data"], data)
+
+    def test_problem_notes_favorites_and_practice_restore_for_a_second_login_only(self):
+        token, owner = self.new_user()
+        email = f"learning-{self.counter}@example.invalid"
+        other, _ = self.new_user()
+        at = "2026-10-16T12:00:00.123Z"
+        personal = {"problemId": "quantvault-14", "updatedAt": at,
+                    "favorite": True, "favoriteUpdatedAt": at, "note": "仅本账号的题目笔记", "noteUpdatedAt": at,
+                    "freePracticeAttempts": [{"id": "history", "startedAt": at, "recordedAt": at, "updatedAt": at,
+                        "elapsedSeconds": 32, "outcome": "correct", "hintViewed": True, "answerViewed": False}]}
+        status, result, headers = self.request("PUT", "/api/problem-states", token=token, payload={"problemState": personal})
+        self.assertEqual(status, 200, result)
+        self.assert_private(headers)
+        self.assertEqual(result["problemStates"], [personal])
+        status, login, _ = self.request("POST", "/api/auth/login", payload={"email": email, "password": "CloudFixture1234"})
+        self.assertEqual(status, 200, login)
+        self.assertEqual(self.request("GET", "/api/problem-states", token=login["token"])[1]["problemStates"], [personal])
+        self.assert_private(self.request("GET", "/api/problem-states", token=login["token"])[2])
+        self.assertEqual(self.request("GET", f"/api/problem-states?userId={owner}", token=other)[1]["problemStates"], [])
+        for method in ("GET", "PUT"):
+            status, _, headers = self.request(method, "/api/problem-states", payload={"problemState": personal})
+            self.assertEqual(status, 401)
+            self.assert_private(headers)
+
+    def test_sync_is_private_and_does_not_acknowledge_a_failed_commit(self):
+        token, _ = self.new_user()
+        at = "2026-10-16T12:00:00.123Z"
+        body = {"problemStates": [{"problemId": "quantvault-14", "updatedAt": at,
+                                 "note": "must commit before acknowledgment", "noteUpdatedAt": at}]}
+        status, _, headers = self.request("POST", "/api/sync", payload=body)
+        self.assertEqual(status, 401)
+        self.assert_private(headers)
+        with self.connect_database() as conn:
+            conn.execute("CREATE TABLE fixture_commit_failure (owner_id TEXT REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED)")
+            if USE_POSTGRES:
+                conn.execute("CREATE FUNCTION fixture_fail_sync_commit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN INSERT INTO fixture_commit_failure (owner_id) VALUES ('missing-owner'); RETURN NEW; END $$")
+                conn.execute("CREATE TRIGGER fixture_fail_sync_commit AFTER INSERT ON user_problem_states FOR EACH ROW EXECUTE FUNCTION fixture_fail_sync_commit()")
+            else:
+                conn.execute("CREATE TRIGGER fixture_fail_sync_commit AFTER INSERT ON user_problem_states BEGIN INSERT INTO fixture_commit_failure (owner_id) VALUES ('missing-owner'); END")
+        try:
+            # The write itself succeeds; the deferred FK fails only at COMMIT.
+            status, reply, headers = self.request("POST", "/api/sync", token=token, payload=body)
+            self.assertEqual(status, 500, reply)
+            self.assert_private(headers)
+            self.assertEqual(self.request("GET", "/api/problem-states", token=token)[1]["problemStates"], [])
+        finally:
+            with self.connect_database() as conn:
+                conn.execute("DROP TRIGGER fixture_fail_sync_commit ON user_problem_states" if USE_POSTGRES else "DROP TRIGGER fixture_fail_sync_commit")
+                if USE_POSTGRES:
+                    conn.execute("DROP FUNCTION fixture_fail_sync_commit()")
+                conn.execute("DROP TABLE fixture_commit_failure")
+        status, reply, headers = self.request("POST", "/api/sync", token=token, payload=body)
+        self.assertEqual(status, 200, reply)
+        self.assert_private(headers)
+        self.assertEqual(reply["problemStates"][0]["note"], body["problemStates"][0]["note"])
+
+    def test_stale_and_concurrent_problem_snapshots_preserve_independent_edits_and_deletions(self):
+        token, _ = self.new_user()
+        def write(state):
+            return self.request("PUT", "/api/problem-states", token=token, payload={"problemState": state})
+        base = {"problemId": "quantvault-14", "updatedAt": "2026-10-16T12:00:00.123Z",
+                "favorite": True, "favoriteUpdatedAt": "2026-10-16T12:00:00.123Z",
+                "note": "old", "noteUpdatedAt": "2026-10-16T12:00:00.123Z"}
+        self.assertEqual(write(base)[0], 200)
+        note_edit = {**base, "note": "new", "noteUpdatedAt": "2026-10-16T12:00:01.123Z", "updatedAt": "2026-10-16T12:00:01.123Z"}
+        unfavorite = {**base, "favorite": False, "favoriteUpdatedAt": "2026-10-16T12:00:02.123Z", "updatedAt": "2026-10-16T12:00:02.123Z"}
+        barrier = threading.Barrier(2)
+        def simultaneous(state):
+            barrier.wait(timeout=5)
+            return write(state)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            replies = list(executor.map(simultaneous, (note_edit, unfavorite)))
+        self.assertEqual([reply[0] for reply in replies], [200, 200], replies)
+        saved = self.request("GET", "/api/problem-states", token=token)[1]["problemStates"][0]
+        self.assertEqual(saved["note"], "new")
+        self.assertFalse(saved["favorite"])
+        self.assertEqual(write({**base, "note": "", "noteUpdatedAt": "2026-10-16T12:00:03.123Z"})[0], 200)
+        for legacy in (base, {"problemId": "quantvault-14", "updatedAt": "2026-10-17T12:00:00Z", "note": "old", "favorite": True},
+                       {"problemId": "quantvault-14", "updatedAt": "2026-10-18T12:00:00Z"}):
+            status, reply, _ = write(legacy)
+            self.assertEqual(status, 200, reply)
+            self.assertEqual(reply["problemStates"][0]["note"], "")
+            self.assertFalse(reply["problemStates"][0]["favorite"])
+        for invalid in ({"note": "x" * 20001}, {"note": "x", "noteUpdatedAt": "invalid"}, {"note": []}):
+            self.assertEqual(write({"problemId": "quantvault-14", **invalid})[0], 400)
+        self.assertEqual(self.request("GET", "/api/problem-states", token=token)[1]["problemStates"][0]["note"], "")
+
+    def test_scoring_atomically_projects_practice_and_read_repairs_older_missing_rows(self):
+        token, owner = self.new_user()
+        event = self.fixture["training"]["events"][0]
+        at = event["at"]
+        from datetime import datetime, timezone
+        iso = lambda value: datetime.fromtimestamp(value / 1000, timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        personal = {"problemId": "quantvault-14", "updatedAt": iso(at - 1000), "favorite": True,
+                    "favoriteUpdatedAt": iso(at - 2000), "note": "保留我的笔记", "noteUpdatedAt": iso(at - 2000),
+                    "freePracticeSession": {"id": "fixture", "startedAt": iso(at - 30000), "elapsedMs": 7000,
+                        "timerStartedAt": iso(at - 2000), "answerViewed": False, "hintViewed": False}}
+        self.assertEqual(self.request("PUT", "/api/problem-states", token=token, payload={"problemState": personal})[0], 200)
+        saved = self.put(token)
+        self.assertEqual(saved[0], 200, saved)
+        record = self.request("GET", "/api/problem-states", token=token)[1]["problemStates"][0]
+        self.assertEqual(record["problemId"], "quantvault-14")
+        self.assertEqual((record["note"], record["favorite"]), ("保留我的笔记", True))
+        self.assertIsNone(record["freePracticeSession"])
+        attempt = record["freePracticeAttempts"][0]
+        self.assertEqual((attempt["id"], attempt["outcome"], attempt["elapsedSeconds"]), ("fixture", "correct", 9))
+        self.assertEqual(attempt["recordedAt"], iso(at))
+        self.assertTrue(attempt["hintViewed"])
+        stale = copy.deepcopy(self.fixture)
+        stale["training"]["events"][0].update(id="weng-loser", problemId="15")
+        self.assertEqual(self.put(token, stale)[0], 409)
+        self.assertEqual(len(self.request("GET", "/api/problem-states", token=token)[1]["problemStates"]), 1)
+        # Simulate a historical successful score whose separate practice write was lost.
+        with self.connect_database() as conn:
+            conn.execute(self.sql("DELETE FROM user_problem_states WHERE user_id = ?"), (owner,))
+        self.assertEqual(self.request("GET", token=token)[1], saved[1])
+        repaired = self.request("GET", "/api/problem-states", token=token)[1]["problemStates"]
+        self.assertEqual(len(repaired), 1)
+        self.assertEqual(repaired[0]["freePracticeAttempts"][0]["id"], "fixture")
+        # No timer survives the historical loss, so elapsed time is unknown (0), never fabricated.
+        self.assertEqual(repaired[0]["freePracticeAttempts"][0]["elapsedSeconds"], 0)
+        self.request("GET", token=token)
+        self.assertEqual(self.request("GET", "/api/problem-states", token=token)[1]["problemStates"], repaired)
+
+    def test_failed_practice_projection_rolls_back_the_scoring_snapshot(self):
+        token, _ = self.new_user()
+        with self.connect_database() as conn:
+            if USE_POSTGRES:
+                conn.execute("CREATE FUNCTION fixture_reject_practice() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'fixture projection failure'; END $$")
+                conn.execute("CREATE TRIGGER fixture_reject_practice BEFORE INSERT ON user_problem_states FOR EACH ROW EXECUTE FUNCTION fixture_reject_practice()")
+            else:
+                conn.execute("CREATE TRIGGER fixture_reject_practice BEFORE INSERT ON user_problem_states BEGIN SELECT RAISE(ABORT, 'fixture projection failure'); END")
+        try:
+            self.assertEqual(self.put(token)[0], 500)
+            self.assertEqual(self.request("GET", token=token)[1]["revision"], 0)
+            self.assertEqual(self.request("GET", "/api/problem-states", token=token)[1]["problemStates"], [])
+        finally:
+            with self.connect_database() as conn:
+                conn.execute("DROP TRIGGER fixture_reject_practice ON user_problem_states" if USE_POSTGRES else "DROP TRIGGER fixture_reject_practice")
+                if USE_POSTGRES:
+                    conn.execute("DROP FUNCTION fixture_reject_practice()")
+        self.assertEqual(self.put(token)[0], 200)
 
     def test_real_javascript_cloud_sync_and_transport_across_devices(self):
         token, owner = self.new_user()

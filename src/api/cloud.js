@@ -20,7 +20,8 @@ export function loadCloudConfig(key, defaultEndpoint = "") {
 }
 
 export function saveCloudConfig(key, config) {
-  localStorage.setItem(key, JSON.stringify(config));
+  const { problemSyncStatus, ...persistent } = config;
+  localStorage.setItem(key, JSON.stringify(persistent));
 }
 
 export function getCloudApiBase(config = {}, defaultEndpoint = "") {
@@ -55,7 +56,8 @@ export async function cloudApi(path, options = {}) {
       method: options.method || "GET",
       token: config.token,
       auth: options.auth !== false,
-      body: options.body
+      body: options.body,
+      cache: options.cache
     });
     // Public endpoints also use this client. Only an authenticated endpoint
     // can establish that the server has accepted the active credentials.
@@ -81,7 +83,8 @@ export function getCloudStatusText(config = {}, options = {}) {
   } = options;
   if (!config.token || config.userId !== currentUser?.id) return t("cloudDisconnected");
   if (config.lastError) return t("cloudFailed", { error: config.lastError });
-  if (inFlight) return t("cloudSyncing");
+  if (inFlight || (config.problemSyncStatus?.ownerId === currentUser?.id
+    && ["loading", "pending", "syncing"].includes(config.problemSyncStatus.phase))) return t("cloudSyncing");
   if (config.lastSyncAt) return t("cloudSynced", { date: formatDate(config.lastSyncAt) });
   return t("cloudConnected");
 }

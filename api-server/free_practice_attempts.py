@@ -1,4 +1,4 @@
-"""Merge only free-practice fields; keep the legacy problem-state write rules."""
+"""Merge private practice records and independently clocked notes/favorites."""
 
 from datetime import datetime, timezone
 import math
@@ -6,6 +6,7 @@ import math
 
 WINDOW_MS = 24 * 60 * 60 * 1000
 OUTCOMES = {"correct", "idea_wrong", "wrong"}
+MAX_PROBLEM_NOTE_LENGTH = 20000
 
 
 def _timestamp(value):
@@ -33,6 +34,44 @@ def _timestamp(value):
 
 def _iso(value):
     return datetime.fromtimestamp(value / 1000, timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def sanitize_personal_problem_fields(raw):
+    """Validate explicit edits, while accepting legacy snapshots without clocks."""
+    result = dict(raw)
+    if "note" in result:
+        note = result["note"]
+        try:
+            valid = isinstance(note, str) and len(note.encode("utf-16-le")) // 2 <= MAX_PROBLEM_NOTE_LENGTH
+        except UnicodeError:
+            valid = False
+        if not valid:
+            raise ValueError("Problem notes must be text of at most 20000 characters.")
+    for field, clock in (("favorite", "favoriteUpdatedAt"), ("note", "noteUpdatedAt")):
+        value = result.get(clock)
+        if value in (None, ""):
+            result.pop(clock, None)
+            continue
+        at = _timestamp(value) if isinstance(value, str) else None
+        if at is None or field not in result or (field == "favorite" and type(result[field]) is not bool):
+            raise ValueError(f"Invalid {clock} or missing {field} value.")
+        result[clock] = _iso(at)
+    return result
+
+
+def _personal_field_source(existing, incoming, field, clock):
+    candidates = [item for item in (existing, incoming) if field in item]
+    if not candidates:
+        return None
+    def rank(item):
+        explicit = _timestamp(item.get(clock))
+        legacy = _timestamp(item.get("lastFavoriteAt")) if field == "favorite" else None
+        at = explicit if explicit is not None else legacy if legacy is not None else _timestamp(item.get("updatedAt")) or 0
+        # JS compares strings as UTF-16 code units. Match that ordering for
+        # rare simultaneous text edits; an un-favorite wins an exact tie.
+        tie = not bool(item[field]) if field == "favorite" else str(item[field]).encode("utf-16-be", errors="surrogatepass")
+        return explicit is not None, at, tie
+    return max(candidates, key=rank)
 
 
 def _id(value):
@@ -139,10 +178,19 @@ def merge_free_practice_attempts(lists):
 
 
 def merge_free_practice_state(existing, incoming):
-    """Preserve new history against stale/older clients without merging old fields."""
+    """Keep histories and independent edits when a stale full snapshot arrives."""
     existing = existing if isinstance(existing, dict) else {}
     incoming = incoming if isinstance(incoming, dict) else {}
     result = dict(incoming)
+    for field, clock in (("favorite", "favoriteUpdatedAt"), ("note", "noteUpdatedAt")):
+        source = _personal_field_source(existing, incoming, field, clock)
+        if source is not None:
+            result[field] = source[field]
+            result.pop(clock, None)
+            if _timestamp(source.get(clock)) is not None:
+                result[clock] = _iso(_timestamp(source[clock]))
+            if field == "favorite" and ("lastFavoriteAt" in source or "lastFavoriteAt" in result):
+                result["lastFavoriteAt"] = source.get("lastFavoriteAt") or ""
     attempts = merge_free_practice_attempts([existing.get("freePracticeAttempts", []), incoming.get("freePracticeAttempts", [])])
     if "freePracticeAttempts" in existing or "freePracticeAttempts" in incoming:
         result["freePracticeAttempts"] = attempts
@@ -158,4 +206,8 @@ def merge_free_practice_state(existing, incoming):
                 source = previous
         recorded_ids = {record["id"] for item in attempts for record in [item, *item.get("syncRecords", [])]}
         result["freePracticeSession"] = None if source and source["id"] in recorded_ids else source
+    old_time, new_time = _timestamp(existing.get("updatedAt")), _timestamp(incoming.get("updatedAt"))
+    times = [value for value in (old_time, new_time) if value is not None]
+    if times:
+        result["updatedAt"] = _iso(max(times))
     return result
