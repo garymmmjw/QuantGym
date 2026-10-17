@@ -38,6 +38,14 @@ CREATE TABLE user_leetcode (
   updated_at timestamptz NOT NULL
 );
 
+-- Account-owned Learn progress and scoring ledger; never public profile data.
+CREATE TABLE user_learning_states (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  data_json jsonb NOT NULL,
+  revision integer NOT NULL CHECK (revision > 0),
+  updated_at timestamptz NOT NULL
+);
+
 CREATE TABLE community (
   id integer PRIMARY KEY CHECK (id = 1),
   community_json jsonb NOT NULL,

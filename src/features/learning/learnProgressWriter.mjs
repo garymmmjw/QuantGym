@@ -30,3 +30,30 @@ export function createLearnProgressWriter({ userId, initialProgress, read, save,
     close() { closed = true; },
   };
 }
+
+/** The server revision replaces browser-only locks. Keep the reader's input
+ * baseline: merged fields may belong to another device and are not yet in this
+ * iframe, so their absence in its next snapshot is not an intentional deletion. */
+export function createCloudLearnProgressWriter({ initialProgress, save, isActive, onPending = () => {} }) {
+  let baseline = structuredClone(initialProgress), closed = false, pending = 0;
+  let queue = Promise.resolve();
+  return {
+    submit(progress) {
+      const input = structuredClone(progress);
+      pending++; onPending(true);
+      const result = queue.catch(() => {}).then(async () => {
+        if (closed || !isActive()) return { status: 'inactive' };
+        const saved = await save(input, baseline);
+        if (saved.status === 'saved') baseline = input;
+        return saved;
+      });
+      queue = result;
+      // Keep flush() rejected after failure, while allowing an explicit retry.
+      result.finally(() => { pending--; onPending(pending > 0); }).catch(() => {});
+      return result;
+    },
+    flush: () => queue,
+    hasPending: () => pending > 0,
+    close() { closed = true; },
+  };
+}
