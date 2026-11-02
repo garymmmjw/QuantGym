@@ -114,7 +114,7 @@ test('real settings bundle applies server records, preserves in-flight records, 
   const userState = { value: { problemStates: [local] } }; let disk = structuredClone(userState.value); const saves = [];
   const bundle = createSyncSettingsBundle({ appState, userState, storage, canUseCloud: () => true,
     cloudApi: async () => wait.promise, cloudStatePayload: value => value, getUserCatalogProblems: () => [],
-    loadStateForUser: () => disk, saveState: options => { saves.push(options); disk = structuredClone(userState.value); },
+    loadProblemStatesForUser: () => disk.problemStates, saveState: options => { saves.push(options); disk = structuredClone(userState.value); },
     saveCloudConfig() {}, syncStores() {}, t: value => value, formatDate: value => value, normalizeLeaderboardSettings: value => value,
   });
   await settle();
@@ -173,7 +173,7 @@ test('legacy local-only personal records are reconciled by a small upload once a
       calls.push({ path, ...request });
       if (request.method === 'POST') remote = structuredClone(request.body.problemStates);
       return { problemStates: structuredClone(remote) };
-    }, cloudStatePayload: value => value, getUserCatalogProblems: () => [], loadStateForUser: () => disk,
+    }, cloudStatePayload: value => value, getUserCatalogProblems: () => [], loadProblemStatesForUser: () => disk.problemStates,
     saveState: () => { disk = structuredClone(userState.value); }, saveCloudConfig() {}, syncStores() {}, t: value => value, formatDate: value => value, normalizeLeaderboardSettings: value => value,
   });
   await settle(); await bundle.cloudSyncController.refresh(); await bundle.cloudSyncController.refresh();

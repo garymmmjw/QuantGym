@@ -75,6 +75,72 @@ test('failed writes do not appear saved or remove existing records', () => {
   assert.ok(trackerStore.getSnapshot().error);
 });
 
+test('adding or editing one application preserves other immutable row references', () => {
+  const { trackerStore } = stores();
+  const input = application('a1');
+  trackerStore.addApplication(input);
+  const first = trackerStore.getSnapshot().applications[0];
+  input.company = 'Changed outside the store';
+  input.events[0].date = '2026-10-01';
+  assert.equal(first.company, 'Example Company');
+  assert.equal(first.events[0].date, '2026-09-17');
+  assert.ok(Object.isFrozen(first));
+  assert.ok(Object.isFrozen(first.events));
+  assert.ok(Object.isFrozen(first.events[0]));
+
+  trackerStore.addApplication(application('a2'));
+  const before = trackerStore.getSnapshot();
+  assert.equal(before.applications[0], first);
+  const second = before.applications[1];
+  trackerStore.updateEvent('a1', 'a1-submitted', { date: '2026-09-18' });
+  const after = trackerStore.getSnapshot();
+  assert.notEqual(after.applications, before.applications);
+  assert.notEqual(after.applications[0], first);
+  assert.equal(after.applications[1], second);
+  assert.equal(first.events[0].date, '2026-09-17');
+  assert.equal(after.applications[0].events[0].date, '2026-09-18');
+  assert.ok(Object.isFrozen(after));
+  assert.ok(Object.isFrozen(after.applications));
+  assert.throws(() => { after.applications[0].events[0].date = '2026-10-01'; }, TypeError);
+});
+
+test('external refresh replaces changed rows while retaining unaffected rows and ordering', () => {
+  const storage = memoryStorage();
+  const first = stores(storage).trackerStore;
+  first.addApplication(application('a1'));
+  first.addApplication(application('a2'));
+  const before = first.getSnapshot();
+  const second = stores(storage).trackerStore;
+  second.updateApplication({ ...second.getSnapshot().applications[1], role: 'Updated elsewhere' });
+  first.refresh();
+  const after = first.getSnapshot();
+  assert.equal(after.applications[0], before.applications[0]);
+  assert.notEqual(after.applications[1], before.applications[1]);
+  assert.equal(after.applications[1].role, 'Updated elsewhere');
+  first.replaceSyncState({ applications: [...after.applications].reverse(), deletedEvents: [] });
+  assert.deepEqual(first.getSnapshot().applications.map(row => row.id), ['a2', 'a1']);
+  assert.equal(first.getSnapshot().applications[0], after.applications[1]);
+  assert.equal(first.getSnapshot().applications[1], after.applications[0]);
+});
+
+test('write errors and recovery preserve unchanged row and array references', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication(application());
+  const saved = trackerStore.getSnapshot();
+  const write = storage.setItem;
+  storage.setItem = () => { throw new Error('Storage full'); };
+  assert.throws(() => trackerStore.addApplication(application('new')), /Storage full/);
+  const failed = trackerStore.getSnapshot();
+  assert.notEqual(failed, saved);
+  assert.equal(failed.applications, saved.applications);
+  assert.equal(failed.error, 'Storage full');
+  storage.setItem = write;
+  trackerStore.refresh();
+  const recovered = trackerStore.getSnapshot();
+  assert.equal(recovered.error, '');
+  assert.equal(recovered.applications, saved.applications);
+});
+
 test('import validates the entire file before writing either store', () => {
   const context=stores();
   const payload={applications:[application()],stages:[{id:'stage-1',label:'Stage 1',recordedDate:'2026-02-30'}]};

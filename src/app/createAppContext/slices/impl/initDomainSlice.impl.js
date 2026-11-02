@@ -128,6 +128,7 @@ export function initDomainSliceImpl(shared, ctx) {
   libraryFilterState,
   loadState,
   loadStateForUser,
+  loadProblemStatesForUser,
   loading,
   localDateKey,
   localStatePayload,
@@ -543,7 +544,7 @@ export function initDomainSliceImpl(shared, ctx) {
     invalidateLeaderboardCloud,
     LEADERBOARD_CLOUD_REFRESH_MS,
     llmConfigRuntime,
-    loadStateForUser,
+    loadProblemStatesForUser,
     subscribeSession(listener) {
       const offAuth = domainStores.authStore.subscribe(listener);
       const offApp = domainStores.appStore.subscribe(listener);

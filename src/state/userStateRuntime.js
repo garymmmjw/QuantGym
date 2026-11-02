@@ -30,6 +30,21 @@ export function createUserStateRuntime(initialState = {}, deps = {}) {
     }) || deps.createBaseState?.() || {};
   }
 
+  function loadProblemStatesForUser(userId) {
+    // Cloud reconciliation needs the latest personal rows from other tabs, not
+    // a new copy of the question catalog and every other workspace domain.
+    const saved = deps.loadUserState?.(userId, {
+      createBaseState: () => ({}),
+      normalizeState: value => value,
+      userStateKey: deps.userStateKey
+    }) || {};
+    const rows = Array.isArray(saved.problemStates) ? saved.problemStates : [];
+    const favorites = Array.isArray(saved.interviewFavorites) ? saved.interviewFavorites : [];
+    const legacyRows = deps.problemStatesFromFavorites?.(favorites.filter(item => item?.problemId)) || [];
+    const merged = deps.mergeProblemStates?.(rows, legacyRows) || [...rows, ...legacyRows];
+    return merged.filter(row => !deps.isDisabledProblemId?.(row.problemId));
+  }
+
   function loadCurrent() {
     const currentUser = deps.getCurrentUser?.();
     return setValue(currentUser ? loadForUser(currentUser.id) : deps.createBaseState?.() || {});
@@ -78,6 +93,7 @@ export function createUserStateRuntime(initialState = {}, deps = {}) {
     clearForUser,
     loadCurrent,
     loadForUser,
+    loadProblemStatesForUser,
     migrateLegacy,
     save,
     setValue,

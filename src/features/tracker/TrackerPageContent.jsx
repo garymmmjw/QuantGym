@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { getSummary, localToday } from './dataModel.js';
 import DetailDrawer from './DetailDrawer.jsx';
 import ProgressDialog from './ProgressDialog.jsx';
@@ -79,7 +79,10 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const deadlineEvent = deadlineApplication?.events.find(event => event.id === deadlineTarget?.eventId) || null;
   const editingApplication = resolvedApplications.find(a => a.id === eventTarget?.applicationId) || null;
   const editingEvent = editingApplication?.events.find(event => event.id === eventTarget?.eventId) || null;
-  const editEvent = (application, event) => setEventTarget({applicationId:application.id, eventId:event.id});
+  const openDetails = useCallback(application => setSelectedId(application.id), []);
+  const openProgress = useCallback(application => setProgressId(application.id), []);
+  const openNewApplication = useCallback(() => setAdding(true), []);
+  const editEvent = useCallback((application, event) => setEventTarget({applicationId:application.id, eventId:event.id}), []);
   const saveEvent = changes => {
     if (!eventTarget) return false;
     try {
@@ -108,7 +111,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
       setDeletedRecord(current => ({ ...current, error: error.message || '恢复失败，请重试。' }));
     }
   };
-  const editDeadline = (application, event) => setDeadlineTarget({applicationId:application.id, eventId:event.id});
+  const editDeadline = useCallback((application, event) => setDeadlineTarget({applicationId:application.id, eventId:event.id}), []);
   const saveDeadline = values => {
     if (!deadlineTarget) return false;
     try {
@@ -123,7 +126,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   };
   const deletionNotice = deletedRecord && <div className={`${activeApplication ? 'qt-td-deletion-notice' : 'qt-toast'} qt-delete-notice`} role="status"><span>{deletedRecord.error || '记录已删除'}</span><button type="button" className="qt-btn" onClick={undoDelete}>撤销</button></div>;
   return <div className="quantgym-tracker">
-        <div className="qt-page-heading"><div><h1>我的投递<span className="qt-heading-dot">.</span></h1></div><div className="qt-heading-actions"><button className="qt-btn" onClick={() => setAddStageRequest(value => value+1)}><Icon name="Flag" size={16}/>添加 Stage</button><button className="qt-btn qt-primary" onClick={() => setAdding(true)}><Icon name="Plus" size={17}/>添加申请</button></div></div>
+        <div className="qt-page-heading"><div><h1>我的投递<span className="qt-heading-dot">.</span></h1></div><div className="qt-heading-actions"><button className="qt-btn" onClick={() => setAddStageRequest(value => value+1)}><Icon name="Flag" size={16}/>添加 Stage</button><button className="qt-btn qt-primary" onClick={openNewApplication}><Icon name="Plus" size={17}/>添加申请</button></div></div>
         {!namespace && <div className="qt-cloud-status" role="status">
           <span>{syncError || (cloud.phase === 'synced' ? '已同步至账号' : cloud.phase === 'syncing' || cloud.phase === 'pending' ? '正在同步…' : cloud.phase === 'auth' ? '登录已过期，请重新登录以同步记录' : cloud.phase === 'error' ? '暂未同步，记录保存在此设备' : '记录保存在此设备，登录云账号后同步')}</span>
           {cloud.phase === 'error' && <button type="button" onClick={sync}>重试同步</button>}
@@ -144,11 +147,11 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
           status={status}
           onStatusChange={setStatus}
           saveError={saveError}
-          onOpenDetails={application => setSelectedId(application.id)}
-          onUpdateProgress={application => setProgressId(application.id)}
+          onOpenDetails={openDetails}
+          onUpdateProgress={openProgress}
           onEditEvent={editEvent}
           onEditDeadline={editDeadline}
-          onAddApplication={() => setAdding(true)}
+          onAddApplication={openNewApplication}
         />
     <DetailDrawer application={activeApplication} phases={stageDefinitions} onClose={()=>setSelectedId(null)} onUpdate={update} onEditEvent={editEvent} deletionNotice={deletionNotice}/>
     {editingApplication && editingEvent && <EventEditDialog key={`${editingApplication.id}:${editingEvent.id}`} application={editingApplication} event={editingEvent} onClose={()=>setEventTarget(null)} onSave={saveEvent} onDelete={deleteEvent}/>}
