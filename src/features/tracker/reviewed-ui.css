@@ -49,31 +49,42 @@
 .quantgym-tracker .qt-view-toggle { flex: 0 0 36px; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 6px; color: var(--qt-accent); background: var(--qt-accent-soft); transition: background .15s; }
 .quantgym-tracker .qt-view-toggle:hover { background: var(--qt-accent-hover); }
 .quantgym-tracker .qt-table-scroll { max-height: clamp(560px, calc(100dvh - 260px), 900px); }
-/* Let each column include its longest progress pill and the cell padding. */
-.quantgym-tracker .qt-table-scroll .qt-progress-table { table-layout: auto; min-width: calc(720px + var(--qt-progress-column-count) * 140px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; }
-.quantgym-tracker .qt-progress-table .qt-col-company { width: 165px; }
-.quantgym-tracker .qt-progress-table .qt-col-role { width: 285px; }
-.quantgym-tracker .qt-progress-table .qt-col-update { width: 130px; }
-.quantgym-tracker .qt-progress-table .qt-col-deadline { width: 150px; }
-.quantgym-tracker .qt-progress-table thead th { height: 38px; font-size: 13px; padding: 0 14px; color: #81768d; background: #f7f6fa; border-color: #ebe7f0; }
-.quantgym-tracker .qt-progress-table thead th:first-child { padding-left: 20px; }
+/* Explicit column widths keep long progress labels from squeezing the company. */
+.quantgym-tracker .qt-table-scroll .qt-progress-table { table-layout: fixed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; }
+.quantgym-tracker .qt-progress-table thead th { position: relative; height: 38px; font-size: 13px; padding: 0 14px; color: #81768d; background: #f7f6fa; border-color: #ebe7f0; }
+.quantgym-tracker .qt-progress-table thead th:first-child { position: sticky; left: 0; padding-left: 20px; }
+.quantgym-tracker .qt-column-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quantgym-tracker .qt-column-resizer { position: absolute; z-index: 1; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; touch-action: none; user-select: none; outline: none; }
+.quantgym-tracker .qt-column-resizer::after { content: ''; position: absolute; top: 8px; bottom: 8px; right: 0; width: 2px; background: #ded7e9; border-radius: 2px; }
+.quantgym-tracker .qt-column-resizer:hover::after,
+.quantgym-tracker .qt-column-resizer:focus-visible::after,
+.quantgym-tracker .qt-column-resizer.qt-active::after { background: var(--qt-accent); width: 3px; }
+.quantgym-tracker .qt-column-resizer:focus-visible { background: var(--qt-accent-soft); outline: 2px solid var(--qt-accent); outline-offset: -2px; }
+.quantgym-tracker .qt-resizing,
+.quantgym-tracker .qt-resizing * { cursor: col-resize !important; user-select: none; }
 .quantgym-tracker .qt-phase-row th { background: color-mix(in srgb, var(--qt-accent) 5%, white); border-bottom-color: var(--qt-accent-border); }
 .quantgym-tracker .qt-phase-row button { padding: 8px 18px; min-height: 40px; gap: 12px; }
 .quantgym-tracker .qt-phase-row .qt-icon { color: #797083; }
 .quantgym-tracker .qt-phase-badge { font-family: inherit; color: var(--qt-accent); background: var(--qt-accent-soft); border-color: transparent; border-radius: 4px; font-size: 14px; font-weight: 600; padding: 3px 8px; white-space: nowrap; }
 .quantgym-tracker .qt-phase-count { font-size: 12px; color: #8d8099; white-space: nowrap; }
 .quantgym-tracker .qt-phase-caption { font-size: 12px; color: #87788f; white-space: nowrap; }
-.quantgym-tracker .qt-application-row td { height: 47px; padding: 7px 10px; border-bottom: 1px solid #eeebf2; vertical-align: middle; }
+.quantgym-tracker .qt-application-row td { height: 47px; padding: 7px 10px; border-bottom: 1px solid #eeebf2; vertical-align: middle; overflow: hidden; }
 .quantgym-tracker .qt-application-row td + td { border-left: 1px solid #efedf3; }
 .quantgym-tracker .qt-application-row td.qt-company-cell { padding-left: 20px; }
 .quantgym-tracker .qt-application-row td.qt-progress-cell,
 .quantgym-tracker .qt-application-row td.qt-deadline-cell,
 .quantgym-tracker .qt-application-row td.qt-update-cell { vertical-align: middle; }
-.quantgym-tracker .qt-company-name { font-size: 15px; font-weight: 600; line-height: 1.35; color: #292435; }
+.quantgym-tracker .qt-company-name { font-size: 15px; font-weight: 600; line-height: 1.35; color: #292435; white-space: nowrap; overflow-wrap: normal; overflow: hidden; text-overflow: ellipsis; }
 .quantgym-tracker .qt-role-link { font: inherit; font-size: 14px; line-height: 1.35; color: #7b718a; }
 .quantgym-tracker .qt-event-pill { gap: 7px; border-radius: 4px; padding: 7px 9px; font-size: 13px; font-weight: 500; line-height: 1.3; }
 .quantgym-tracker .qt-event-date { font: inherit; font-size: 12px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .quantgym-tracker .qt-event-dot { width: 7px; height: 7px; flex-shrink: 0; border-radius: 50%; background: currentColor; }
+.quantgym-tracker .qt-progress-table :is(.qt-edit-progress, .qt-event-pill, .qt-add-progress, .qt-deadline-button) { max-width: 100%; min-width: 0; overflow: hidden; }
+.quantgym-tracker .qt-progress-table .qt-event-label,
+.quantgym-tracker .qt-progress-table .qt-add-progress > span,
+.quantgym-tracker .qt-progress-table .qt-deadline-button time { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quantgym-tracker .qt-progress-table .qt-event-date,
+.quantgym-tracker .qt-progress-table .qt-deadline-button svg { flex-shrink: 0; }
 .quantgym-tracker .qt-event-pill.qt-neutral { background: #eaf5f2; border-color: #dceee8; color: #287f71; }
 .quantgym-tracker .qt-event-pill.qt-blue { background: #edf4ff; border-color: #d9e8fd; color: #306fae; }
 .quantgym-tracker .qt-event-pill.qt-purple { background: #f3edf8; border-color: #e8dcef; color: #855aa0; }
@@ -109,7 +120,6 @@
   .quantgym-tracker .qt-search { min-height: 42px; padding-inline: 8px; gap: 5px; }
   .quantgym-tracker .qt-search input { font-size: 16px; }
   .quantgym-tracker .qt-view-toggle { flex-basis: 42px; width: 42px; height: 42px; }
-  .quantgym-tracker .qt-progress-table .qt-col-company { width: 135px; }
   .quantgym-tracker .qt-company-name { font-size: 13px; }
   .quantgym-tracker .qt-application-row td.qt-company-cell { padding-left: 12px; }
   .quantgym-tracker .qt-phase-count { display: inline; }
