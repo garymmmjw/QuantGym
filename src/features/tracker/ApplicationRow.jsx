@@ -23,7 +23,7 @@ function ApplicationRow({ application, progressColumnCount, onOpenDetails, onUpd
   const archived = ['rejected', 'withdrawn'].includes(getCurrentStatus(application));
   return (
     <tr className={`qt-application-row${archived ? ' archived' : ''}${deadline ? ' qt-has-deadline' : ''}`}>
-      <td className="qt-company-cell"><strong className="qt-company-name">{company.trim()}</strong></td>
+      <td className="qt-company-cell"><strong className="qt-company-name" title={company.trim()}>{company.trim()}</strong></td>
       <td className="qt-role-cell">
         <button className="qt-role-link" title={role} onClick={() => onOpenDetails(application)} aria-label={`查看 ${company.trim()} 的 ${role}`}>
           <span>{role}</span>

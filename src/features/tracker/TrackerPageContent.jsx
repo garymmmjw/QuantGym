@@ -142,6 +142,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
         </section>
         <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} summaryRows={activity.stageRows} summaryNote={activity.leetcodeStageNote} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList
+          columnWidthsStorageKey={`quantgym.tracker.column-widths.v1:${encodeURIComponent(ownerId)}:${namespace || 'main'}`}
           applications={resolvedApplications}
           stages={activity.stageRows}
           status={status}

@@ -3,8 +3,9 @@ import { getApplicationView, getProgressColumnCount, getSummary } from './dataMo
 import ApplicationRow from './ApplicationRow.jsx';
 import Icon from './TrackerIcon.jsx';
 import { formatStagePeriod } from '../careerStages/stagePractice.js';
+import useColumnWidths from './useColumnWidths.js';
 
-function ApplicationList({ applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline, onAddApplication }) {
+function ApplicationList({ applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline, onAddApplication, columnWidthsStorageKey }) {
   const [view, setView] = useState('table');
   const [collapsed, setCollapsed] = useState({});
   const [query, setQuery] = useState('');
@@ -14,8 +15,19 @@ function ApplicationList({ applications, stages, status, onStatusChange, saveErr
   const clearSearch = () => { search(''); searchInput.current?.focus(); };
   const summary = getSummary(applications);
   const progressColumnCount = Math.max(3, getProgressColumnCount(applications));
-  const progressColumns = Array.from({ length: progressColumnCount }, (_, index) => index);
-  const columnCount = progressColumnCount + 4;
+  const columns = [
+    { id: 'company', label: '公司', defaultWidth: 190, minWidth: 80, className: 'qt-col-company' },
+    { id: 'role', label: '岗位', defaultWidth: 285, minWidth: 100, className: 'qt-col-role' },
+    ...Array.from({ length: progressColumnCount }, (_, index) => ({
+      id: `event-${index}`, label: index === 0 ? '投递' : `阶段 ${index + 1}`,
+      defaultWidth: index === 0 ? 160 : 240, minWidth: 100, className: 'qt-col-event',
+    })),
+    { id: 'update', label: '更新进展', defaultWidth: 130, minWidth: 100, className: 'qt-col-update' },
+    { id: 'deadline', label: 'DDL', defaultWidth: 160, minWidth: 110, className: 'qt-col-deadline' },
+  ];
+  const { getWidth, resizeHandleProps, resizingColumn, resetWidths } = useColumnWidths(columnWidthsStorageKey);
+  const tableWidth = columns.reduce((sum, column) => sum + getWidth(column), 0);
+  const columnCount = columns.length;
   const { applications: visible, groups } = useMemo(() => getApplicationView(applications, stages, status, query), [applications, stages, status, query]);
   const views = [
     ['all', '全部', summary.total],
@@ -49,6 +61,9 @@ function ApplicationList({ applications, stages, status, onStatusChange, saveErr
       </div>
       <div className="qt-toolbar-controls">
         <div className="qt-search"><Icon name="Search" size={16}/><span className="qt-sr-only">搜索公司或岗位</span><input ref={searchInput} aria-label="搜索公司或岗位" type="search" value={query} onChange={event => search(event.target.value)} placeholder="公司或岗位" />{query && <button type="button" aria-label="清空搜索" onClick={clearSearch}><Icon name="X" size={14}/></button>}</div>
+        <button type="button" className="qt-view-toggle" aria-label="恢复默认列宽" title="恢复默认列宽" onClick={resetWidths}>
+          <Icon name="RotateCcw" size={16}/>
+        </button>
         <button type="button" className="qt-view-toggle"
           aria-label={view === 'table' ? '切换为紧凑视图' : '切换为表格视图'}
           title={view === 'table' ? '切换为紧凑视图' : '切换为表格视图'}
@@ -57,10 +72,13 @@ function ApplicationList({ applications, stages, status, onStatusChange, saveErr
         </button>
       </div>
     </div>
-    <div className={`qt-table-scroll qt-${view}`} tabIndex={0} aria-label="横向滚动查看申请进展">
-      <table className="qt-progress-table" style={{ '--qt-progress-column-count': progressColumnCount }}>
-        <colgroup><col className="qt-col-company"/><col className="qt-col-role"/>{progressColumns.map(index => <col className="qt-col-event" key={index}/>)}<col className="qt-col-update"/><col className="qt-col-deadline"/></colgroup>
-        <thead><tr><th scope="col">公司</th><th scope="col">岗位</th>{progressColumns.map(index => <th scope="col" key={index}>{index === 0 ? '投递' : `阶段 ${index + 1}`}</th>)}<th scope="col">更新进展</th><th scope="col">DDL</th></tr></thead>
+    <div className={`qt-table-scroll qt-${view}${resizingColumn ? ' qt-resizing' : ''}`} tabIndex={0} aria-label="横向滚动查看申请进展">
+      <table className="qt-progress-table" style={{ width: tableWidth, minWidth: tableWidth }}>
+        <colgroup>{columns.map(column => <col key={column.id} className={column.className} style={{ width: getWidth(column) }}/>)}</colgroup>
+        <thead><tr>{columns.map(column => <th scope="col" key={column.id} data-column-id={column.id}>
+          <span className="qt-column-label">{column.label}</span>
+          <span className={`qt-column-resizer${resizingColumn === column.id ? ' qt-active' : ''}`} {...resizeHandleProps(column)}/>
+        </th>)}</tr></thead>
         {groups ? groups.map(({ stage, applications: rows }) => {
           if (!rows.length && (status !== 'all' || hasQuery)) return null;
           const filteredCount = (status !== 'all' || hasQuery) && Number.isSafeInteger(stage.applications);

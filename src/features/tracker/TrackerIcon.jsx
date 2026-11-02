@@ -10,6 +10,7 @@ const paths = {
   SearchX: ['M21 21l-4.4-4.4', 'm8 8 5 5', 'm8 13 5-5'],
   Table2: ['M3 8h18', 'M8 8v13'],
   List: ['M8 6h13', 'M8 12h13', 'M8 18h13', 'M3 6h.01', 'M3 12h.01', 'M3 18h.01'],
+  RotateCcw: ['M3 10a9 9 0 1 1 2.6 8.4', 'M3 4v6h6'],
   ArrowDownWideNarrow: ['M4 3v18', 'm1 18 3 3 3-3', 'M10 5h12', 'M10 12h8', 'M10 19h4'],
   CheckCheck: ['m3 12 4 4L19 4', 'm12 16 2 2 8-8'],
   CircleCheck: ['m8 12 3 3 5-6'],
