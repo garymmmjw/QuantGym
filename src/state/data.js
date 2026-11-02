@@ -82,10 +82,10 @@ export function localStatePayload(rawState = {}, deps = {}) {
   };
 }
 
-export function cloudStatePayload(rawState = {}, deps = {}) {
-  const payload = localStatePayload(rawState, deps);
-  delete payload.problems;
-  delete payload.problemStates;
+export function cloudStatePayload(rawState = {}) {
+  // Catalogs and practice records have separate sync routes. Do not filter and
+  // normalize the full catalog just to discard it from this payload.
+  const { problems, problemStates, ...payload } = rawState || {};
   return payload;
 }
 

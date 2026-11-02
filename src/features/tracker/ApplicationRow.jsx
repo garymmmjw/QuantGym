@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Clock3 } from 'lucide-react';
 import { getEventMeta, getCurrentStatus, getCurrentDeadlineEvent, formatDeadline, deadlineDateTime } from './dataModel.js';
 import Icon from './TrackerIcon.jsx';
@@ -17,7 +17,7 @@ function EventPill({ event }) {
   );
 }
 
-export default function ApplicationRow({ application, progressColumnCount, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline }) {
+function ApplicationRow({ application, progressColumnCount, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline }) {
   const { company, role, events } = application;
   const deadline = getCurrentDeadlineEvent(application);
   const archived = ['rejected', 'withdrawn'].includes(getCurrentStatus(application));
@@ -25,7 +25,7 @@ export default function ApplicationRow({ application, progressColumnCount, onOpe
     <tr className={`qt-application-row${archived ? ' archived' : ''}${deadline ? ' qt-has-deadline' : ''}`}>
       <td className="qt-company-cell"><strong className="qt-company-name">{company.trim()}</strong></td>
       <td className="qt-role-cell">
-        <button className="qt-role-link" title={role} onClick={onOpenDetails} aria-label={`查看 ${company.trim()} 的 ${role}`}>
+        <button className="qt-role-link" title={role} onClick={() => onOpenDetails(application)} aria-label={`查看 ${company.trim()} 的 ${role}`}>
           <span>{role}</span>
         </button>
       </td>
@@ -33,19 +33,19 @@ export default function ApplicationRow({ application, progressColumnCount, onOpe
         {events[index] ? <button
           type="button"
           className="qt-edit-progress"
-          onClick={() => onEditEvent(events[index])}
+          onClick={() => onEditEvent(application, events[index])}
           title="点击修改这条记录"
           aria-label={`修改 ${company.trim()} ${role} 的${index === 0 ? '投递' : `阶段 ${index + 1}`}记录`}
         ><EventPill event={events[index]}/></button> : <EventPill/>}
       </td>)}
       <td className="qt-update-cell">
-        <button type="button" className="qt-add-progress" onClick={onUpdateProgress} aria-label={`更新 ${company.trim()} ${role} 的进展`}>
+        <button type="button" className="qt-add-progress" onClick={() => onUpdateProgress(application)} aria-label={`更新 ${company.trim()} ${role} 的进展`}>
           <Icon name="Plus" size={13} /><span>更新进展</span>
         </button>
       </td>
       <td className="qt-deadline-cell">
         {deadline ? (
-          <button className="qt-deadline-button" onClick={() => onEditDeadline(deadline)}
+          <button className="qt-deadline-button" onClick={() => onEditDeadline(application, deadline)}
             title={`截止 ${formatDeadline(deadline, { fullDate: true })} · 点击修改`}
             aria-label={`修改 ${company.trim()} ${role} 的截止时间，${formatDeadline(deadline, { fullDate: true })}`}>
             <Clock3 size={16} strokeWidth={1.7} aria-hidden="true"/><time dateTime={deadlineDateTime(deadline)}>{formatDeadline(deadline)}</time>
@@ -55,3 +55,5 @@ export default function ApplicationRow({ application, progressColumnCount, onOpe
     </tr>
   );
 }
+
+export default memo(ApplicationRow);

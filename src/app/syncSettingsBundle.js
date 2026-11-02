@@ -30,7 +30,7 @@ export function createSyncSettingsBundle(deps = {}) {
     invalidateLeaderboardCloud,
     LEADERBOARD_CLOUD_REFRESH_MS,
     llmConfigRuntime,
-    loadStateForUser,
+    loadProblemStatesForUser,
     normalizeCloudLeaderboardRows,
     normalizeCountry,
     normalizeLanguage,
@@ -68,7 +68,7 @@ export function createSyncSettingsBundle(deps = {}) {
 
   function mergePersonalRecords(records) {
     const current = userState.value;
-    const latestLocal = loadStateForUser?.(appState.currentUser?.id)?.problemStates || [];
+    const latestLocal = loadProblemStatesForUser?.(appState.currentUser?.id) || [];
     const merged = mergeProblemStates([records || [], latestLocal, current.problemStates || []], {
       mergeRecordsById: (...lists) => mergeRecordsById(lists)
     });

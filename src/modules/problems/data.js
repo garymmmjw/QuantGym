@@ -176,6 +176,24 @@ export function normalizeCategory(category, defs = skillDefs) {
   return defs[key] || REVIEWED_EXTRA_CATEGORIES.has(key) ? key : aliases[key] || aliases[lookupKey] || "probabilityExpectation";
 }
 
+function resolveProblemVisibility(raw, { source, sourceType, bookSlug, ownerUserId, getId }) {
+  const visibility = String(raw?.visibility || (
+    source === "seed" || source === "question-bank" || sourceType === "book" || bookSlug
+      ? "public"
+      : "user"
+  )).trim().toLowerCase();
+  if (visibility !== "user") return ["public", "private"].includes(visibility) ? visibility : "private";
+  // Older clients stored private platform rows as user questions. Recognize
+  // only the original, ownerless QuantGuide identity so retired rows can leave
+  // the catalog without changing genuine personal questions or their history.
+  if (ownerUserId || source !== "quantguide" || bookSlug !== "quantguide" || sourceType !== "platform"
+    || typeof raw?.quantguide?.id !== "string" || !raw.quantguide.id.trim()) return "user";
+  const quantguideSlug = typeof raw?.quantguide?.slug === "string"
+    ? raw.quantguide.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    : "";
+  return quantguideSlug && getId() === `quantguide-${quantguideSlug}` ? "private" : "user";
+}
+
 export function normalizeProblem(raw = {}, deps = {}) {
   const {
     makeId = () => `${Date.now()}-${Math.random()}`,
@@ -202,24 +220,7 @@ export function normalizeProblem(raw = {}, deps = {}) {
   const bookSlug = String(raw?.bookSlug || "").trim();
   const ownerUserId = String(raw?.ownerUserId || "").trim();
   const tags = sanitizeProblemTags(Array.isArray(raw?.tags) ? raw.tags.map(String).filter(Boolean) : parseTags(raw?.tags || ""));
-  const visibility = String(raw?.visibility || (
-    source === "seed" || source === "question-bank" || sourceType === "book" || bookSlug
-      ? "public"
-      : "user"
-  )).trim().toLowerCase();
-  // Older clients stored private platform rows as user questions. Recognize
-  // only the original, ownerless QuantGuide identity so retired rows can leave
-  // the catalog without changing genuine personal questions or their history.
-  const quantguideSlug = typeof raw?.quantguide?.slug === "string"
-    ? raw.quantguide.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-    : "";
-  const legacyQuantguideCatalog = visibility === "user" && !ownerUserId
-    && source === "quantguide" && bookSlug === "quantguide" && sourceType === "platform"
-    && typeof raw?.quantguide?.id === "string" && raw.quantguide.id.trim()
-    && quantguideSlug && id === `quantguide-${quantguideSlug}`;
-  const normalizedVisibility = legacyQuantguideCatalog ? "private" : ["public", "private", "user"].includes(visibility)
-    ? visibility
-    : "private";
+  const normalizedVisibility = resolveProblemVisibility(raw, { source, sourceType, bookSlug, ownerUserId, getId: () => id });
   return {
     id,
     titleEn,
@@ -246,7 +247,25 @@ export function normalizeProblem(raw = {}, deps = {}) {
 }
 
 export function isUserProblem(problem, deps = {}) {
-  return normalizeProblem(problem, deps).visibility === "user";
+  const sourceUrl = String(problem?.sourceUrl || problem?.url || "").trim();
+  const source = normalizeProblemSource(problem?.source || (deps.inferSource || (() => "manual"))(sourceUrl));
+  return resolveProblemVisibility(problem, {
+    source,
+    sourceType: String(problem?.sourceType || problem?.collection || "").trim(),
+    bookSlug: String(problem?.bookSlug || "").trim(),
+    ownerUserId: String(problem?.ownerUserId || "").trim(),
+    // Only the legacy platform migration needs an ID. Saving a catalog should
+    // not re-normalize its titles, content, tags, and company aliases.
+    getId: () => {
+      if (problem?.id) return normalizeCatalogProblemId(problem.id);
+      const overrides = deps.exerciseTitleOverrides || {};
+      const titleEn = sanitizeProblemTitleEn(String(problem?.titleEn || problem?.title || "").trim(), problem, overrides);
+      const titleZh = sanitizeProblemTitleZh(String(problem?.titleZh || "").trim(), problem, overrides);
+      const makeId = deps.makeId || (() => `${Date.now()}-${Math.random()}`);
+      const stableId = deps.stableId || ((title, url) => `${title}|${url}`);
+      return normalizeCatalogProblemId(stableId(titleEn || titleZh || sourceUrl || makeId(), sourceUrl));
+    }
+  }) === "user";
 }
 
 export function isCatalogProblem(problem, deps = {}) {

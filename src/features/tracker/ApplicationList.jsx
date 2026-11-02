@@ -1,10 +1,10 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { memo, useMemo, useRef, useState } from 'react';
 import { getApplicationView, getProgressColumnCount, getSummary } from './dataModel.js';
 import ApplicationRow from './ApplicationRow.jsx';
 import Icon from './TrackerIcon.jsx';
 import { formatStagePeriod } from '../careerStages/stagePractice.js';
 
-export default function ApplicationList({ applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline, onAddApplication }) {
+function ApplicationList({ applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline, onAddApplication }) {
   const [view, setView] = useState('table');
   const [collapsed, setCollapsed] = useState({});
   const [query, setQuery] = useState('');
@@ -29,10 +29,10 @@ export default function ApplicationList({ applications, stages, status, onStatus
     key={application.id}
     application={application}
     progressColumnCount={progressColumnCount}
-    onOpenDetails={() => onOpenDetails(application)}
-    onUpdateProgress={() => onUpdateProgress(application)}
-    onEditEvent={event => onEditEvent(application, event)}
-    onEditDeadline={event => onEditDeadline(application, event)}
+    onOpenDetails={onOpenDetails}
+    onUpdateProgress={onUpdateProgress}
+    onEditEvent={onEditEvent}
+    onEditDeadline={onEditDeadline}
   />;
 
   return <section className="qt-tracker-panel" aria-label="投递记录">
@@ -86,3 +86,5 @@ export default function ApplicationList({ applications, stages, status, onStatus
     </div>
   </section>;
 }
+
+export default memo(ApplicationList);

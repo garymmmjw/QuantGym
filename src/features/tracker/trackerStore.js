@@ -108,15 +108,36 @@ function restoredEventIndex(originalOrder, eventId, currentOrder) {
   return followingId ? currentOrder.indexOf(followingId) : currentOrder.indexOf(previousId) + 1;
 }
 
-function frozenSnapshot(applications, error = '') {
-  const value = copy({ applications, error });
-  value.applications.forEach(application => {
-    application.events.forEach(Object.freeze);
-    Object.freeze(application.events);
-    Object.freeze(application);
+function sameFields(first, second) {
+  const keys = Object.keys(first);
+  return keys.length === Object.keys(second).length
+    && keys.every(key => Object.hasOwn(second, key) && first[key] === second[key]);
+}
+
+function sameApplication(first, second) {
+  if (first === second) return true;
+  if (!first || first.events.length !== second.events.length) return false;
+  const { events: firstEvents, ...firstFields } = first;
+  const { events: secondEvents, ...secondFields } = second;
+  return sameFields(firstFields, secondFields)
+    && firstEvents.every((event, index) => sameFields(event, secondEvents[index]));
+}
+
+function frozenSnapshot(applications, error = '', previous) {
+  const previousById = new Map(previous?.applications.map(application => [application.id, application]));
+  const rows = applications.map(application => {
+    const existing = previousById.get(application.id);
+    // A journal replay or a new application must not invalidate every row in
+    // the table. Only reuse our own frozen copy, never a caller-owned object.
+    if (sameApplication(existing, application)) return existing;
+    const next = copy(application);
+    next.events.forEach(Object.freeze);
+    Object.freeze(next.events);
+    return Object.freeze(next);
   });
-  Object.freeze(value.applications);
-  return Object.freeze(value);
+  const unchanged = previous?.applications.length === rows.length
+    && rows.every((application, index) => application === previous.applications[index]);
+  return Object.freeze({ applications: unchanged ? previous.applications : Object.freeze(rows), error });
 }
 
 export function createTrackerStore({ ownerId, namespace = '', storage = globalThis.localStorage, eventTarget = globalThis.window } = {}) {
@@ -128,7 +149,7 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
     const nextSignature = JSON.stringify({ applications, error });
     if (nextSignature === signature) return;
     signature = nextSignature;
-    snapshot = frozenSnapshot(applications, error);
+    snapshot = frozenSnapshot(applications, error, snapshot);
     [...listeners].forEach(listener => listener());
   }
   function read() {
