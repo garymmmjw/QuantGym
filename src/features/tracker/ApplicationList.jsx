@@ -33,7 +33,7 @@ function ApplicationList({ applications, stages, status, onStatusChange, saveErr
     ['all', '全部', summary.total],
     ['ddl', 'DDL', summary.ddl],
     ['awaiting', '等待回复', summary.awaiting],
-    ['oa', 'OA', summary.oa],
+    ['oa', 'OA/VI', summary.oa],
     ['interview', '面试', summary.interview],
     ['company', '按公司'],
   ];
