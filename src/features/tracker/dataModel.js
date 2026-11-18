@@ -40,8 +40,8 @@ const STATUS_GROUPS = Object.freeze({
   submitted: 'awaiting',
   oa_received: 'oa',
   oa_completed: 'oa',
-  vi_received: 'interview',
-  vi_completed: 'interview',
+  vi_received: 'oa',
+  vi_completed: 'oa',
   interview: 'interview',
   interview_completed: 'interview',
   offer: 'offer',
@@ -102,7 +102,12 @@ export function getSummary(applications) {
 }
 
 function hasReceivedProgress(application, group) {
-  return application.events?.some(event => STATUS_GROUPS[event.type] === group) ?? false;
+  return application.events?.some(event => {
+    const interview = isInterviewType(event.type);
+    // Direct interview invitations also qualify for OA/VI progress. Only
+    // formal interview rounds qualify for the separate interview milestone.
+    return group === 'oa' ? STATUS_GROUPS[event.type] === 'oa' || interview : interview;
+  }) ?? false;
 }
 
 export function filterApplications(applications, { query = '', status = 'all', phase = 'all' } = {}) {
