@@ -33,13 +33,19 @@ test('progress presets and legacy labels use the new vocabulary without changing
   assert.equal(getEventMeta({ type: 'custom', customLabel: '  Team Match  ' }).label, 'Team Match');
 });
 
-test('VI and completed interview rounds remain in the interview view and milestone counts', () => {
+test('VI belongs to OA/VI while formal interview rounds count toward both received milestones', () => {
   const rows = ['vi_received', 'vi_completed', 'interview', 'interview_completed', 'custom'].map(type => ({
     ...app(type, '2026-10-09'), events: [...app(type, '2026-10-09').events, { id: `${type}-next`, type, date: '2026-10-10', customLabel: 'Team Match' }],
   }));
-  assert.equal(getSummary(rows).interview, 4);
-  assert.equal(getSummary(rows).receivedInterview, 4);
-  assert.equal(filterApplications(rows, { status: 'interview' }).length, 4);
+  assert.equal(getSummary(rows).oa, 2);
+  assert.equal(getSummary(rows).interview, 2);
+  assert.equal(getSummary(rows).receivedOa, 4);
+  assert.equal(getSummary(rows).receivedInterview, 2);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'oa' })), ['vi_received', 'vi_completed']);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'interview' })), ['interview', 'interview_completed']);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'interview-offer' })), ['interview', 'interview_completed']);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'received-oa' })), ['vi_received', 'vi_completed', 'interview', 'interview_completed']);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'received-interview' })), ['interview', 'interview_completed']);
   assert.equal(filterApplications(rows, { status: 'all' }).length, 5);
 });
 
@@ -86,23 +92,31 @@ test('received milestones count each application once and preserve separate curr
     withProgress('withdrawn', ['oa_received', 'withdrawn']),
     withProgress('direct-offer', ['offer']),
     withProgress('direct-rejection', ['rejected']),
+    withProgress('direct-interview', ['interview']),
+    withProgress('direct-interview-complete', ['interview_completed']),
+    withProgress('vi', ['vi_received']),
+    withProgress('vi-complete', ['vi_completed']),
+    withProgress('vi-rejected', ['vi_received', 'vi_completed', 'rejected']),
+    withProgress('oa-and-vi', ['oa_received', 'oa_completed', 'vi_received', 'vi_completed']),
+    withProgress('vi-offer', ['vi_completed', 'offer']),
+    withProgress('direct-interview-withdrawn', ['interview', 'interview_completed', 'withdrawn']),
   ];
   const before = structuredClone(rows);
   const summary = getSummary(rows);
-  assert.deepEqual(summary, { total: 8, ddl: 0, awaiting: 1, oa: 1, interview: 1, offer: 2, rejected: 2, closed: 3, receivedOa: 5, receivedInterview: 3 });
+  assert.deepEqual(summary, { total: 16, ddl: 0, awaiting: 1, oa: 4, interview: 3, offer: 3, rejected: 3, closed: 5, receivedOa: 13, receivedInterview: 6 });
   for (const [mode, key, expected] of [
-    ['received-oa', 'receivedOa', ['oa', 'interview', 'offer', 'rejected', 'withdrawn']],
-    ['received-interview', 'receivedInterview', ['interview', 'offer', 'rejected']],
-    ['rejected', 'rejected', ['rejected', 'direct-rejection']],
-    ['offer', 'offer', ['offer', 'direct-offer']],
-    ['closed', 'closed', ['rejected', 'withdrawn', 'direct-rejection']],
+    ['received-oa', 'receivedOa', ['oa', 'interview', 'offer', 'rejected', 'withdrawn', 'direct-interview', 'direct-interview-complete', 'vi', 'vi-complete', 'vi-rejected', 'oa-and-vi', 'vi-offer', 'direct-interview-withdrawn']],
+    ['received-interview', 'receivedInterview', ['interview', 'offer', 'rejected', 'direct-interview', 'direct-interview-complete', 'direct-interview-withdrawn']],
+    ['rejected', 'rejected', ['rejected', 'direct-rejection', 'vi-rejected']],
+    ['offer', 'offer', ['offer', 'direct-offer', 'vi-offer']],
+    ['closed', 'closed', ['rejected', 'withdrawn', 'direct-rejection', 'vi-rejected', 'direct-interview-withdrawn']],
   ]) {
     const view = getApplicationView(rows, stages, mode);
     assert.equal(view.applications.length, summary[key]);
     assert.deepEqual(ids(view.applications).sort(), [...expected].sort());
   }
-  assert.deepEqual(ids(filterApplications(rows, { status: 'oa' })), ['oa']);
-  assert.deepEqual(ids(filterApplications(rows, { status: 'interview' })), ['interview']);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'oa' })), ['oa', 'vi', 'vi-complete', 'oa-and-vi']);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'interview' })), ['interview', 'direct-interview', 'direct-interview-complete']);
   assert.deepEqual(rows, before);
 });
 

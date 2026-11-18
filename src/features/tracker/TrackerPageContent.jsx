@@ -134,11 +134,11 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
         <section className="qt-summary-strip" aria-label="申请统计">
           {[
             ['all', '申请总数', summary.total, 'all', '总申请'],
-            ['received-oa', '收到 OA', summary.receivedOa, 'oa', 'OA'],
-            ['received-interview', '收到 Interview', summary.receivedInterview, 'interview', '面试'],
+            ['received-oa', '收到 OA/VI', summary.receivedOa, 'oa', 'OA/VI', '累计收到过 OA、VI 或直接进入正式面试的申请数，同一申请只计一次'],
+            ['received-interview', '收到 Interview', summary.receivedInterview, 'interview', '面试', '累计收到过正式面试轮次的申请数，不包含 VI，同一申请只计一次'],
             ['closed', '已结束', summary.closed, 'closed', '已结束'],
             ['offer', 'Offer', summary.offer, 'offer', 'Offer'],
-          ].map(([id, label, count, tone, compactLabel]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label}${label.includes(compactLabel) ? '' : `（${compactLabel}）`} ${count}，查看申请`} title={id.startsWith('received-') ? '累计收到过的申请数，同一申请只计一次' : undefined}><span className="qt-metric-label"><span className="qt-metric-dot" aria-hidden="true"/><span className="qt-metric-label-full">{label}</span><span className="qt-metric-label-compact" aria-hidden="true">{compactLabel}</span></span><strong>{String(count).padStart(2, '0')}</strong></button>)}
+          ].map(([id, label, count, tone, compactLabel, description]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label}${label.includes(compactLabel) ? '' : `（${compactLabel}）`} ${count}，查看申请`} title={description}><span className="qt-metric-label"><span className="qt-metric-dot" aria-hidden="true"/><span className="qt-metric-label-full">{label}</span><span className="qt-metric-label-compact" aria-hidden="true">{compactLabel}</span></span><strong>{String(count).padStart(2, '0')}</strong></button>)}
         </section>
         <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} summaryRows={activity.stageRows} summaryNote={activity.leetcodeStageNote} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList
