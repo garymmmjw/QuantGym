@@ -33,8 +33,8 @@ function ApplicationList({ applications, stages, status, onStatusChange, saveErr
     ['all', '全部', summary.total],
     ['ddl', 'DDL', summary.ddl],
     ['awaiting', '等待回复', summary.awaiting],
-    ['oa', 'OA/VI', summary.oa],
-    ['interview', '面试', summary.interview],
+    ['received-oa', 'OA/VI', summary.receivedOa, '曾收到过 OA、VI 或正式面试，包含之后被拒或撤回的申请'],
+    ['received-interview', '面试', summary.receivedInterview, '曾收到过正式面试轮次，包含之后被拒或撤回的申请，不包含 VI'],
     ['company', '按公司'],
   ];
   const renderRow = application => <ApplicationRow
@@ -51,12 +51,13 @@ function ApplicationList({ applications, stages, status, onStatusChange, saveErr
     {saveError && <p className="qt-tracker-error" role="alert">{saveError}</p>}
     <div className="qt-table-toolbar">
       <div className="qt-filter-tabs" aria-label="申请视图">
-        {views.map(([id, label, count]) => <button
+        {views.map(([id, label, count, description]) => <button
           type="button"
           key={id}
           className={[id === 'ddl' ? 'qt-ddl-tab' : '', id === 'company' ? 'qt-company-tab' : '', status === id ? 'qt-active' : ''].filter(Boolean).join(' ')}
           onClick={() => onStatusChange(id)}
           aria-pressed={status === id}
+          title={description}
         >{label}{count !== undefined && <span>{count}</span>}</button>)}
       </div>
       <div className="qt-toolbar-controls">
